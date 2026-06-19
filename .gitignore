@@ -1,0 +1,10 @@
+# Laravel
+pontis-api/.env
+pontis-api/vendor/
+pontis-api/storage/logs/
+pontis-api/bootstrap/cache/
+
+# Node
+pontis-app/node_modules/
+pontis-app/dist/
+pontis-app/.env
