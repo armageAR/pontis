@@ -1,0 +1,135 @@
+.workshop-picker {
+  position: relative;
+}
+
+.workshop-picker-input-wrap {
+  position: relative;
+}
+
+.workshop-picker-spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.workshop-picker-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.workshop-picker-clear:hover {
+  color: var(--text-h);
+}
+
+.workshop-picker-selected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.workshop-picker-selected-number {
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.workshop-picker-selected-name {
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.workshop-picker-selected-meta {
+  color: var(--text);
+  font-size: 13px;
+  margin-left: auto;
+}
+
+.workshop-picker-dropdown {
+  position: absolute;
+  z-index: 50;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.workshop-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.workshop-picker-option:hover {
+  background: var(--accent-bg);
+}
+
+.workshop-picker-option-number {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 52px;
+}
+
+.workshop-picker-option-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workshop-picker-option-meta {
+  font-size: 12px;
+  color: var(--text);
+  margin-left: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.workshop-picker-empty {
+  position: absolute;
+  z-index: 50;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  font-size: 14px;
+  color: var(--text);
+}

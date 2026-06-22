@@ -15,6 +15,8 @@ class SuperAdminSeeder extends Seeder
                 'name' => 'Super Admin',
                 'password' => 'password',
                 'role' => 'superadmin',
+                'status' => 'active',
+                'email_verified_at' => now(),
             ]
         );
     }

@@ -1,0 +1,73 @@
+.pending-loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.pending-status {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+}
+
+.pending-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.pending-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.pending-text {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 360px;
+}
+
+.pending-detail {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+}
+
+.pending-muted {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.pending-verification {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.pending-verification-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error);
+}
+
+.pending-badge-ok {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success);
+}

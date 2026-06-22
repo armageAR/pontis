@@ -29,12 +29,12 @@ class WorkshopController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
+            $search = mb_strtolower($request->input('search'));
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('zone_name', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%");
+                $q->whereRaw('LOWER(name) like ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(zone_name) like ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(address) like ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(city) like ?', ["%{$search}%"]);
             });
         }
 

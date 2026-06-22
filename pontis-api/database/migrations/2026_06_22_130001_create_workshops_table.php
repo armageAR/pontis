@@ -23,6 +23,9 @@ return new class extends Migration
             $table->string('language', 100)->nullable();
             $table->string('status')->default('active');
             $table->text('notes')->nullable();
+            $table->string('source_url')->nullable();
+            $table->timestamp('last_synced_at')->nullable();
+            $table->text('raw_source_text')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

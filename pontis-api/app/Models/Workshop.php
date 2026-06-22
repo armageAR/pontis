@@ -28,6 +28,9 @@ class Workshop extends Model
         'language',
         'status',
         'notes',
+        'source_url',
+        'last_synced_at',
+        'raw_source_text',
     ];
 
     protected function casts(): array
@@ -36,6 +39,7 @@ class Workshop extends Model
             'zone_number' => 'integer',
             'number' => 'integer',
             'status' => WorkshopStatus::class,
+            'last_synced_at' => 'datetime',
         ];
     }
 

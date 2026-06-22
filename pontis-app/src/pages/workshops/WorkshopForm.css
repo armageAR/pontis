@@ -1,0 +1,35 @@
+.workshop-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.workshop-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.workshop-form-row-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 600px) {
+  .workshop-form-row,
+  .workshop-form-row-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.workshop-form-textarea {
+  resize: vertical;
+  min-height: 72px;
+  font-family: var(--sans);
+}
+
+.workshop-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
