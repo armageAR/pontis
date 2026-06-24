@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Workshop;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class SanctumAuthTest extends TestCase
@@ -284,7 +286,7 @@ class SanctumAuthTest extends TestCase
              ->assertOk()
              ->assertJson(['message' => 'Email de verificación reenviado.']);
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
     }
 
     public function test_resend_verification_skips_if_already_verified(): void
@@ -298,7 +300,7 @@ class SanctumAuthTest extends TestCase
              ->assertOk()
              ->assertJson(['message' => 'El email ya fue verificado.']);
 
-        Notification::assertNotSentTo($user, VerifyEmail::class);
+        Notification::assertNotSentTo($user, VerifyEmailNotification::class);
     }
 
     // ── email verify ─────────────────────────────────────────────────────────
@@ -306,9 +308,14 @@ class SanctumAuthTest extends TestCase
     public function test_verify_email_marks_user_as_verified(): void
     {
         $user = User::factory()->pending()->unverified()->create();
-        $hash = sha1($user->getEmailForVerification());
 
-        $this->getJson("/api/email/verify/{$user->id}/{$hash}")
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())],
+        );
+
+        $this->getJson($url)
              ->assertOk()
              ->assertJson(['message' => 'Email verificado correctamente.']);
 
@@ -319,8 +326,66 @@ class SanctumAuthTest extends TestCase
     {
         $user = User::factory()->pending()->unverified()->create();
 
-        $this->getJson("/api/email/verify/{$user->id}/invalidhash")
-             ->assertForbidden();
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => 'invalidhash'],
+        );
+
+        $this->getJson($url)->assertForbidden();
+    }
+
+    public function test_verify_email_rejects_expired_link(): void
+    {
+        $user = User::factory()->pending()->unverified()->create();
+
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::now()->subMinutes(1),
+            ['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())],
+        );
+
+        $this->getJson($url)->assertForbidden();
+    }
+
+    public function test_register_sends_verification_email(): void
+    {
+        Notification::fake();
+        $workshop = Workshop::factory()->create();
+
+        $this->postJson('/api/register', [
+            'name'                  => 'Mail User',
+            'email'                 => 'mail@test.com',
+            'password'              => 'password123',
+            'password_confirmation' => 'password123',
+            'workshop_id'           => $workshop->id,
+        ])->assertStatus(201);
+
+        $user = User::where('email', 'mail@test.com')->first();
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
+    }
+
+    public function test_verification_notification_contains_frontend_url(): void
+    {
+        Notification::fake();
+        $workshop = Workshop::factory()->create();
+
+        $this->postJson('/api/register', [
+            'name'                  => 'Link User',
+            'email'                 => 'link@test.com',
+            'password'              => 'password123',
+            'password_confirmation' => 'password123',
+            'workshop_id'           => $workshop->id,
+        ])->assertStatus(201);
+
+        $user = User::where('email', 'link@test.com')->first();
+
+        Notification::assertSentTo($user, VerifyEmailNotification::class, function ($notification) use ($user) {
+            $mail = $notification->toMail($user);
+            $url = $mail->actionUrl;
+
+            return str_contains($url, config('app.frontend_url') . '/verify-email');
+        });
     }
 
     // ── logout ────────────────────────────────────────────────────────────────

@@ -55,6 +55,7 @@ export default function PendingStatus() {
 
   async function handleRefreshStatus() {
     setLoading(true)
+    setError('')
     try {
       await refreshUser()
       const updated = await authApi.getAccountStatus()
@@ -74,58 +75,68 @@ export default function PendingStatus() {
     )
   }
 
-  const canResend = status && !status.email_verified && hoursAgo(status.verification_sent_at) >= 24
+  const emailVerified = status?.email_verified ?? false
+  const canResend = status && !emailVerified && hoursAgo(status.verification_sent_at) >= 24
+
+  if (emailVerified) {
+    return (
+      <div className="pending-status">
+        {error && <Alert variant="error">{error}</Alert>}
+
+        <div className="pending-icon">⏳</div>
+
+        <h2 className="pending-title">Esperando aprobación</h2>
+
+        <div className="pending-verification">
+          <div className="pending-verification-badge pending-badge-ok">Email verificado</div>
+          <p className="pending-text">
+            Tu email fue verificado el <strong>{formatDate(status!.email_verified_at!)}</strong>.
+          </p>
+        </div>
+
+        <p className="pending-text">
+          Tu cuenta está pendiente de aprobación por un administrador.
+          Te notificaremos cuando esté lista.
+        </p>
+
+        <Button variant="ghost" onClick={handleRefreshStatus}>
+          Actualizar estado
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="pending-status">
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}
 
-      <div className="pending-icon">⏳</div>
+      <div className="pending-icon">✉</div>
 
-      <h2 className="pending-title">Cuenta pendiente de aprobación</h2>
+      <h2 className="pending-title">Verificá tu email</h2>
 
       <p className="pending-text">
-        Tu cuenta fue creada pero aún no fue aprobada por un administrador.
+        Para iniciar el proceso de aprobación de tu cuenta necesitamos verificar tu dirección de email.
+        Revisá tu bandeja de entrada y la carpeta de spam.
       </p>
 
-      {status && !status.email_verified && (
-        <div className="pending-verification">
-          <div className="pending-verification-badge">Email no verificado</div>
-          <p className="pending-text">
-            Tu email debe estar verificado para que se inicie el proceso de aprobación.
-            Revisá tu bandeja de entrada y la carpeta de spam.
-          </p>
-          <p className="pending-detail">
-            Email de verificación enviado el{' '}
-            <strong>{formatDate(status.verification_sent_at)}</strong>
-          </p>
+      <div className="pending-verification">
+        <div className="pending-verification-badge">Email no verificado</div>
+        <p className="pending-detail">
+          Email de verificación enviado el{' '}
+          <strong>{status ? formatDate(status.verification_sent_at) : '—'}</strong>
+        </p>
 
-          {canResend ? (
-            <Button onClick={handleResend} loading={resending} variant="primary">
-              Reenviar email de verificación
-            </Button>
-          ) : (
-            <p className="pending-detail pending-muted">
-              Podrás reenviar el email de verificación 24 horas después del último envío.
-            </p>
-          )}
-        </div>
-      )}
-
-      {status?.email_verified && (
-        <div className="pending-verification">
-          <div className="pending-verification-badge pending-badge-ok">Email verificado</div>
-          <p className="pending-text">
-            Tu email fue verificado el <strong>{formatDate(status.email_verified_at!)}</strong>.
-            Un administrador revisará tu cuenta a la brevedad.
+        {canResend ? (
+          <Button onClick={handleResend} loading={resending} variant="primary">
+            Reenviar email de verificación
+          </Button>
+        ) : (
+          <p className="pending-detail pending-muted">
+            Podrás reenviar el email 24 horas después del último envío.
           </p>
-        </div>
-      )}
-
-      <Button variant="ghost" onClick={handleRefreshStatus}>
-        Actualizar estado
-      </Button>
+        )}
+      </div>
     </div>
   )
 }

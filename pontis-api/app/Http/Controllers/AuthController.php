@@ -107,10 +107,10 @@ class AuthController extends Controller
         $user = $request->user();
 
         return response()->json([
-            'status'              => $user->status,
-            'email_verified'      => $user->hasVerifiedEmail(),
-            'email_verified_at'   => $user->email_verified_at,
-            'verification_sent_at' => $user->email_verified_at ?? $user->created_at,
+            'status'               => $user->status,
+            'email_verified'       => $user->hasVerifiedEmail(),
+            'email_verified_at'    => $user->email_verified_at,
+            'verification_sent_at' => $user->created_at,
         ]);
     }
 
@@ -129,6 +129,10 @@ class AuthController extends Controller
 
     public function verifyEmail(Request $request, int $id, string $hash): JsonResponse
     {
+        if (! $request->hasValidSignature()) {
+            return response()->json(['message' => 'El link de verificación expiró o es inválido.'], 403);
+        }
+
         $user = User::findOrFail($id);
 
         if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {

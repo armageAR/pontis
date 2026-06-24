@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserStatus;
+use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -57,5 +58,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAssignedToWorkshop(Workshop $workshop): bool
     {
         return $this->workshops()->where('workshop_id', $workshop->id)->exists();
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
     }
 }

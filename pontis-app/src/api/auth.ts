@@ -61,3 +61,10 @@ export async function resendVerification(): Promise<{ message: string }> {
   const { data } = await client.post<{ message: string }>('/email/resend-verification')
   return data
 }
+
+export async function verifyEmail(fullSignedUrl: string): Promise<{ message: string }> {
+  const url = new URL(fullSignedUrl)
+  const path = url.pathname + url.search
+  const { data } = await client.get<{ message: string }>(path, { baseURL: '' })
+  return data
+}
