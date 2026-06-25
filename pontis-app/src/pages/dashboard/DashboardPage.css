@@ -1,8 +1,37 @@
+.dashboard-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .dashboard-title {
   font-size: 28px;
   font-weight: 700;
   color: var(--text-h);
-  margin: 0 0 8px;
+  margin: 0;
+}
+
+.dashboard-superadmin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(234, 179, 8, 0.12);
+  color: #ca8a04;
+  border: 1px solid rgba(202, 138, 4, 0.35);
+  letter-spacing: 0.3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .dashboard-superadmin-badge {
+    background: rgba(250, 204, 21, 0.1);
+    color: #facc15;
+    border-color: rgba(250, 204, 21, 0.3);
+  }
 }
 
 .dashboard-text {
@@ -10,6 +39,205 @@
   color: var(--text);
   margin: 0 0 32px;
 }
+
+/* ── Notifications (user: accepted / rejected) ── */
+
+.dashboard-notifications {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.dashboard-notification {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid;
+}
+
+.notification-accepted {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+
+.notification-rejected {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-accepted .notification-icon {
+  background: var(--success);
+  color: #fff;
+}
+
+.notification-rejected .notification-icon {
+  background: var(--error);
+  color: #fff;
+}
+
+.notification-body {
+  flex: 1;
+}
+
+.notification-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0 0 2px;
+}
+
+.notification-text {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+}
+
+.notification-ok-btn {
+  flex-shrink: 0;
+  font-size: 13px !important;
+  padding: 5px 16px !important;
+  height: auto !important;
+}
+
+/* ── Pending requests (admin) ── */
+
+.dashboard-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0 0 14px;
+}
+
+.dashboard-pending-section {
+  margin-bottom: 36px;
+}
+
+.dashboard-pending-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.pending-request-card {
+  border: 1px solid rgba(202, 138, 4, 0.4);
+  border-radius: 12px;
+  background: rgba(234, 179, 8, 0.06);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pending-request-card {
+    background: rgba(250, 204, 21, 0.07);
+    border-color: rgba(250, 204, 21, 0.25);
+  }
+}
+
+.pending-request-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.pending-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ca8a04;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pending-dot { background: #facc15; }
+}
+
+.pending-workshop {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ca8a04;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pending-workshop { color: #facc15; }
+}
+
+.pending-user-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.pending-date {
+  font-size: 12px;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.pending-request-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.pending-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.6;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: opacity 0.15s;
+  margin-right: auto;
+}
+
+.pending-info-btn:hover {
+  opacity: 1;
+}
+
+.pending-reject-btn {
+  font-size: 13px !important;
+  padding: 5px 12px !important;
+  height: auto !important;
+  color: var(--error) !important;
+  border-color: var(--error-border) !important;
+}
+
+.pending-reject-btn:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+}
+
+.pending-approve-btn {
+  font-size: 13px !important;
+  padding: 5px 14px !important;
+  height: auto !important;
+}
+
+/* ── Nav cards ── */
 
 .dashboard-cards {
   display: grid;
@@ -51,4 +279,31 @@
   color: var(--text);
   margin: 0;
   line-height: 1.5;
+}
+
+/* ── User info modal ── */
+
+.user-info-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0;
+}
+
+.user-info-row {
+  display: flex;
+  gap: 16px;
+}
+
+.user-info-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.user-info-value {
+  font-size: 13px;
+  color: var(--text-h);
 }
