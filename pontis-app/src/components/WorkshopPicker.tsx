@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { X } from 'lucide-react'
 import { searchWorkshopsPublic, type WorkshopSearchResult } from '@/api/workshops'
 import Input from './Input'
 import Spinner from './Spinner'
@@ -84,7 +85,7 @@ export default function WorkshopPicker({ value, onChange, error }: WorkshopPicke
         {loading && <Spinner size={16} className="workshop-picker-spinner" />}
         {value && (
           <button type="button" className="workshop-picker-clear" onClick={handleClear} aria-label="Quitar selección">
-            &times;
+            <X size={16} />
           </button>
         )}
       </div>

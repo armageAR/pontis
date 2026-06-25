@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { CheckCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import * as authApi from '@/api/auth'
 import AuthLayout from '@/components/AuthLayout'
@@ -49,7 +50,9 @@ export default function VerifyEmailPage() {
 
         {!loading && success && (
           <>
-            <div className="verify-email-icon">✓</div>
+            <div className="verify-email-icon">
+              <CheckCircle size={48} strokeWidth={1.5} />
+            </div>
             <Alert variant="success">Tu email fue verificado correctamente.</Alert>
             <p className="verify-email-text">
               Un administrador revisará tu cuenta. Te notificaremos cuando esté aprobada.

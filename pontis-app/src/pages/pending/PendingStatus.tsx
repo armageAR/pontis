@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Clock, Mail } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import * as authApi from '@/api/auth'
 import type { AccountStatus } from '@/api/auth'
@@ -83,7 +84,7 @@ export default function PendingStatus() {
       <div className="pending-status">
         {error && <Alert variant="error">{error}</Alert>}
 
-        <div className="pending-icon">⏳</div>
+        <div className="pending-icon"><Clock size={48} strokeWidth={1.5} /></div>
 
         <h2 className="pending-title">Esperando aprobación</h2>
 
@@ -111,7 +112,7 @@ export default function PendingStatus() {
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}
 
-      <div className="pending-icon">✉</div>
+      <div className="pending-icon"><Mail size={48} strokeWidth={1.5} /></div>
 
       <h2 className="pending-title">Verificá tu email</h2>
 

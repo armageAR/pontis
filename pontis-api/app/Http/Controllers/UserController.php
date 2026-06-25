@@ -89,7 +89,13 @@ class UserController extends Controller
 
         $currentUser = $request->user();
 
-        if (! $this->canActOn($currentUser, $user)) {
+        $isSelf = $currentUser->id === $user->id;
+
+        if ($isSelf && ! $currentUser->isSuperAdmin()) {
+            return response()->json(['message' => 'No podés editarte a vos mismo.'], 403);
+        }
+
+        if (! $isSelf && ! $this->canActOn($currentUser, $user)) {
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 

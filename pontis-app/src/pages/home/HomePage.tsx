@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { LayoutGrid, RefreshCw, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/Button'
 import './HomePage.css'
@@ -42,17 +43,17 @@ export default function HomePage() {
 
         <section className="features">
           <div className="feature-card">
-            <div className="feature-icon">⬡</div>
+            <div className="feature-icon"><LayoutGrid size={28} /></div>
             <h3>Gestión centralizada</h3>
             <p>Todos los módulos del sistema accesibles desde un panel unificado.</p>
           </div>
           <div className="feature-card">
-            <div className="feature-icon">⟳</div>
+            <div className="feature-icon"><RefreshCw size={28} /></div>
             <h3>Tiempo real</h3>
             <p>Datos actualizados al instante para tomar mejores decisiones.</p>
           </div>
           <div className="feature-card">
-            <div className="feature-icon">⬤</div>
+            <div className="feature-icon"><ShieldCheck size={28} /></div>
             <h3>Seguro y confiable</h3>
             <p>Autenticación robusta y trazabilidad completa de cada acción.</p>
           </div>

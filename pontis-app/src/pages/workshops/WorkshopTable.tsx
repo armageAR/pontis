@@ -1,3 +1,4 @@
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { Workshop, WorkshopFilters } from '@/api/workshops'
 import Badge from '@/components/Badge'
 import './WorkshopTable.css'
@@ -26,15 +27,17 @@ const COLUMNS: Column[] = [
   { key: 'status', label: 'Estado', sortable: false },
 ]
 
+function SortIcon({ col, sortBy, sortDirection }: { col: string; sortBy: string; sortDirection: 'asc' | 'desc' }) {
+  if (col !== sortBy) return <span className="sort-icon sort-icon-idle"><ChevronUp size={12} /></span>
+  return sortDirection === 'asc'
+    ? <span className="sort-icon sort-icon-active"><ChevronUp size={12} /></span>
+    : <span className="sort-icon sort-icon-active"><ChevronDown size={12} /></span>
+}
+
 export default function WorkshopTable({ workshops, sortBy, sortDirection, onSort, onSelect }: WorkshopTableProps) {
   function handleSort(key: string) {
     const newDir = sortBy === key && sortDirection === 'asc' ? 'desc' : 'asc'
     onSort({ sort_by: key, sort_direction: newDir })
-  }
-
-  function sortIndicator(key: string) {
-    if (sortBy !== key) return ''
-    return sortDirection === 'asc' ? ' ↑' : ' ↓'
   }
 
   return (
@@ -48,7 +51,10 @@ export default function WorkshopTable({ workshops, sortBy, sortDirection, onSort
                 className={col.sortable ? 'sortable' : ''}
                 onClick={col.sortable ? () => handleSort(col.key) : undefined}
               >
-                {col.label}{col.sortable ? sortIndicator(col.key) : ''}
+                <span className="th-content">
+                  {col.label}
+                  {col.sortable && <SortIcon col={col.key} sortBy={sortBy} sortDirection={sortDirection} />}
+                </span>
               </th>
             ))}
           </tr>

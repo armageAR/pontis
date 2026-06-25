@@ -53,3 +53,23 @@ body {
 h1, h2, h3 {
   font-family: var(--sans);
 }
+
+.th-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sort-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sort-icon-idle {
+  opacity: 0.25;
+}
+
+.sort-icon-active {
+  opacity: 1;
+  color: var(--accent);
+}

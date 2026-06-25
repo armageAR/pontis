@@ -34,9 +34,9 @@
 }
 
 .dashboard-card-icon {
-  font-size: 28px;
   color: var(--accent);
-  line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 .dashboard-card h3 {

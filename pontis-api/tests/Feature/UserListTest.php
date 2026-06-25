@@ -345,12 +345,24 @@ class UserListTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => 'Updated Name', 'role' => 'admin']);
     }
 
-    public function test_superadmin_cannot_edit_themselves(): void
+    public function test_superadmin_can_edit_themselves(): void
     {
         $sa = $this->superAdmin();
 
         $this->actingAs($sa, 'sanctum')
-             ->patchJson("/api/users/{$sa->id}", ['name' => 'New Name'])
+             ->patchJson("/api/users/{$sa->id}", ['name' => 'New SA Name'])
+             ->assertOk()
+             ->assertJsonPath('data.name', 'New SA Name');
+    }
+
+    public function test_admin_cannot_edit_themselves(): void
+    {
+        $admin = $this->admin();
+        $workshop = Workshop::factory()->create();
+        $admin->workshops()->attach($workshop);
+
+        $this->actingAs($admin, 'sanctum')
+             ->patchJson("/api/users/{$admin->id}", ['name' => 'Hack'])
              ->assertForbidden();
     }
 

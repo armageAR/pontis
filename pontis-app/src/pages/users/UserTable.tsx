@@ -1,3 +1,4 @@
+import { ChevronUp, ChevronDown, Pencil, KeyRound } from 'lucide-react'
 import type { UserListItem, UserFilters } from '@/api/users'
 import ActionMenu from '@/components/ActionMenu'
 import UserStatusSelect from './UserStatusSelect'
@@ -37,6 +38,13 @@ const COLUMNS: Column[] = [
   { key: 'actions', label: '', sortable: false },
 ]
 
+function SortIcon({ col, sortBy, sortDirection }: { col: string; sortBy: string; sortDirection: 'asc' | 'desc' }) {
+  if (col !== sortBy) return <span className="sort-icon sort-icon-idle"><ChevronUp size={12} /></span>
+  return sortDirection === 'asc'
+    ? <span className="sort-icon sort-icon-active"><ChevronUp size={12} /></span>
+    : <span className="sort-icon sort-icon-active"><ChevronDown size={12} /></span>
+}
+
 function formatDate(d: string): string {
   return new Date(d).toLocaleDateString('es-AR', {
     day: '2-digit',
@@ -61,12 +69,8 @@ export default function UserTable({
     onSort({ sort_by: key, sort_direction: newDir })
   }
 
-  function sortIndicator(key: string) {
-    if (sortBy !== key) return ''
-    return sortDirection === 'asc' ? ' ↑' : ' ↓'
-  }
-
   const canManage = currentUserRole === 'superadmin' || currentUserRole === 'admin'
+  const isSuperAdmin = currentUserRole === 'superadmin'
 
   return (
     <div className="user-table-wrapper">
@@ -79,7 +83,10 @@ export default function UserTable({
                 className={col.sortable ? 'sortable' : ''}
                 onClick={col.sortable ? () => handleSort(col.key) : undefined}
               >
-                {col.label}{col.sortable ? sortIndicator(col.key) : ''}
+                <span className="th-content">
+                  {col.label}
+                  {col.sortable && <SortIcon col={col.key} sortBy={sortBy} sortDirection={sortDirection} />}
+                </span>
               </th>
             ))}
           </tr>
@@ -88,6 +95,7 @@ export default function UserTable({
           {users.map((u) => {
             const isSelf = u.id === currentUserId
             const rowCanManage = canManage && !isSelf
+            const rowCanEdit = rowCanManage || (isSelf && isSuperAdmin)
 
             return (
               <tr key={u.id}>
@@ -113,13 +121,13 @@ export default function UserTable({
                   <ActionMenu
                     actions={[
                       {
-                        icon: '✎',
+                        icon: <Pencil size={15} />,
                         label: 'Editar usuario',
                         onClick: () => onEdit(u),
-                        disabled: !rowCanManage,
+                        disabled: !rowCanEdit,
                       },
                       {
-                        icon: '🔑',
+                        icon: <KeyRound size={15} />,
                         label: 'Cambiar contraseña',
                         onClick: () => onChangePassword(u),
                         disabled: !rowCanManage,
