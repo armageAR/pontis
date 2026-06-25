@@ -1,21 +1,18 @@
 import { type ChangeEvent } from 'react'
 import Input from '@/components/Input'
 import Select from '@/components/Select'
-import type { UserFilters as Filters } from '@/api/users'
+import type { UserFilters as Filters, WorkshopOption } from '@/api/users'
 import './UserFilters.css'
 
 interface UserFiltersProps {
   filters: Filters
   onChange: (filters: Filters) => void
+  workshops: WorkshopOption[]
 }
 
-export default function UserFilters({ filters, onChange }: UserFiltersProps) {
+export default function UserFilters({ filters, onChange, workshops }: UserFiltersProps) {
   function set(key: keyof Filters, value: string) {
     onChange({ ...filters, [key]: value, page: 1 })
-  }
-
-  function handleSearch(e: ChangeEvent<HTMLInputElement>) {
-    set('search', e.target.value)
   }
 
   return (
@@ -23,17 +20,27 @@ export default function UserFilters({ filters, onChange }: UserFiltersProps) {
       <Input
         placeholder="Buscar por nombre o email..."
         value={filters.search ?? ''}
-        onChange={handleSearch}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => set('search', e.target.value)}
         className="user-filters-search"
       />
       <Select
-        value={filters.role ?? ''}
-        onChange={(e) => set('role', e.target.value)}
+        value={filters.workshop_id ?? ''}
+        onChange={(e) => set('workshop_id', e.target.value)}
       >
-        <option value="">Rol</option>
-        <option value="superadmin">Super Admin</option>
-        <option value="admin">Admin</option>
-        <option value="user">Usuario</option>
+        <option value="">Taller</option>
+        {workshops.map((w) => (
+          <option key={w.id} value={w.id}>
+            {w.number} — {w.name}
+          </option>
+        ))}
+      </Select>
+      <Select
+        value={filters.workshop_role ?? ''}
+        onChange={(e) => set('workshop_role', e.target.value)}
+      >
+        <option value="">Rol en taller</option>
+        <option value="admin">Admin de taller</option>
+        <option value="member">Miembro</option>
       </Select>
       <Select
         value={filters.status ?? ''}

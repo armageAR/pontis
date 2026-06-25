@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\Workshop;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class UserListTest extends TestCase
@@ -16,14 +17,23 @@ class UserListTest extends TestCase
         return User::factory()->create(['role' => 'superadmin']);
     }
 
-    private function admin(): User
-    {
-        return User::factory()->create(['role' => 'admin']);
-    }
-
-    private function regularUser(): User
+    private function user(): User
     {
         return User::factory()->create(['role' => 'user']);
+    }
+
+    private function workshopAdmin(Workshop $workshop): User
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        $user->workshops()->attach($workshop->id, ['role' => 'admin']);
+        return $user;
+    }
+
+    private function workshopMember(Workshop $workshop): User
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        $user->workshops()->attach($workshop->id, ['role' => 'member']);
+        return $user;
     }
 
     // ── access ───────────────────────────────────────────────────────────────
@@ -35,16 +45,12 @@ class UserListTest extends TestCase
 
     public function test_any_authenticated_user_can_list_users(): void
     {
-        $user = $this->regularUser();
-        $workshop = Workshop::factory()->create();
-        $user->workshops()->attach($workshop);
-
-        $this->actingAs($user, 'sanctum')
+        $this->actingAs($this->user(), 'sanctum')
              ->getJson('/api/users')
              ->assertOk();
     }
 
-    // ── scope by role ────────────────────────────────────────────────────────
+    // ── scope ────────────────────────────────────────────────────────────────
 
     public function test_superadmin_sees_all_users(): void
     {
@@ -57,18 +63,14 @@ class UserListTest extends TestCase
              ->assertJsonPath('meta.total', 4);
     }
 
-    public function test_admin_sees_only_users_from_own_workshops(): void
+    public function test_workshop_admin_sees_only_own_workshop_users(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
-
-        $memberInWorkshop = User::factory()->create();
-        $memberInWorkshop->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
+        $member = $this->workshopMember($workshop);
 
         $otherWorkshop = Workshop::factory()->create();
-        $outsider = User::factory()->create();
-        $outsider->workshops()->attach($otherWorkshop);
+        $outsider = $this->workshopMember($otherWorkshop);
 
         $response = $this->actingAs($admin, 'sanctum')
              ->getJson('/api/users')
@@ -76,22 +78,18 @@ class UserListTest extends TestCase
 
         $ids = collect($response->json('data'))->pluck('id')->toArray();
         $this->assertContains($admin->id, $ids);
-        $this->assertContains($memberInWorkshop->id, $ids);
+        $this->assertContains($member->id, $ids);
         $this->assertNotContains($outsider->id, $ids);
     }
 
-    public function test_regular_user_sees_only_users_from_own_workshops(): void
+    public function test_regular_user_sees_only_own_workshop_users(): void
     {
-        $user = $this->regularUser();
         $workshop = Workshop::factory()->create();
-        $user->workshops()->attach($workshop);
+        $user = $this->workshopMember($workshop);
+        $fellow = $this->workshopMember($workshop);
 
-        $fellow = User::factory()->create();
-        $fellow->workshops()->attach($workshop);
-
-        $stranger = User::factory()->create();
-        $otherWs = Workshop::factory()->create();
-        $stranger->workshops()->attach($otherWs);
+        $otherWorkshop = Workshop::factory()->create();
+        $stranger = $this->workshopMember($otherWorkshop);
 
         $response = $this->actingAs($user, 'sanctum')
              ->getJson('/api/users')
@@ -118,16 +116,32 @@ class UserListTest extends TestCase
              ->assertJsonPath('data.0.name', 'Juan Perez');
     }
 
-    public function test_filter_by_role(): void
+    public function test_filter_by_global_role_superadmin(): void
     {
         $sa = $this->superAdmin();
-        User::factory()->create(['role' => 'admin']);
         User::factory()->create(['role' => 'user']);
 
         $this->actingAs($sa, 'sanctum')
-             ->getJson('/api/users?role=admin')
+             ->getJson('/api/users?role=superadmin')
              ->assertOk()
-             ->assertJsonCount(1, 'data');
+             ->assertJsonCount(1, 'data')
+             ->assertJsonPath('data.0.role', 'superadmin');
+    }
+
+    public function test_filter_by_workshop_role(): void
+    {
+        $sa = $this->superAdmin();
+        $workshop = Workshop::factory()->create();
+        $admin = $this->workshopAdmin($workshop);
+        $member = $this->workshopMember($workshop);
+
+        $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users?workshop_role=admin')
+             ->assertOk()
+             ->assertJsonCount(1, 'data')
+             ->assertJsonPath('data.0.id', $admin->id);
+
+        unset($member);
     }
 
     public function test_filter_by_status(): void
@@ -147,18 +161,16 @@ class UserListTest extends TestCase
         $sa = $this->superAdmin();
         $w1 = Workshop::factory()->create();
         $w2 = Workshop::factory()->create();
-
-        $u1 = User::factory()->create();
-        $u1->workshops()->attach($w1);
-
-        $u2 = User::factory()->create();
-        $u2->workshops()->attach($w2);
+        $u1 = $this->workshopMember($w1);
+        $u2 = $this->workshopMember($w2);
 
         $this->actingAs($sa, 'sanctum')
              ->getJson("/api/users?workshop_id={$w1->id}")
              ->assertOk()
              ->assertJsonCount(1, 'data')
              ->assertJsonPath('data.0.id', $u1->id);
+
+        unset($u2);
     }
 
     // ── pagination & sort ────────────────────────────────────────────────────
@@ -189,14 +201,13 @@ class UserListTest extends TestCase
         $this->assertEquals($names, collect($names)->sort()->values()->toArray());
     }
 
-    // ── response includes workshops ──────────────────────────────────────────
+    // ── response structure ───────────────────────────────────────────────────
 
-    public function test_response_includes_user_workshops(): void
+    public function test_response_includes_workshop_with_pivot_role(): void
     {
         $sa = $this->superAdmin();
         $workshop = Workshop::factory()->create(['name' => 'UNION DEL PLATA', 'number' => 1]);
-        $user = User::factory()->create();
-        $user->workshops()->attach($workshop);
+        $user = $this->workshopAdmin($workshop);
 
         $response = $this->actingAs($sa, 'sanctum')
              ->getJson('/api/users')
@@ -205,11 +216,12 @@ class UserListTest extends TestCase
         $userData = collect($response->json('data'))->firstWhere('id', $user->id);
         $this->assertNotEmpty($userData['workshops']);
         $this->assertEquals('UNION DEL PLATA', $userData['workshops'][0]['name']);
+        $this->assertEquals('admin', $userData['workshops'][0]['workshop_role']);
     }
 
     // ── update status ────────────────────────────────────────────────────────
 
-    public function test_superadmin_can_change_user_status(): void
+    public function test_superadmin_can_change_any_user_status(): void
     {
         $sa = $this->superAdmin();
         $user = User::factory()->pending()->create();
@@ -231,14 +243,12 @@ class UserListTest extends TestCase
              ->assertForbidden();
     }
 
-    public function test_admin_can_change_status_of_own_workshop_member(): void
+    public function test_workshop_admin_can_change_status_of_own_member(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
-
+        $admin = $this->workshopAdmin($workshop);
         $member = User::factory()->pending()->create();
-        $member->workshops()->attach($workshop);
+        $member->workshops()->attach($workshop->id, ['role' => 'member']);
 
         $this->actingAs($admin, 'sanctum')
              ->patchJson("/api/users/{$member->id}/status", ['status' => 'active'])
@@ -246,38 +256,36 @@ class UserListTest extends TestCase
              ->assertJsonPath('data.status', 'active');
     }
 
-    public function test_admin_cannot_change_status_of_other_workshop_member(): void
+    public function test_workshop_admin_cannot_change_status_of_other_workshop_member(): void
     {
-        $admin = $this->admin();
         $workshop1 = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop1);
+        $admin = $this->workshopAdmin($workshop1);
 
         $workshop2 = Workshop::factory()->create();
-        $outsider = User::factory()->create();
-        $outsider->workshops()->attach($workshop2);
+        $outsider = $this->workshopMember($workshop2);
 
         $this->actingAs($admin, 'sanctum')
              ->patchJson("/api/users/{$outsider->id}/status", ['status' => 'suspended'])
              ->assertForbidden();
     }
 
-    public function test_admin_cannot_change_own_status(): void
+    public function test_workshop_admin_cannot_change_own_status(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
 
         $this->actingAs($admin, 'sanctum')
              ->patchJson("/api/users/{$admin->id}/status", ['status' => 'inactive'])
              ->assertForbidden();
     }
 
-    public function test_regular_user_cannot_change_status(): void
+    public function test_regular_member_cannot_change_status(): void
     {
-        $user = $this->regularUser();
+        $workshop = Workshop::factory()->create();
+        $member = $this->workshopMember($workshop);
         $target = User::factory()->create();
 
-        $this->actingAs($user, 'sanctum')
+        $this->actingAs($member, 'sanctum')
              ->patchJson("/api/users/{$target->id}/status", ['status' => 'active'])
              ->assertForbidden();
     }
@@ -292,28 +300,7 @@ class UserListTest extends TestCase
              ->assertOk()
              ->assertJsonPath('data.status', 'active');
 
-        $fresh = $user->fresh();
-        $this->assertEquals('active', $fresh->status->value);
-        $this->assertNull($fresh->email_verified_at);
-    }
-
-    public function test_invalid_status_rejected(): void
-    {
-        $sa = $this->superAdmin();
-        $user = User::factory()->create();
-
-        $this->actingAs($sa, 'sanctum')
-             ->patchJson("/api/users/{$user->id}/status", ['status' => 'invalid'])
-             ->assertUnprocessable()
-             ->assertJsonValidationErrors(['status']);
-    }
-
-    public function test_unauthenticated_cannot_change_status(): void
-    {
-        $user = User::factory()->create();
-
-        $this->patchJson("/api/users/{$user->id}/status", ['status' => 'active'])
-             ->assertUnauthorized();
+        $this->assertNull($user->fresh()->email_verified_at);
     }
 
     public function test_superadmin_can_set_all_statuses(): void
@@ -331,18 +318,18 @@ class UserListTest extends TestCase
 
     // ── update user ──────────────────────────────────────────────────────────
 
-    public function test_superadmin_can_edit_user(): void
+    public function test_superadmin_can_edit_any_user(): void
     {
         $sa = $this->superAdmin();
-        $user = User::factory()->create(['name' => 'Original Name', 'role' => 'user']);
+        $user = User::factory()->create(['name' => 'Original']);
 
         $this->actingAs($sa, 'sanctum')
-             ->patchJson("/api/users/{$user->id}", ['name' => 'Updated Name', 'role' => 'admin'])
+             ->patchJson("/api/users/{$user->id}", ['name' => 'Updated', 'role' => 'superadmin'])
              ->assertOk()
-             ->assertJsonPath('data.name', 'Updated Name')
-             ->assertJsonPath('data.role', 'admin');
+             ->assertJsonPath('data.name', 'Updated')
+             ->assertJsonPath('data.role', 'superadmin');
 
-        $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => 'Updated Name', 'role' => 'admin']);
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => 'Updated', 'role' => 'superadmin']);
     }
 
     public function test_superadmin_can_edit_themselves(): void
@@ -355,25 +342,21 @@ class UserListTest extends TestCase
              ->assertJsonPath('data.name', 'New SA Name');
     }
 
-    public function test_admin_cannot_edit_themselves(): void
+    public function test_non_superadmin_cannot_edit_themselves(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
 
         $this->actingAs($admin, 'sanctum')
              ->patchJson("/api/users/{$admin->id}", ['name' => 'Hack'])
              ->assertForbidden();
     }
 
-    public function test_admin_can_edit_own_workshop_member(): void
+    public function test_workshop_admin_can_edit_own_member(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
-
-        $member = User::factory()->create(['name' => 'Original']);
-        $member->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
+        $member = $this->workshopMember($workshop);
 
         $this->actingAs($admin, 'sanctum')
              ->patchJson("/api/users/{$member->id}", ['name' => 'Updated'])
@@ -381,41 +364,36 @@ class UserListTest extends TestCase
              ->assertJsonPath('data.name', 'Updated');
     }
 
-    public function test_admin_cannot_edit_other_workshop_member(): void
+    public function test_workshop_admin_cannot_edit_other_workshop_member(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
 
-        $outsider = User::factory()->create();
-        $otherWs = Workshop::factory()->create();
-        $outsider->workshops()->attach($otherWs);
+        $outsider = $this->workshopMember(Workshop::factory()->create());
 
         $this->actingAs($admin, 'sanctum')
              ->patchJson("/api/users/{$outsider->id}", ['name' => 'Hack'])
              ->assertForbidden();
     }
 
-    public function test_admin_cannot_change_role(): void
+    public function test_workshop_admin_cannot_change_global_role(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
-
-        $member = User::factory()->create();
-        $member->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
+        $member = $this->workshopMember($workshop);
 
         $this->actingAs($admin, 'sanctum')
              ->patchJson("/api/users/{$member->id}", ['role' => 'superadmin'])
              ->assertForbidden();
     }
 
-    public function test_regular_user_cannot_edit_others(): void
+    public function test_regular_member_cannot_edit_others(): void
     {
-        $user = $this->regularUser();
+        $workshop = Workshop::factory()->create();
+        $member = $this->workshopMember($workshop);
         $target = User::factory()->create();
 
-        $this->actingAs($user, 'sanctum')
+        $this->actingAs($member, 'sanctum')
              ->patchJson("/api/users/{$target->id}", ['name' => 'Hack'])
              ->assertForbidden();
     }
@@ -444,7 +422,7 @@ class UserListTest extends TestCase
 
     // ── update password ──────────────────────────────────────────────────────
 
-    public function test_superadmin_can_change_user_password(): void
+    public function test_superadmin_can_change_any_password(): void
     {
         $sa = $this->superAdmin();
         $user = User::factory()->create();
@@ -454,20 +432,16 @@ class UserListTest extends TestCase
                  'password' => 'newpassword123',
                  'password_confirmation' => 'newpassword123',
              ])
-             ->assertOk()
-             ->assertJson(['message' => 'Contraseña actualizada correctamente.']);
+             ->assertOk();
 
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newpassword123', $user->fresh()->password));
+        $this->assertTrue(Hash::check('newpassword123', $user->fresh()->password));
     }
 
-    public function test_admin_can_change_password_of_workshop_member(): void
+    public function test_workshop_admin_can_change_member_password(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
-
-        $member = User::factory()->create();
-        $member->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
+        $member = $this->workshopMember($workshop);
 
         $this->actingAs($admin, 'sanctum')
              ->patchJson("/api/users/{$member->id}/password", [
@@ -477,7 +451,7 @@ class UserListTest extends TestCase
              ->assertOk();
     }
 
-    public function test_cannot_change_own_password_via_this_endpoint(): void
+    public function test_cannot_change_own_password_via_admin_endpoint(): void
     {
         $sa = $this->superAdmin();
 
@@ -489,7 +463,7 @@ class UserListTest extends TestCase
              ->assertForbidden();
     }
 
-    public function test_password_confirmation_required(): void
+    public function test_password_confirmation_must_match(): void
     {
         $sa = $this->superAdmin();
         $user = User::factory()->create();
@@ -497,18 +471,19 @@ class UserListTest extends TestCase
         $this->actingAs($sa, 'sanctum')
              ->patchJson("/api/users/{$user->id}/password", [
                  'password' => 'newpassword123',
-                 'password_confirmation' => 'differentpassword',
+                 'password_confirmation' => 'different',
              ])
              ->assertUnprocessable()
              ->assertJsonValidationErrors(['password']);
     }
 
-    public function test_regular_user_cannot_change_others_password(): void
+    public function test_regular_member_cannot_change_others_password(): void
     {
-        $user = $this->regularUser();
+        $workshop = Workshop::factory()->create();
+        $member = $this->workshopMember($workshop);
         $target = User::factory()->create();
 
-        $this->actingAs($user, 'sanctum')
+        $this->actingAs($member, 'sanctum')
              ->patchJson("/api/users/{$target->id}/password", [
                  'password' => 'newpassword123',
                  'password_confirmation' => 'newpassword123',

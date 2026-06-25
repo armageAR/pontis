@@ -5,13 +5,14 @@ export interface UserWorkshop {
   id: number
   name: string
   number: number
+  workshop_role: 'admin' | 'member'
 }
 
 export interface UserListItem {
   id: number
   name: string
   email: string
-  role: string | null
+  role: 'superadmin' | 'user' | null
   status: 'pending' | 'active' | 'rejected' | 'suspended' | 'inactive'
   email_verified_at: string | null
   created_at: string
@@ -23,6 +24,7 @@ export interface UserFilters {
   role?: string
   status?: string
   workshop_id?: number | string
+  workshop_role?: string
   per_page?: number
   page?: number
   sort_by?: string
@@ -55,4 +57,31 @@ export async function updateUser(userId: number, payload: UserUpdatePayload): Pr
 
 export async function updateUserPassword(userId: number, password: string, password_confirmation: string): Promise<void> {
   await client.patch(`/users/${userId}/password`, { password, password_confirmation })
+}
+
+export interface WorkshopOption {
+  id: number
+  name: string
+  number: number
+  my_role: 'admin' | 'member' | null
+}
+
+export async function listMyWorkshops(): Promise<WorkshopOption[]> {
+  const { data } = await client.get<WorkshopOption[]>('/my-workshops')
+  return data
+}
+
+export async function addUserWorkshop(userId: number, workshopId: number): Promise<UserListItem> {
+  const { data } = await client.post<{ data: UserListItem }>(`/users/${userId}/workshops/${workshopId}`)
+  return data.data
+}
+
+export async function updateUserWorkshopRole(userId: number, workshopId: number, role: 'admin' | 'member'): Promise<UserListItem> {
+  const { data } = await client.patch<{ data: UserListItem }>(`/users/${userId}/workshops/${workshopId}`, { role })
+  return data.data
+}
+
+export async function removeUserWorkshop(userId: number, workshopId: number): Promise<UserListItem> {
+  const { data } = await client.delete<{ data: UserListItem }>(`/users/${userId}/workshops/${workshopId}`)
+  return data.data
 }

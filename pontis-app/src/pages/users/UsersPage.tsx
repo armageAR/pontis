@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '@/api/users'
-import type { UserListItem, UserFilters as Filters, UserUpdatePayload } from '@/api/users'
+import type { UserListItem, UserFilters as Filters, UserUpdatePayload, WorkshopOption } from '@/api/users'
 import { useAuth } from '@/context/AuthContext'
 import AppLayout from '@/components/AppLayout'
 import Spinner from '@/components/Spinner'
@@ -24,6 +24,7 @@ export default function UsersPage() {
 
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
   const [passwordUser, setPasswordUser] = useState<UserListItem | null>(null)
+  const [workshops, setWorkshops] = useState<WorkshopOption[]>([])
 
   const fetchUsers = useCallback(async (f: Filters) => {
     setLoading(true)
@@ -38,6 +39,12 @@ export default function UsersPage() {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    api.listMyWorkshops().then(setWorkshops).catch(() => {})
+  }, [])
+
+  const isCurrentUserWorkshopAdmin = workshops.some((w) => w.my_role === 'admin')
 
   useEffect(() => {
     fetchUsers(filters)
@@ -79,6 +86,31 @@ export default function UsersPage() {
     notify(`${updated.name} actualizado correctamente.`)
   }
 
+  async function handleWorkshopAdd(userId: number, workshopId: number) {
+    const updated = await api.addUserWorkshop(userId, workshopId)
+    patchUser(updated)
+    return updated
+  }
+
+  async function handleWorkshopRemove(userId: number, workshopId: number) {
+    const updated = await api.removeUserWorkshop(userId, workshopId)
+    patchUser(updated)
+    return updated
+  }
+
+  async function handleToggleSuperadmin(user: UserListItem) {
+    const newRole = user.role === 'superadmin' ? 'user' : 'superadmin'
+    const updated = await api.updateUser(user.id, { role: newRole })
+    patchUser(updated)
+    notify(updated.role === 'superadmin' ? `${updated.name} ahora tiene el badge de superadmin.` : `${updated.name} ya no es superadmin.`)
+  }
+
+  async function handleWorkshopRoleToggle(userId: number, workshopId: number, newRole: 'admin' | 'member') {
+    const updated = await api.updateUserWorkshopRole(userId, workshopId, newRole)
+    patchUser(updated)
+    return updated
+  }
+
   async function handlePassword(userId: number, password: string, confirmation: string) {
     await api.updateUserPassword(userId, password, confirmation)
     const target = users.find((u) => u.id === userId)
@@ -94,7 +126,7 @@ export default function UsersPage() {
       {successMsg && <Alert variant="success">{successMsg}</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
 
-      <UserFiltersBar filters={filters} onChange={updateFilters} />
+      <UserFiltersBar filters={filters} onChange={updateFilters} workshops={workshops} />
 
       {loading ? (
         <div className="users-loading">
@@ -114,9 +146,11 @@ export default function UsersPage() {
             onSort={updateFilters}
             currentUserId={currentUser?.id ?? 0}
             currentUserRole={currentUser?.role ?? 'user'}
+            isCurrentUserWorkshopAdmin={isCurrentUserWorkshopAdmin}
             onStatusChange={handleStatusChange}
             onEdit={setEditingUser}
             onChangePassword={setPasswordUser}
+            onToggleSuperadmin={handleToggleSuperadmin}
           />
           <Pagination
             currentPage={meta.current_page}
@@ -132,7 +166,10 @@ export default function UsersPage() {
         open={editingUser !== null}
         onClose={() => setEditingUser(null)}
         onSave={handleEdit}
-        currentUserRole={currentUser?.role ?? 'user'}
+        allWorkshops={workshops}
+        onWorkshopAdd={handleWorkshopAdd}
+        onWorkshopRemove={handleWorkshopRemove}
+        onWorkshopRoleToggle={handleWorkshopRoleToggle}
       />
 
       <UserPasswordModal
