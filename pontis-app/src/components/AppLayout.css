@@ -21,11 +21,9 @@
 }
 
 .app-nav-logo {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--text-h);
   text-decoration: none;
+  display: flex;
+  align-items: center;
 }
 
 .app-nav-links {

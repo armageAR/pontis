@@ -1,0 +1,18 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  user-select: none;
+}
+
+.logo-text {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-h);
+  line-height: 1;
+}
+
+.logo--sm .logo-text { font-size: 18px; }
+.logo--md .logo-text { font-size: 22px; }
+.logo--lg .logo-text { font-size: 28px; gap: 10px; }

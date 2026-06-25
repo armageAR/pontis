@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import Logo from './Logo'
 import './AuthLayout.css'
+import './Logo.css'
 
 interface AuthLayoutProps {
   title: string
@@ -14,7 +16,7 @@ export default function AuthLayout({ title, subtitle, children, footer }: AuthLa
     <div className="auth-layout">
       <div className="auth-card">
         <Link to="/" className="auth-logo">
-          Pontis
+          <Logo size="lg" />
         </Link>
         <h1 className="auth-title">{title}</h1>
         {subtitle && <p className="auth-subtitle">{subtitle}</p>}
