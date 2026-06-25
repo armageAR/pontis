@@ -45,6 +45,9 @@ class Workshop extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withTimestamps();
+        return $this->belongsToMany(User::class)
+            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at')
+            ->withTimestamps()
+            ->wherePivot('status', 'active');
     }
 }

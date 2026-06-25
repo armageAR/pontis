@@ -32,17 +32,22 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function workshops(): BelongsToMany
     {
-        return $this->belongsToMany(Workshop::class)->withTimestamps();
+        return $this->belongsToMany(Workshop::class)
+            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at')
+            ->withTimestamps()
+            ->wherePivot('status', 'active');
+    }
+
+    public function workshopMemberships(): BelongsToMany
+    {
+        return $this->belongsToMany(Workshop::class)
+            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at')
+            ->withTimestamps();
     }
 
     public function isSuperAdmin(): bool
     {
         return $this->role === 'superadmin';
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
     }
 
     public function isActive(): bool
@@ -58,6 +63,19 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAssignedToWorkshop(Workshop $workshop): bool
     {
         return $this->workshops()->where('workshop_id', $workshop->id)->exists();
+    }
+
+    public function isAdminOfWorkshop(Workshop $workshop): bool
+    {
+        return $this->workshops()
+            ->where('workshop_id', $workshop->id)
+            ->wherePivot('role', 'admin')
+            ->exists();
+    }
+
+    public function isAdminOfAnyWorkshop(): bool
+    {
+        return $this->workshops()->wherePivot('role', 'admin')->exists();
     }
 
     public function sendEmailVerificationNotification(): void
