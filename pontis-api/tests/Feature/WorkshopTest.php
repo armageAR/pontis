@@ -16,14 +16,23 @@ class WorkshopTest extends TestCase
         return User::factory()->create(['role' => 'superadmin']);
     }
 
-    private function admin(): User
-    {
-        return User::factory()->create(['role' => 'admin']);
-    }
-
     private function user(): User
     {
         return User::factory()->create(['role' => 'user']);
+    }
+
+    private function workshopAdmin(Workshop $workshop): User
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        $user->workshops()->attach($workshop->id, ['role' => 'admin']);
+        return $user;
+    }
+
+    private function workshopMember(Workshop $workshop): User
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        $user->workshops()->attach($workshop->id, ['role' => 'member']);
+        return $user;
     }
 
     // ── Auth: unauthenticated ────────────────────────────────────────────────
@@ -50,7 +59,7 @@ class WorkshopTest extends TestCase
 
     // ── Index ────────────────────────────────────────────────────────────────
 
-    public function test_superadmin_can_list_workshops(): void
+    public function test_superadmin_can_list_all_workshops(): void
     {
         Workshop::factory()->count(3)->create();
 
@@ -60,26 +69,43 @@ class WorkshopTest extends TestCase
             ->assertJsonCount(3, 'data');
     }
 
-    public function test_user_cannot_list_workshops(): void
+    public function test_user_sees_only_own_workshops(): void
     {
-        $this->actingAs($this->user(), 'sanctum')
+        $workshop = Workshop::factory()->create();
+        $other = Workshop::factory()->create();
+        $user = $this->workshopMember($workshop);
+
+        $this->actingAs($user, 'sanctum')
             ->getJson('/api/admin/workshops')
-            ->assertForbidden();
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $workshop->id);
+
+        unset($other);
     }
 
-    public function test_admin_only_sees_assigned_workshops(): void
+    public function test_user_with_no_workshops_sees_empty_list(): void
     {
-        $admin = $this->admin();
-        $assigned = Workshop::factory()->create();
+        Workshop::factory()->count(2)->create();
+
+        $this->actingAs($this->user(), 'sanctum')
+            ->getJson('/api/admin/workshops')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_workshop_admin_sees_only_own_workshops(): void
+    {
+        $workshop = Workshop::factory()->create();
         Workshop::factory()->create();
 
-        $admin->workshops()->attach($assigned);
+        $admin = $this->workshopAdmin($workshop);
 
         $this->actingAs($admin, 'sanctum')
             ->getJson('/api/admin/workshops')
             ->assertOk()
             ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.id', $assigned->id);
+            ->assertJsonPath('data.0.id', $workshop->id);
     }
 
     public function test_filter_by_search(): void
@@ -201,32 +227,27 @@ class WorkshopTest extends TestCase
         $this->assertDatabaseHas('workshops', ['name' => 'UNION DEL PLATA', 'number' => 1]);
     }
 
-    public function test_admin_cannot_create_workshop(): void
+    public function test_workshop_admin_cannot_create_workshop(): void
     {
-        $this->actingAs($this->admin(), 'sanctum')
-            ->postJson('/api/admin/workshops', [
-                'name' => 'Test',
-                'number' => 99,
-            ])
+        $workshop = Workshop::factory()->create();
+        $admin = $this->workshopAdmin($workshop);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson('/api/admin/workshops', ['name' => 'Test', 'number' => 99])
             ->assertForbidden();
     }
 
     public function test_user_cannot_create_workshop(): void
     {
         $this->actingAs($this->user(), 'sanctum')
-            ->postJson('/api/admin/workshops', [
-                'name' => 'Test',
-                'number' => 99,
-            ])
+            ->postJson('/api/admin/workshops', ['name' => 'Test', 'number' => 99])
             ->assertForbidden();
     }
 
     public function test_validation_fails_without_name(): void
     {
         $this->actingAs($this->superAdmin(), 'sanctum')
-            ->postJson('/api/admin/workshops', [
-                'number' => 1,
-            ])
+            ->postJson('/api/admin/workshops', ['number' => 1])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['name']);
     }
@@ -234,9 +255,7 @@ class WorkshopTest extends TestCase
     public function test_validation_fails_without_number(): void
     {
         $this->actingAs($this->superAdmin(), 'sanctum')
-            ->postJson('/api/admin/workshops', [
-                'name' => 'Test',
-            ])
+            ->postJson('/api/admin/workshops', ['name' => 'Test'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['number']);
     }
@@ -246,17 +265,14 @@ class WorkshopTest extends TestCase
         Workshop::factory()->create(['number' => 1]);
 
         $this->actingAs($this->superAdmin(), 'sanctum')
-            ->postJson('/api/admin/workshops', [
-                'name' => 'Another Workshop',
-                'number' => 1,
-            ])
+            ->postJson('/api/admin/workshops', ['name' => 'Another', 'number' => 1])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['number']);
     }
 
     // ── Show ─────────────────────────────────────────────────────────────────
 
-    public function test_superadmin_can_view_workshop(): void
+    public function test_superadmin_can_view_any_workshop(): void
     {
         $workshop = Workshop::factory()->create();
 
@@ -266,11 +282,21 @@ class WorkshopTest extends TestCase
             ->assertJsonPath('data.id', $workshop->id);
     }
 
-    public function test_admin_can_view_assigned_workshop(): void
+    public function test_member_can_view_own_workshop(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
+        $user = $this->workshopMember($workshop);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson("/api/admin/workshops/{$workshop->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $workshop->id);
+    }
+
+    public function test_workshop_admin_can_view_own_workshop(): void
+    {
+        $workshop = Workshop::factory()->create();
+        $admin = $this->workshopAdmin($workshop);
 
         $this->actingAs($admin, 'sanctum')
             ->getJson("/api/admin/workshops/{$workshop->id}")
@@ -278,16 +304,7 @@ class WorkshopTest extends TestCase
             ->assertJsonPath('data.id', $workshop->id);
     }
 
-    public function test_admin_cannot_view_unassigned_workshop(): void
-    {
-        $workshop = Workshop::factory()->create();
-
-        $this->actingAs($this->admin(), 'sanctum')
-            ->getJson("/api/admin/workshops/{$workshop->id}")
-            ->assertForbidden();
-    }
-
-    public function test_user_cannot_view_workshop(): void
+    public function test_user_cannot_view_unassigned_workshop(): void
     {
         $workshop = Workshop::factory()->create();
 
@@ -310,53 +327,47 @@ class WorkshopTest extends TestCase
 
     // ── Update ───────────────────────────────────────────────────────────────
 
-    public function test_superadmin_can_update_workshop(): void
+    public function test_superadmin_can_update_any_workshop(): void
     {
         $workshop = Workshop::factory()->create();
 
         $this->actingAs($this->superAdmin(), 'sanctum')
-            ->patchJson("/api/admin/workshops/{$workshop->id}", [
-                'name' => 'Updated Name',
-            ])
+            ->patchJson("/api/admin/workshops/{$workshop->id}", ['name' => 'Updated'])
             ->assertOk()
-            ->assertJsonPath('data.name', 'Updated Name');
+            ->assertJsonPath('data.name', 'Updated');
 
-        $this->assertDatabaseHas('workshops', ['id' => $workshop->id, 'name' => 'Updated Name']);
+        $this->assertDatabaseHas('workshops', ['id' => $workshop->id, 'name' => 'Updated']);
     }
 
-    public function test_admin_can_update_assigned_workshop(): void
+    public function test_workshop_admin_can_update_own_workshop(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
 
         $this->actingAs($admin, 'sanctum')
-            ->patchJson("/api/admin/workshops/{$workshop->id}", [
-                'name' => 'Admin Updated',
-            ])
+            ->patchJson("/api/admin/workshops/{$workshop->id}", ['name' => 'Admin Updated'])
             ->assertOk()
             ->assertJsonPath('data.name', 'Admin Updated');
     }
 
-    public function test_admin_cannot_update_unassigned_workshop(): void
+    public function test_workshop_admin_cannot_update_other_workshop(): void
     {
-        $workshop = Workshop::factory()->create();
+        $myWorkshop = Workshop::factory()->create();
+        $otherWorkshop = Workshop::factory()->create();
+        $admin = $this->workshopAdmin($myWorkshop);
 
-        $this->actingAs($this->admin(), 'sanctum')
-            ->patchJson("/api/admin/workshops/{$workshop->id}", [
-                'name' => 'Updated',
-            ])
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/workshops/{$otherWorkshop->id}", ['name' => 'Hack'])
             ->assertForbidden();
     }
 
-    public function test_user_cannot_update_workshop(): void
+    public function test_member_cannot_update_workshop(): void
     {
         $workshop = Workshop::factory()->create();
+        $member = $this->workshopMember($workshop);
 
-        $this->actingAs($this->user(), 'sanctum')
-            ->patchJson("/api/admin/workshops/{$workshop->id}", [
-                'name' => 'Updated',
-            ])
+        $this->actingAs($member, 'sanctum')
+            ->patchJson("/api/admin/workshops/{$workshop->id}", ['name' => 'Hack'])
             ->assertForbidden();
     }
 
@@ -365,9 +376,7 @@ class WorkshopTest extends TestCase
         $workshop = Workshop::factory()->create(['number' => 10]);
 
         $this->actingAs($this->superAdmin(), 'sanctum')
-            ->patchJson("/api/admin/workshops/{$workshop->id}", [
-                'number' => 10,
-            ])
+            ->patchJson("/api/admin/workshops/{$workshop->id}", ['number' => 10])
             ->assertOk();
     }
 
@@ -377,9 +386,7 @@ class WorkshopTest extends TestCase
         $workshop = Workshop::factory()->create(['number' => 20]);
 
         $this->actingAs($this->superAdmin(), 'sanctum')
-            ->patchJson("/api/admin/workshops/{$workshop->id}", [
-                'number' => 10,
-            ])
+            ->patchJson("/api/admin/workshops/{$workshop->id}", ['number' => 10])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['number']);
     }
@@ -398,22 +405,23 @@ class WorkshopTest extends TestCase
         $this->assertDatabaseHas('workshops', ['id' => $workshop->id, 'status' => 'disabled']);
     }
 
-    public function test_admin_cannot_disable_workshop(): void
+    public function test_workshop_admin_can_disable_own_workshop(): void
     {
-        $admin = $this->admin();
-        $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
+        $workshop = Workshop::factory()->create(['status' => 'active']);
+        $admin = $this->workshopAdmin($workshop);
 
         $this->actingAs($admin, 'sanctum')
             ->postJson("/api/admin/workshops/{$workshop->id}/disable")
-            ->assertForbidden();
+            ->assertOk()
+            ->assertJsonPath('data.status', 'disabled');
     }
 
-    public function test_user_cannot_disable_workshop(): void
+    public function test_member_cannot_disable_workshop(): void
     {
         $workshop = Workshop::factory()->create();
+        $member = $this->workshopMember($workshop);
 
-        $this->actingAs($this->user(), 'sanctum')
+        $this->actingAs($member, 'sanctum')
             ->postJson("/api/admin/workshops/{$workshop->id}/disable")
             ->assertForbidden();
     }
@@ -432,22 +440,23 @@ class WorkshopTest extends TestCase
         $this->assertDatabaseHas('workshops', ['id' => $workshop->id, 'status' => 'active']);
     }
 
-    public function test_admin_cannot_enable_workshop(): void
+    public function test_workshop_admin_can_enable_own_workshop(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create(['status' => 'disabled']);
-        $admin->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
 
         $this->actingAs($admin, 'sanctum')
             ->postJson("/api/admin/workshops/{$workshop->id}/enable")
-            ->assertForbidden();
+            ->assertOk()
+            ->assertJsonPath('data.status', 'active');
     }
 
-    public function test_user_cannot_enable_workshop(): void
+    public function test_member_cannot_enable_workshop(): void
     {
         $workshop = Workshop::factory()->create(['status' => 'disabled']);
+        $member = $this->workshopMember($workshop);
 
-        $this->actingAs($this->user(), 'sanctum')
+        $this->actingAs($member, 'sanctum')
             ->postJson("/api/admin/workshops/{$workshop->id}/enable")
             ->assertForbidden();
     }
@@ -476,29 +485,29 @@ class WorkshopTest extends TestCase
         $this->assertNotNull($workshop->fresh()->deleted_at);
     }
 
-    public function test_admin_cannot_delete_workshop(): void
+    public function test_workshop_admin_cannot_delete_workshop(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
+        $admin = $this->workshopAdmin($workshop);
 
         $this->actingAs($admin, 'sanctum')
             ->deleteJson("/api/admin/workshops/{$workshop->id}")
             ->assertForbidden();
     }
 
-    public function test_user_cannot_delete_workshop(): void
+    public function test_member_cannot_delete_workshop(): void
     {
         $workshop = Workshop::factory()->create();
+        $member = $this->workshopMember($workshop);
 
-        $this->actingAs($this->user(), 'sanctum')
+        $this->actingAs($member, 'sanctum')
             ->deleteJson("/api/admin/workshops/{$workshop->id}")
             ->assertForbidden();
     }
 
     // ── Assign Users ─────────────────────────────────────────────────────────
 
-    public function test_superadmin_can_assign_users_to_workshop(): void
+    public function test_superadmin_can_assign_users(): void
     {
         $workshop = Workshop::factory()->create();
         $users = User::factory()->count(3)->create();
@@ -512,12 +521,10 @@ class WorkshopTest extends TestCase
         $this->assertCount(3, $workshop->fresh()->users);
     }
 
-    public function test_assigned_admin_can_assign_users(): void
+    public function test_workshop_admin_can_assign_users(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
-
+        $admin = $this->workshopAdmin($workshop);
         $newUser = User::factory()->create();
 
         $this->actingAs($admin, 'sanctum')
@@ -529,28 +536,65 @@ class WorkshopTest extends TestCase
         $this->assertTrue($workshop->users()->where('user_id', $newUser->id)->exists());
     }
 
-    public function test_unassigned_admin_cannot_assign_users(): void
+    public function test_member_cannot_assign_users(): void
     {
         $workshop = Workshop::factory()->create();
+        $member = $this->workshopMember($workshop);
         $newUser = User::factory()->create();
 
-        $this->actingAs($this->admin(), 'sanctum')
+        $this->actingAs($member, 'sanctum')
             ->postJson("/api/admin/workshops/{$workshop->id}/users", [
                 'user_ids' => [$newUser->id],
             ])
             ->assertForbidden();
     }
 
-    public function test_user_cannot_assign_users_to_workshop(): void
+    public function test_unassigned_user_cannot_assign_users(): void
+    {
+        $workshop = Workshop::factory()->create();
+
+        $this->actingAs($this->user(), 'sanctum')
+            ->postJson("/api/admin/workshops/{$workshop->id}/users", [
+                'user_ids' => [User::factory()->create()->id],
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_assign_with_admin_role_sets_pivot_role(): void
     {
         $workshop = Workshop::factory()->create();
         $newUser = User::factory()->create();
 
-        $this->actingAs($this->user(), 'sanctum')
+        $this->actingAs($this->superAdmin(), 'sanctum')
+            ->postJson("/api/admin/workshops/{$workshop->id}/users", [
+                'user_ids' => [$newUser->id],
+                'role' => 'admin',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('user_workshop', [
+            'user_id' => $newUser->id,
+            'workshop_id' => $workshop->id,
+            'role' => 'admin',
+        ]);
+    }
+
+    public function test_assign_defaults_to_member_role(): void
+    {
+        $workshop = Workshop::factory()->create();
+        $newUser = User::factory()->create();
+
+        $this->actingAs($this->superAdmin(), 'sanctum')
             ->postJson("/api/admin/workshops/{$workshop->id}/users", [
                 'user_ids' => [$newUser->id],
             ])
-            ->assertForbidden();
+            ->assertOk();
+
+        $this->assertDatabaseHas('user_workshop', [
+            'user_id' => $newUser->id,
+            'workshop_id' => $workshop->id,
+            'role' => 'member',
+        ]);
     }
 
     public function test_assign_users_does_not_duplicate(): void
@@ -570,7 +614,7 @@ class WorkshopTest extends TestCase
 
     // ── Remove Users ─────────────────────────────────────────────────────────
 
-    public function test_superadmin_can_remove_users_from_workshop(): void
+    public function test_superadmin_can_remove_users(): void
     {
         $workshop = Workshop::factory()->create();
         $users = User::factory()->count(2)->create();
@@ -585,53 +629,39 @@ class WorkshopTest extends TestCase
         $this->assertCount(1, $workshop->fresh()->users);
     }
 
-    public function test_assigned_admin_can_remove_users(): void
+    public function test_workshop_admin_can_remove_users(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
-
-        $targetUser = User::factory()->create();
-        $workshop->users()->attach($targetUser);
+        $admin = $this->workshopAdmin($workshop);
+        $target = User::factory()->create();
+        $workshop->users()->attach($target);
 
         $this->actingAs($admin, 'sanctum')
             ->deleteJson("/api/admin/workshops/{$workshop->id}/users", [
-                'user_ids' => [$targetUser->id],
+                'user_ids' => [$target->id],
             ])
             ->assertOk();
 
-        $this->assertFalse($workshop->users()->where('user_id', $targetUser->id)->exists());
+        $this->assertFalse($workshop->users()->where('user_id', $target->id)->exists());
     }
 
-    public function test_unassigned_admin_cannot_remove_users(): void
+    public function test_member_cannot_remove_users(): void
     {
         $workshop = Workshop::factory()->create();
-        $targetUser = User::factory()->create();
-        $workshop->users()->attach($targetUser);
+        $member = $this->workshopMember($workshop);
+        $target = User::factory()->create();
+        $workshop->users()->attach($target);
 
-        $this->actingAs($this->admin(), 'sanctum')
+        $this->actingAs($member, 'sanctum')
             ->deleteJson("/api/admin/workshops/{$workshop->id}/users", [
-                'user_ids' => [$targetUser->id],
-            ])
-            ->assertForbidden();
-    }
-
-    public function test_user_cannot_remove_users_from_workshop(): void
-    {
-        $workshop = Workshop::factory()->create();
-        $targetUser = User::factory()->create();
-        $workshop->users()->attach($targetUser);
-
-        $this->actingAs($this->user(), 'sanctum')
-            ->deleteJson("/api/admin/workshops/{$workshop->id}/users", [
-                'user_ids' => [$targetUser->id],
+                'user_ids' => [$target->id],
             ])
             ->assertForbidden();
     }
 
     // ── Workshop Users List ──────────────────────────────────────────────────
 
-    public function test_workshop_users_returns_only_assigned_users(): void
+    public function test_workshop_users_returns_only_assigned(): void
     {
         $workshop = Workshop::factory()->create();
         $assigned = User::factory()->count(2)->create();
@@ -645,27 +675,17 @@ class WorkshopTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
-    public function test_assigned_admin_can_list_workshop_users(): void
+    public function test_member_can_list_workshop_users(): void
     {
-        $admin = $this->admin();
         $workshop = Workshop::factory()->create();
-        $admin->workshops()->attach($workshop);
+        $member = $this->workshopMember($workshop);
 
-        $this->actingAs($admin, 'sanctum')
+        $this->actingAs($member, 'sanctum')
             ->getJson("/api/admin/workshops/{$workshop->id}/users")
             ->assertOk();
     }
 
-    public function test_unassigned_admin_cannot_list_workshop_users(): void
-    {
-        $workshop = Workshop::factory()->create();
-
-        $this->actingAs($this->admin(), 'sanctum')
-            ->getJson("/api/admin/workshops/{$workshop->id}/users")
-            ->assertForbidden();
-    }
-
-    public function test_user_cannot_list_workshop_users(): void
+    public function test_unassigned_user_cannot_list_workshop_users(): void
     {
         $workshop = Workshop::factory()->create();
 
@@ -677,9 +697,9 @@ class WorkshopTest extends TestCase
     public function test_workshop_users_filter_by_search(): void
     {
         $workshop = Workshop::factory()->create();
-        $user1 = User::factory()->create(['name' => 'Juan Perez']);
-        $user2 = User::factory()->create(['name' => 'Maria Lopez']);
-        $workshop->users()->attach([$user1->id, $user2->id]);
+        $u1 = User::factory()->create(['name' => 'Juan Perez']);
+        $u2 = User::factory()->create(['name' => 'Maria Lopez']);
+        $workshop->users()->attach([$u1->id, $u2->id]);
 
         $this->actingAs($this->superAdmin(), 'sanctum')
             ->getJson("/api/admin/workshops/{$workshop->id}/users?search=Juan")
@@ -688,17 +708,32 @@ class WorkshopTest extends TestCase
             ->assertJsonPath('data.0.name', 'Juan Perez');
     }
 
-    public function test_workshop_users_filter_by_role(): void
+    public function test_workshop_users_filter_by_workshop_role(): void
     {
         $workshop = Workshop::factory()->create();
-        $adminUser = User::factory()->create(['role' => 'admin']);
-        $regularUser = User::factory()->create(['role' => 'user']);
-        $workshop->users()->attach([$adminUser->id, $regularUser->id]);
+        $adminUser = User::factory()->create();
+        $memberUser = User::factory()->create();
+        $workshop->users()->attach($adminUser->id, ['role' => 'admin']);
+        $workshop->users()->attach($memberUser->id, ['role' => 'member']);
 
         $this->actingAs($this->superAdmin(), 'sanctum')
-            ->getJson("/api/admin/workshops/{$workshop->id}/users?role=admin")
+            ->getJson("/api/admin/workshops/{$workshop->id}/users?workshop_role=admin")
             ->assertOk()
             ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.role', 'admin');
+            ->assertJsonPath('data.0.id', $adminUser->id);
+    }
+
+    public function test_user_can_be_admin_in_one_and_member_in_another(): void
+    {
+        $workshop1 = Workshop::factory()->create();
+        $workshop2 = Workshop::factory()->create();
+        $user = User::factory()->create();
+
+        $user->workshops()->attach($workshop1->id, ['role' => 'admin']);
+        $user->workshops()->attach($workshop2->id, ['role' => 'member']);
+
+        $this->assertTrue($user->isAdminOfWorkshop($workshop1));
+        $this->assertFalse($user->isAdminOfWorkshop($workshop2));
+        $this->assertTrue($user->isAssignedToWorkshop($workshop2));
     }
 }

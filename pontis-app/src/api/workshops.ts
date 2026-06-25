@@ -17,6 +17,9 @@ export interface Workshop {
   notes: string | null
   created_at: string
   updated_at: string
+  is_member: boolean
+  is_pending: boolean
+  my_role: 'admin' | 'member' | null
 }
 
 export interface WorkshopFormData {
@@ -46,6 +49,7 @@ export interface WorkshopFilters {
   page?: number
   sort_by?: string
   sort_direction?: 'asc' | 'desc'
+  my_workshops_only?: boolean
 }
 
 export interface PaginatedResponse<T> {
@@ -73,7 +77,7 @@ export async function searchWorkshopsPublic(q: string): Promise<WorkshopSearchRe
 
 export async function listWorkshops(filters: WorkshopFilters = {}): Promise<PaginatedResponse<Workshop>> {
   const params = Object.fromEntries(
-    Object.entries(filters).filter(([, v]) => v !== undefined && v !== ''),
+    Object.entries(filters).filter(([, v]) => v !== undefined && v !== '' && v !== false),
   )
   const { data } = await client.get<PaginatedResponse<Workshop>>('/admin/workshops', { params })
   return data
@@ -105,5 +109,15 @@ export async function disableWorkshop(id: number): Promise<Workshop> {
 
 export async function enableWorkshop(id: number): Promise<Workshop> {
   const { data } = await client.post<{ data: Workshop }>(`/admin/workshops/${id}/enable`)
+  return data.data
+}
+
+export async function joinWorkshop(id: number): Promise<Workshop> {
+  const { data } = await client.post<{ data: Workshop }>(`/admin/workshops/${id}/join`)
+  return data.data
+}
+
+export async function leaveWorkshop(id: number): Promise<Workshop> {
+  const { data } = await client.delete<{ data: Workshop }>(`/admin/workshops/${id}/leave`)
   return data.data
 }

@@ -1,6 +1,7 @@
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { Workshop, WorkshopFilters } from '@/api/workshops'
 import Badge from '@/components/Badge'
+import Button from '@/components/Button'
 import './WorkshopTable.css'
 
 interface WorkshopTableProps {
@@ -9,6 +10,9 @@ interface WorkshopTableProps {
   sortDirection: 'asc' | 'desc'
   onSort: (filters: Partial<WorkshopFilters>) => void
   onSelect: (workshop: Workshop) => void
+  joiningId: number | null
+  onJoin: (workshop: Workshop) => void
+  onLeave: (workshop: Workshop) => void
 }
 
 interface Column {
@@ -34,7 +38,7 @@ function SortIcon({ col, sortBy, sortDirection }: { col: string; sortBy: string;
     : <span className="sort-icon sort-icon-active"><ChevronDown size={12} /></span>
 }
 
-export default function WorkshopTable({ workshops, sortBy, sortDirection, onSort, onSelect }: WorkshopTableProps) {
+export default function WorkshopTable({ workshops, sortBy, sortDirection, onSort, onSelect, joiningId, onJoin, onLeave }: WorkshopTableProps) {
   function handleSort(key: string) {
     const newDir = sortBy === key && sortDirection === 'asc' ? 'desc' : 'asc'
     onSort({ sort_by: key, sort_direction: newDir })
@@ -57,6 +61,7 @@ export default function WorkshopTable({ workshops, sortBy, sortDirection, onSort
                 </span>
               </th>
             ))}
+            <th />
           </tr>
         </thead>
         <tbody>
@@ -72,6 +77,29 @@ export default function WorkshopTable({ workshops, sortBy, sortDirection, onSort
                 <Badge variant={w.status === 'active' ? 'success' : 'error'}>
                   {w.status === 'active' ? 'Activo' : 'Deshabilitado'}
                 </Badge>
+              </td>
+              <td className="workshop-cell-action" onClick={(e) => e.stopPropagation()}>
+                {w.is_member ? (
+                  <Button
+                    variant="outline"
+                    className="workshop-action-btn workshop-action-leave"
+                    onClick={() => onLeave(w)}
+                  >
+                    Salir
+                  </Button>
+                ) : w.is_pending ? (
+                  <span className="workshop-action-pending">Solicitud pendiente</span>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="workshop-action-btn"
+                    loading={joiningId === w.id}
+                    disabled={w.status !== 'active'}
+                    onClick={() => onJoin(w)}
+                  >
+                    Solicitar ingreso
+                  </Button>
+                )}
               </td>
             </tr>
           ))}

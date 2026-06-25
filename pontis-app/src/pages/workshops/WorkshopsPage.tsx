@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '@/api/workshops'
 import type { Workshop, WorkshopFilters as Filters, WorkshopFormData } from '@/api/workshops'
+import { useAuth } from '@/context/AuthContext'
 import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import Spinner from '@/components/Spinner'
@@ -18,6 +19,7 @@ import './WorkshopsPage.css'
 type ModalView = 'none' | 'create' | 'edit' | 'detail'
 
 export default function WorkshopsPage() {
+  const { user: currentUser } = useAuth()
   const [workshops, setWorkshops] = useState<Workshop[]>([])
   const [meta, setMeta] = useState({ current_page: 1, last_page: 1, per_page: 15, total: 0 })
   const [filters, setFilters] = useState<Filters>({ sort_by: 'number', sort_direction: 'asc', page: 1 })
@@ -31,6 +33,10 @@ export default function WorkshopsPage() {
   const [deleting, setDeleting] = useState(false)
   const [toggling, setToggling] = useState(false)
   const [actionMsg, setActionMsg] = useState('')
+
+  const [workshopToLeave, setWorkshopToLeave] = useState<Workshop | null>(null)
+  const [leaving, setLeaving] = useState(false)
+  const [joiningId, setJoiningId] = useState<number | null>(null)
 
   const fetchWorkshops = useCallback(async (f: Filters) => {
     setLoading(true)
@@ -107,6 +113,38 @@ export default function WorkshopsPage() {
     }
   }
 
+  function patchWorkshop(updated: Workshop) {
+    setWorkshops((prev) => prev.map((w) => (w.id === updated.id ? updated : w)))
+  }
+
+  async function handleJoin(workshop: Workshop) {
+    setJoiningId(workshop.id)
+    try {
+      const updated = await api.joinWorkshop(workshop.id)
+      patchWorkshop(updated)
+      setActionMsg(`Te uniste a ${workshop.name}.`)
+    } catch {
+      setError('No se pudo solicitar el ingreso.')
+    } finally {
+      setJoiningId(null)
+    }
+  }
+
+  async function handleLeave() {
+    if (!workshopToLeave) return
+    setLeaving(true)
+    try {
+      const updated = await api.leaveWorkshop(workshopToLeave.id)
+      patchWorkshop(updated)
+      setActionMsg(`Saliste de ${workshopToLeave.name}.`)
+      setWorkshopToLeave(null)
+    } catch {
+      setError('No se pudo salir del taller.')
+    } finally {
+      setLeaving(false)
+    }
+  }
+
   async function handleToggleStatus() {
     if (!selected) return
     setToggling(true)
@@ -153,6 +191,9 @@ export default function WorkshopsPage() {
             sortDirection={filters.sort_direction ?? 'asc'}
             onSort={updateFilters}
             onSelect={openDetail}
+            joiningId={joiningId}
+            onJoin={handleJoin}
+            onLeave={setWorkshopToLeave}
           />
           <Pagination
             currentPage={meta.current_page}
@@ -205,6 +246,17 @@ export default function WorkshopsPage() {
         message={`¿Estás seguro de que querés eliminar "${selected?.name} Nro ${selected?.number}"? Esta acción se puede revertir.`}
         confirmLabel="Eliminar"
         loading={deleting}
+      />
+
+      {/* Leave confirmation */}
+      <ConfirmDialog
+        open={workshopToLeave !== null}
+        onClose={() => setWorkshopToLeave(null)}
+        onConfirm={handleLeave}
+        title="Salir del taller"
+        message={`¿Confirmás que querés salir de ${workshopToLeave?.name}?`}
+        confirmLabel="Salir"
+        loading={leaving}
       />
     </AppLayout>
   )

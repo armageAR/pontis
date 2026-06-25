@@ -58,3 +58,30 @@
   font-weight: 500;
   color: var(--text-h);
 }
+
+.workshop-cell-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.workshop-action-btn {
+  font-size: 12px !important;
+  padding: 4px 10px !important;
+  height: auto !important;
+}
+
+.workshop-action-leave {
+  color: var(--error) !important;
+  border-color: var(--error-border) !important;
+}
+
+.workshop-action-leave:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+}
+
+.workshop-action-pending {
+  font-size: 12px;
+  color: #ca8a04;
+  font-weight: 500;
+  white-space: nowrap;
+}
