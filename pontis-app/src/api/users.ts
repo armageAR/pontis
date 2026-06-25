@@ -41,3 +41,18 @@ export async function updateUserStatus(userId: number, status: string): Promise<
   const { data } = await client.patch<{ data: UserListItem }>(`/users/${userId}/status`, { status })
   return data.data
 }
+
+export interface UserUpdatePayload {
+  name?: string
+  email?: string
+  role?: string
+}
+
+export async function updateUser(userId: number, payload: UserUpdatePayload): Promise<UserListItem> {
+  const { data } = await client.patch<{ data: UserListItem }>(`/users/${userId}`, payload)
+  return data.data
+}
+
+export async function updateUserPassword(userId: number, password: string, password_confirmation: string): Promise<void> {
+  await client.patch(`/users/${userId}/password`, { password, password_confirmation })
+}

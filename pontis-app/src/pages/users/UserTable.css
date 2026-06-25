@@ -59,3 +59,7 @@
   font-size: 13px;
   color: var(--text);
 }
+
+.user-cell-actions {
+  padding-right: 8px;
+}

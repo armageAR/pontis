@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '@/api/users'
-import type { UserListItem, UserFilters as Filters } from '@/api/users'
+import type { UserListItem, UserFilters as Filters, UserUpdatePayload } from '@/api/users'
 import { useAuth } from '@/context/AuthContext'
 import AppLayout from '@/components/AppLayout'
 import Spinner from '@/components/Spinner'
@@ -9,6 +9,8 @@ import EmptyState from '@/components/EmptyState'
 import Alert from '@/components/Alert'
 import UserFiltersBar from './UserFilters'
 import UserTable from './UserTable'
+import UserEditModal from './UserEditModal'
+import UserPasswordModal from './UserPasswordModal'
 import './UsersPage.css'
 
 export default function UsersPage() {
@@ -19,6 +21,9 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
+
+  const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
+  const [passwordUser, setPasswordUser] = useState<UserListItem | null>(null)
 
   const fetchUsers = useCallback(async (f: Filters) => {
     setLoading(true)
@@ -42,18 +47,42 @@ export default function UsersPage() {
     setFilters((prev) => ({ ...prev, ...partial }))
   }
 
-  async function handleStatusChange(userId: number, status: string) {
+  function notify(msg: string) {
+    setSuccessMsg(msg)
     setError('')
+  }
+
+  function notifyError(msg: string) {
+    setError(msg)
     setSuccessMsg('')
+  }
+
+  function patchUser(updated: UserListItem) {
+    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
+  }
+
+  async function handleStatusChange(userId: number, status: string) {
     try {
       const updated = await api.updateUserStatus(userId, status)
-      setUsers((prev) => prev.map((u) => (u.id === userId ? updated : u)))
-      setSuccessMsg(`Estado de ${updated.name} actualizado.`)
+      patchUser(updated)
+      notify(`Estado de ${updated.name} actualizado.`)
     } catch (err) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
         ?? 'No se pudo actualizar el estado.'
-      setError(msg)
+      notifyError(msg)
     }
+  }
+
+  async function handleEdit(userId: number, payload: UserUpdatePayload) {
+    const updated = await api.updateUser(userId, payload)
+    patchUser(updated)
+    notify(`${updated.name} actualizado correctamente.`)
+  }
+
+  async function handlePassword(userId: number, password: string, confirmation: string) {
+    await api.updateUserPassword(userId, password, confirmation)
+    const target = users.find((u) => u.id === userId)
+    notify(`Contraseña de ${target?.name ?? 'usuario'} actualizada.`)
   }
 
   return (
@@ -86,6 +115,8 @@ export default function UsersPage() {
             currentUserId={currentUser?.id ?? 0}
             currentUserRole={currentUser?.role ?? 'user'}
             onStatusChange={handleStatusChange}
+            onEdit={setEditingUser}
+            onChangePassword={setPasswordUser}
           />
           <Pagination
             currentPage={meta.current_page}
@@ -95,6 +126,21 @@ export default function UsersPage() {
           />
         </>
       )}
+
+      <UserEditModal
+        user={editingUser}
+        open={editingUser !== null}
+        onClose={() => setEditingUser(null)}
+        onSave={handleEdit}
+        currentUserRole={currentUser?.role ?? 'user'}
+      />
+
+      <UserPasswordModal
+        user={passwordUser}
+        open={passwordUser !== null}
+        onClose={() => setPasswordUser(null)}
+        onSave={handlePassword}
+      />
     </AppLayout>
   )
 }

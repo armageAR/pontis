@@ -1,4 +1,5 @@
 import type { UserListItem, UserFilters } from '@/api/users'
+import ActionMenu from '@/components/ActionMenu'
 import UserStatusSelect from './UserStatusSelect'
 import './UserTable.css'
 
@@ -10,6 +11,8 @@ interface UserTableProps {
   currentUserId: number
   currentUserRole: string
   onStatusChange: (userId: number, status: string) => Promise<void>
+  onEdit: (user: UserListItem) => void
+  onChangePassword: (user: UserListItem) => void
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -31,6 +34,7 @@ const COLUMNS: Column[] = [
   { key: 'workshops', label: 'Talleres', sortable: false },
   { key: 'status', label: 'Estado', sortable: true },
   { key: 'created_at', label: 'Registro', sortable: true },
+  { key: 'actions', label: '', sortable: false },
 ]
 
 function formatDate(d: string): string {
@@ -49,6 +53,8 @@ export default function UserTable({
   currentUserId,
   currentUserRole,
   onStatusChange,
+  onEdit,
+  onChangePassword,
 }: UserTableProps) {
   function handleSort(key: string) {
     const newDir = sortBy === key && sortDirection === 'asc' ? 'desc' : 'asc'
@@ -60,7 +66,7 @@ export default function UserTable({
     return sortDirection === 'asc' ? ' ↑' : ' ↓'
   }
 
-  const canEdit = currentUserRole === 'superadmin' || currentUserRole === 'admin'
+  const canManage = currentUserRole === 'superadmin' || currentUserRole === 'admin'
 
   return (
     <div className="user-table-wrapper">
@@ -79,28 +85,51 @@ export default function UserTable({
           </tr>
         </thead>
         <tbody>
-          {users.map((u) => (
-            <tr key={u.id}>
-              <td className="user-cell-name">{u.name}</td>
-              <td className="user-cell-email">{u.email}</td>
-              <td>{ROLE_LABELS[u.role ?? ''] ?? '—'}</td>
-              <td>
-                {u.workshops.length > 0 ? (
-                  <span className="user-cell-workshops" title={u.workshops.map((w) => `${w.name} Nro ${w.number}`).join(', ')}>
-                    {u.workshops.map((w) => `Nro ${w.number}`).join(', ')}
-                  </span>
-                ) : '—'}
-              </td>
-              <td>
-                <UserStatusSelect
-                  user={u}
-                  editable={canEdit && u.id !== currentUserId}
-                  onStatusChange={onStatusChange}
-                />
-              </td>
-              <td className="user-cell-date">{formatDate(u.created_at)}</td>
-            </tr>
-          ))}
+          {users.map((u) => {
+            const isSelf = u.id === currentUserId
+            const rowCanManage = canManage && !isSelf
+
+            return (
+              <tr key={u.id}>
+                <td className="user-cell-name">{u.name}</td>
+                <td className="user-cell-email">{u.email}</td>
+                <td>{ROLE_LABELS[u.role ?? ''] ?? '—'}</td>
+                <td>
+                  {u.workshops.length > 0 ? (
+                    <span className="user-cell-workshops" title={u.workshops.map((w) => `${w.name} Nro ${w.number}`).join(', ')}>
+                      {u.workshops.map((w) => `Nro ${w.number}`).join(', ')}
+                    </span>
+                  ) : '—'}
+                </td>
+                <td>
+                  <UserStatusSelect
+                    user={u}
+                    editable={rowCanManage}
+                    onStatusChange={onStatusChange}
+                  />
+                </td>
+                <td className="user-cell-date">{formatDate(u.created_at)}</td>
+                <td className="user-cell-actions">
+                  <ActionMenu
+                    actions={[
+                      {
+                        icon: '✎',
+                        label: 'Editar usuario',
+                        onClick: () => onEdit(u),
+                        disabled: !rowCanManage,
+                      },
+                      {
+                        icon: '🔑',
+                        label: 'Cambiar contraseña',
+                        onClick: () => onChangePassword(u),
+                        disabled: !rowCanManage,
+                      },
+                    ]}
+                  />
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>

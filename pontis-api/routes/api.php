@@ -20,7 +20,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
 
     Route::get('/users', [UserController::class, 'index']);
+    Route::patch('/users/{user}', [UserController::class, 'update']);
     Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
+    Route::patch('/users/{user}/password', [UserController::class, 'updatePassword']);
 
     Route::prefix('admin')->group(function () {
         Route::get('/workshops', [WorkshopController::class, 'index']);

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\UserStatus;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -71,25 +70,70 @@ class UserController extends Controller
 
         $currentUser = $request->user();
 
-        if (! $currentUser->isSuperAdmin() && ! $currentUser->isAdmin()) {
+        if (! $this->canActOn($currentUser, $user)) {
             return response()->json(['message' => 'No autorizado.'], 403);
-        }
-
-        if ($currentUser->id === $user->id) {
-            return response()->json(['message' => 'No podés cambiar tu propio estado.'], 403);
-        }
-
-        if ($currentUser->isAdmin()) {
-            $adminWorkshopIds = $currentUser->workshops()->pluck('workshops.id');
-            $userInAdminWorkshops = $user->workshops()->whereIn('workshops.id', $adminWorkshopIds)->exists();
-
-            if (! $userInAdminWorkshops) {
-                return response()->json(['message' => 'No autorizado.'], 403);
-            }
         }
 
         $user->update(['status' => $request->input('status')]);
 
         return new UserResource($user->load('workshops'));
+    }
+
+    public function update(Request $request, User $user): UserResource|JsonResponse
+    {
+        $request->validate([
+            'name'  => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => ['sometimes', 'required', 'email', 'unique:users,email,' . $user->id],
+            'role'  => ['sometimes', 'required', 'string', 'in:superadmin,admin,user'],
+        ]);
+
+        $currentUser = $request->user();
+
+        if (! $this->canActOn($currentUser, $user)) {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        if ($request->has('role') && ! $currentUser->isSuperAdmin()) {
+            return response()->json(['message' => 'Solo un Super Admin puede cambiar el rol.'], 403);
+        }
+
+        $user->update($request->only(['name', 'email', 'role']));
+
+        return new UserResource($user->load('workshops'));
+    }
+
+    public function updatePassword(Request $request, User $user): JsonResponse
+    {
+        $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $currentUser = $request->user();
+
+        if (! $this->canActOn($currentUser, $user)) {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $user->update(['password' => $request->input('password')]);
+
+        return response()->json(['message' => 'Contraseña actualizada correctamente.']);
+    }
+
+    private function canActOn(User $actor, User $target): bool
+    {
+        if ($actor->id === $target->id) {
+            return false;
+        }
+
+        if ($actor->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($actor->isAdmin()) {
+            $adminWorkshopIds = $actor->workshops()->pluck('workshops.id');
+            return $target->workshops()->whereIn('workshops.id', $adminWorkshopIds)->exists();
+        }
+
+        return false;
     }
 }

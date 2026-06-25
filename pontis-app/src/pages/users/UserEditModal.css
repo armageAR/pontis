@@ -1,0 +1,12 @@
+.user-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.user-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}

@@ -328,4 +328,179 @@ class UserListTest extends TestCase
                  ->assertJsonPath('data.status', $status);
         }
     }
+
+    // ── update user ──────────────────────────────────────────────────────────
+
+    public function test_superadmin_can_edit_user(): void
+    {
+        $sa = $this->superAdmin();
+        $user = User::factory()->create(['name' => 'Original Name', 'role' => 'user']);
+
+        $this->actingAs($sa, 'sanctum')
+             ->patchJson("/api/users/{$user->id}", ['name' => 'Updated Name', 'role' => 'admin'])
+             ->assertOk()
+             ->assertJsonPath('data.name', 'Updated Name')
+             ->assertJsonPath('data.role', 'admin');
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => 'Updated Name', 'role' => 'admin']);
+    }
+
+    public function test_superadmin_cannot_edit_themselves(): void
+    {
+        $sa = $this->superAdmin();
+
+        $this->actingAs($sa, 'sanctum')
+             ->patchJson("/api/users/{$sa->id}", ['name' => 'New Name'])
+             ->assertForbidden();
+    }
+
+    public function test_admin_can_edit_own_workshop_member(): void
+    {
+        $admin = $this->admin();
+        $workshop = Workshop::factory()->create();
+        $admin->workshops()->attach($workshop);
+
+        $member = User::factory()->create(['name' => 'Original']);
+        $member->workshops()->attach($workshop);
+
+        $this->actingAs($admin, 'sanctum')
+             ->patchJson("/api/users/{$member->id}", ['name' => 'Updated'])
+             ->assertOk()
+             ->assertJsonPath('data.name', 'Updated');
+    }
+
+    public function test_admin_cannot_edit_other_workshop_member(): void
+    {
+        $admin = $this->admin();
+        $workshop = Workshop::factory()->create();
+        $admin->workshops()->attach($workshop);
+
+        $outsider = User::factory()->create();
+        $otherWs = Workshop::factory()->create();
+        $outsider->workshops()->attach($otherWs);
+
+        $this->actingAs($admin, 'sanctum')
+             ->patchJson("/api/users/{$outsider->id}", ['name' => 'Hack'])
+             ->assertForbidden();
+    }
+
+    public function test_admin_cannot_change_role(): void
+    {
+        $admin = $this->admin();
+        $workshop = Workshop::factory()->create();
+        $admin->workshops()->attach($workshop);
+
+        $member = User::factory()->create();
+        $member->workshops()->attach($workshop);
+
+        $this->actingAs($admin, 'sanctum')
+             ->patchJson("/api/users/{$member->id}", ['role' => 'superadmin'])
+             ->assertForbidden();
+    }
+
+    public function test_regular_user_cannot_edit_others(): void
+    {
+        $user = $this->regularUser();
+        $target = User::factory()->create();
+
+        $this->actingAs($user, 'sanctum')
+             ->patchJson("/api/users/{$target->id}", ['name' => 'Hack'])
+             ->assertForbidden();
+    }
+
+    public function test_edit_email_unique_ignores_same_user(): void
+    {
+        $sa = $this->superAdmin();
+        $user = User::factory()->create(['email' => 'original@test.com']);
+
+        $this->actingAs($sa, 'sanctum')
+             ->patchJson("/api/users/{$user->id}", ['email' => 'original@test.com'])
+             ->assertOk();
+    }
+
+    public function test_edit_email_rejects_duplicate(): void
+    {
+        $sa = $this->superAdmin();
+        User::factory()->create(['email' => 'taken@test.com']);
+        $user = User::factory()->create();
+
+        $this->actingAs($sa, 'sanctum')
+             ->patchJson("/api/users/{$user->id}", ['email' => 'taken@test.com'])
+             ->assertUnprocessable()
+             ->assertJsonValidationErrors(['email']);
+    }
+
+    // ── update password ──────────────────────────────────────────────────────
+
+    public function test_superadmin_can_change_user_password(): void
+    {
+        $sa = $this->superAdmin();
+        $user = User::factory()->create();
+
+        $this->actingAs($sa, 'sanctum')
+             ->patchJson("/api/users/{$user->id}/password", [
+                 'password' => 'newpassword123',
+                 'password_confirmation' => 'newpassword123',
+             ])
+             ->assertOk()
+             ->assertJson(['message' => 'Contraseña actualizada correctamente.']);
+
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newpassword123', $user->fresh()->password));
+    }
+
+    public function test_admin_can_change_password_of_workshop_member(): void
+    {
+        $admin = $this->admin();
+        $workshop = Workshop::factory()->create();
+        $admin->workshops()->attach($workshop);
+
+        $member = User::factory()->create();
+        $member->workshops()->attach($workshop);
+
+        $this->actingAs($admin, 'sanctum')
+             ->patchJson("/api/users/{$member->id}/password", [
+                 'password' => 'newpassword123',
+                 'password_confirmation' => 'newpassword123',
+             ])
+             ->assertOk();
+    }
+
+    public function test_cannot_change_own_password_via_this_endpoint(): void
+    {
+        $sa = $this->superAdmin();
+
+        $this->actingAs($sa, 'sanctum')
+             ->patchJson("/api/users/{$sa->id}/password", [
+                 'password' => 'newpassword123',
+                 'password_confirmation' => 'newpassword123',
+             ])
+             ->assertForbidden();
+    }
+
+    public function test_password_confirmation_required(): void
+    {
+        $sa = $this->superAdmin();
+        $user = User::factory()->create();
+
+        $this->actingAs($sa, 'sanctum')
+             ->patchJson("/api/users/{$user->id}/password", [
+                 'password' => 'newpassword123',
+                 'password_confirmation' => 'differentpassword',
+             ])
+             ->assertUnprocessable()
+             ->assertJsonValidationErrors(['password']);
+    }
+
+    public function test_regular_user_cannot_change_others_password(): void
+    {
+        $user = $this->regularUser();
+        $target = User::factory()->create();
+
+        $this->actingAs($user, 'sanctum')
+             ->patchJson("/api/users/{$target->id}/password", [
+                 'password' => 'newpassword123',
+                 'password_confirmation' => 'newpassword123',
+             ])
+             ->assertForbidden();
+    }
 }
