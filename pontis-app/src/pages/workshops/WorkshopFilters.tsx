@@ -20,6 +20,10 @@ export default function WorkshopFilters({ filters, onChange }: WorkshopFiltersPr
     set('search', e.target.value)
   }
 
+  function toggleMyWorkshops() {
+    onChange({ ...filters, my_workshops_only: !filters.my_workshops_only, page: 1 })
+  }
+
   return (
     <div className="workshop-filters">
       <Input
@@ -45,6 +49,18 @@ export default function WorkshopFilters({ filters, onChange }: WorkshopFiltersPr
           <option key={d} value={d}>{d}</option>
         ))}
       </Select>
+
+      <button
+        type="button"
+        className={`workshop-filter-toggle ${filters.my_workshops_only ? 'workshop-filter-toggle--on' : ''}`}
+        onClick={toggleMyWorkshops}
+        aria-pressed={filters.my_workshops_only ?? false}
+      >
+        <span className="toggle-track">
+          <span className="toggle-thumb" />
+        </span>
+        Mis talleres
+      </button>
     </div>
   )
 }

@@ -3,6 +3,7 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 20px;
+  align-items: center;
 }
 
 .workshop-filters-search {
@@ -13,4 +14,65 @@
 .workshop-filters .select {
   width: auto;
   min-width: 160px;
+}
+
+/* ── Mis talleres toggle ── */
+
+.workshop-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.workshop-filter-toggle:hover {
+  border-color: var(--accent-border);
+  color: var(--text-h);
+}
+
+.workshop-filter-toggle--on {
+  border-color: var(--accent-border);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 28px;
+  height: 16px;
+  border-radius: 99px;
+  background: var(--border);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.workshop-filter-toggle--on .toggle-track {
+  background: var(--accent);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.workshop-filter-toggle--on .toggle-thumb {
+  transform: translateX(12px);
 }

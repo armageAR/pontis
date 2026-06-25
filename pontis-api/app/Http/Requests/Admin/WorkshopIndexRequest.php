@@ -23,6 +23,7 @@ class WorkshopIndexRequest extends FormRequest
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'sort_by' => ['nullable', 'string', 'in:number,name,zone_number,work_day,created_at'],
             'sort_direction' => ['nullable', 'string', 'in:asc,desc'],
+            'my_workshops_only' => ['nullable', 'in:0,1,true,false'],
         ];
     }
 }
