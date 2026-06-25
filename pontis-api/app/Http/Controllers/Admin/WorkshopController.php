@@ -143,10 +143,10 @@ class WorkshopController extends Controller
     {
         Gate::authorize('approveMember', $workshop);
 
-        $user->workshopMemberships()
-            ->where('workshop_id', $workshop->id)
-            ->wherePivot('status', 'pending')
-            ->update(['status' => 'active', 'user_seen_at' => null]);
+        $user->workshopMemberships()->updateExistingPivot($workshop->id, [
+            'status'       => 'active',
+            'user_seen_at' => null,
+        ]);
 
         return response()->json(['message' => 'Solicitud aprobada.']);
     }
@@ -155,10 +155,10 @@ class WorkshopController extends Controller
     {
         Gate::authorize('approveMember', $workshop);
 
-        $user->workshopMemberships()
-            ->where('workshop_id', $workshop->id)
-            ->wherePivot('status', 'pending')
-            ->update(['status' => 'rejected', 'user_seen_at' => null]);
+        $user->workshopMemberships()->updateExistingPivot($workshop->id, [
+            'status'       => 'rejected',
+            'user_seen_at' => null,
+        ]);
 
         return response()->json(['message' => 'Solicitud rechazada.']);
     }
