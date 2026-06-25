@@ -1,4 +1,4 @@
-import { ChevronUp, ChevronDown, Pencil, KeyRound } from 'lucide-react'
+import { ChevronUp, ChevronDown, Pencil, KeyRound, Crown } from 'lucide-react'
 import type { UserListItem, UserFilters } from '@/api/users'
 import ActionMenu from '@/components/ActionMenu'
 import UserStatusSelect from './UserStatusSelect'
@@ -11,15 +11,11 @@ interface UserTableProps {
   onSort: (filters: Partial<UserFilters>) => void
   currentUserId: number
   currentUserRole: string
+  isCurrentUserWorkshopAdmin: boolean
   onStatusChange: (userId: number, status: string) => Promise<void>
   onEdit: (user: UserListItem) => void
   onChangePassword: (user: UserListItem) => void
-}
-
-const ROLE_LABELS: Record<string, string> = {
-  superadmin: 'Super Admin',
-  admin: 'Admin',
-  user: 'Usuario',
+  onToggleSuperadmin: (user: UserListItem) => void
 }
 
 interface Column {
@@ -31,7 +27,6 @@ interface Column {
 const COLUMNS: Column[] = [
   { key: 'name', label: 'Nombre', sortable: true },
   { key: 'email', label: 'Email', sortable: true },
-  { key: 'role', label: 'Rol', sortable: true },
   { key: 'workshops', label: 'Talleres', sortable: false },
   { key: 'status', label: 'Estado', sortable: true },
   { key: 'created_at', label: 'Registro', sortable: true },
@@ -60,17 +55,19 @@ export default function UserTable({
   onSort,
   currentUserId,
   currentUserRole,
+  isCurrentUserWorkshopAdmin,
   onStatusChange,
   onEdit,
   onChangePassword,
+  onToggleSuperadmin,
 }: UserTableProps) {
   function handleSort(key: string) {
     const newDir = sortBy === key && sortDirection === 'asc' ? 'desc' : 'asc'
     onSort({ sort_by: key, sort_direction: newDir })
   }
 
-  const canManage = currentUserRole === 'superadmin' || currentUserRole === 'admin'
   const isSuperAdmin = currentUserRole === 'superadmin'
+  const canManage = isSuperAdmin || isCurrentUserWorkshopAdmin
 
   return (
     <div className="user-table-wrapper">
@@ -96,16 +93,31 @@ export default function UserTable({
             const isSelf = u.id === currentUserId
             const rowCanManage = canManage && !isSelf
             const rowCanEdit = rowCanManage || (isSelf && isSuperAdmin)
+            const userIsSuperAdmin = u.role === 'superadmin'
 
             return (
               <tr key={u.id}>
-                <td className="user-cell-name">{u.name}</td>
+                <td className="user-cell-name">
+                  <span className="user-name-text">{u.name}</span>
+                  {userIsSuperAdmin && (
+                    <span className="user-superadmin-badge" title="Superadmin">
+                      <Crown size={11} />
+                    </span>
+                  )}
+                </td>
                 <td className="user-cell-email">{u.email}</td>
-                <td>{ROLE_LABELS[u.role ?? ''] ?? '—'}</td>
                 <td>
                   {u.workshops.length > 0 ? (
-                    <span className="user-cell-workshops" title={u.workshops.map((w) => `${w.name} Nro ${w.number}`).join(', ')}>
-                      {u.workshops.map((w) => `Nro ${w.number}`).join(', ')}
+                    <span
+                      className="user-cell-workshops"
+                      title={u.workshops.map((w) => `${w.name} Nro ${w.number} (${w.workshop_role === 'admin' ? 'admin' : 'miembro'})`).join(', ')}
+                    >
+                      {u.workshops.map((w) => (
+                        <span key={w.id} className="user-cell-workshop-tag">
+                          Nro {w.number}
+                          {w.workshop_role === 'admin' && <span className="user-cell-workshop-admin-badge">A</span>}
+                        </span>
+                      ))}
                     </span>
                   ) : '—'}
                 </td>
@@ -132,6 +144,12 @@ export default function UserTable({
                         onClick: () => onChangePassword(u),
                         disabled: !rowCanManage,
                       },
+                      ...(isSuperAdmin && !isSelf ? [{
+                        icon: <Crown size={15} />,
+                        label: userIsSuperAdmin ? 'Quitar badge superadmin' : 'Dar badge superadmin',
+                        onClick: () => onToggleSuperadmin(u),
+                        danger: userIsSuperAdmin,
+                      }] : []),
                     ]}
                   />
                 </td>

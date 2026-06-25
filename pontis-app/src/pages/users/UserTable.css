@@ -43,6 +43,34 @@
 .user-cell-name {
   font-weight: 500;
   color: var(--text-h);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-name-text {
+  white-space: nowrap;
+}
+
+.user-superadmin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(234, 179, 8, 0.15);
+  color: #ca8a04;
+  border: 1px solid rgba(202, 138, 4, 0.35);
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .user-superadmin-badge {
+    background: rgba(250, 204, 21, 0.12);
+    color: #facc15;
+    border-color: rgba(250, 204, 21, 0.3);
+  }
 }
 
 .user-cell-email {
@@ -50,9 +78,33 @@
 }
 
 .user-cell-workshops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.user-cell-workshop-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font-size: 13px;
   color: var(--accent);
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.user-cell-workshop-admin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .user-cell-date {
