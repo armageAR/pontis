@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\WorkshopController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -17,6 +18,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/account-status',         [AuthController::class, 'accountStatus']);
     Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
+
+    Route::get('/users', [UserController::class, 'index']);
+    Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
 
     Route::prefix('admin')->group(function () {
         Route::get('/workshops', [WorkshopController::class, 'index']);

@@ -84,8 +84,8 @@ class WorkshopTest extends TestCase
 
     public function test_filter_by_search(): void
     {
-        Workshop::factory()->create(['name' => 'UNION DEL PLATA']);
-        Workshop::factory()->create(['name' => 'CONFRATERNIDAD']);
+        Workshop::factory()->create(['name' => 'UNION DEL PLATA', 'zone_name' => 'Zona 1', 'address' => 'Calle 1', 'city' => 'CABA']);
+        Workshop::factory()->create(['name' => 'CONFRATERNIDAD', 'zone_name' => 'Zona 1', 'address' => 'Calle 2', 'city' => 'CABA']);
 
         $this->actingAs($this->superAdmin(), 'sanctum')
             ->getJson('/api/admin/workshops?search=UNION')

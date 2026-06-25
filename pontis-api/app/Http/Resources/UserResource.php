@@ -14,8 +14,15 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role,
+            'status' => $this->status,
+            'email_verified_at' => $this->email_verified_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'workshops' => $this->whenLoaded('workshops', fn () => $this->workshops->map(fn ($w) => [
+                'id' => $w->id,
+                'name' => $w->name,
+                'number' => $w->number,
+            ])),
         ];
     }
 }

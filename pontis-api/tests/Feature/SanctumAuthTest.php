@@ -213,6 +213,32 @@ class SanctumAuthTest extends TestCase
           ->assertJsonValidationErrors(['email']);
     }
 
+    public function test_suspended_user_cannot_login(): void
+    {
+        $user = User::factory()->suspended()->create([
+            'password' => bcrypt('password123'),
+        ]);
+
+        $this->postJson('/api/login', [
+            'email'    => $user->email,
+            'password' => 'password123',
+        ])->assertStatus(422)
+          ->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_inactive_user_cannot_login(): void
+    {
+        $user = User::factory()->inactive()->create([
+            'password' => bcrypt('password123'),
+        ]);
+
+        $this->postJson('/api/login', [
+            'email'    => $user->email,
+            'password' => 'password123',
+        ])->assertStatus(422)
+          ->assertJsonValidationErrors(['email']);
+    }
+
     public function test_login_fails_with_wrong_password(): void
     {
         $user = User::factory()->create(['password' => bcrypt('password123')]);

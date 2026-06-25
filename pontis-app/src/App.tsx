@@ -8,6 +8,7 @@ import PendingPage from '@/pages/pending/PendingPage'
 import VerifyEmailPage from '@/pages/verify-email/VerifyEmailPage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import WorkshopsPage from '@/pages/workshops/WorkshopsPage'
+import UsersPage from '@/pages/users/UsersPage'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/workshops" element={<WorkshopsPage />} />
+            <Route path="/users" element={<UsersPage />} />
           </Route>
         </Routes>
       </AuthProvider>

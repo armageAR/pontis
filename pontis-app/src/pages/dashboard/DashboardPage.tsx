@@ -19,6 +19,11 @@ export default function DashboardPage() {
           <h3>Talleres</h3>
           <p>Gestionar talleres, zonas y asignaciones.</p>
         </Link>
+        <Link to="/users" className="dashboard-card">
+          <span className="dashboard-card-icon">⬤</span>
+          <h3>Usuarios</h3>
+          <p>Ver miembros y gestionar permisos.</p>
+        </Link>
       </div>
     </AppLayout>
   )

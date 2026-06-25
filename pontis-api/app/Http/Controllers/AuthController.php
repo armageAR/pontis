@@ -82,6 +82,18 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->status === UserStatus::INACTIVE) {
+            throw ValidationException::withMessages([
+                'email' => ['Tu cuenta fue dada de baja.'],
+            ]);
+        }
+
+        if ($user->status === UserStatus::SUSPENDED) {
+            throw ValidationException::withMessages([
+                'email' => ['Tu cuenta está suspendida. Contactá al administrador.'],
+            ]);
+        }
+
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([

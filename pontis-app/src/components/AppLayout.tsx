@@ -29,6 +29,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div className="app-nav-links">
             <Link to="/dashboard" className="app-nav-link">Panel</Link>
             <Link to="/workshops" className="app-nav-link">Talleres</Link>
+            <Link to="/users" className="app-nav-link">Usuarios</Link>
           </div>
         </div>
         <div className="app-nav-right">
