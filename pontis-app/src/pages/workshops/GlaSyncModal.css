@@ -1,0 +1,198 @@
+.gla-sync-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 560px;
+  max-width: 720px;
+}
+
+.gla-sync-empty {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--text);
+  font-size: 15px;
+}
+
+/* ── Section ── */
+
+.gla-sync-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gla-sync-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.gla-sync-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-h);
+}
+
+.gla-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.gla-badge-new {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gla-badge-new {
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.25);
+  }
+}
+
+.gla-badge-modified {
+  background: rgba(234, 179, 8, 0.12);
+  color: #ca8a04;
+  border: 1px solid rgba(202, 138, 4, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gla-badge-modified {
+    background: rgba(250, 204, 21, 0.1);
+    color: #facc15;
+    border-color: rgba(250, 204, 21, 0.25);
+  }
+}
+
+.gla-badge-disabled {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ── Items ── */
+
+.gla-sync-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.gla-sync-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface, transparent);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.gla-sync-item:hover {
+  border-color: var(--accent-border);
+}
+
+.gla-sync-item input[type='checkbox'] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+}
+
+.gla-sync-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.gla-sync-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  line-height: 1.3;
+}
+
+.gla-sync-item-sub {
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* ── Changes diff ── */
+
+.gla-sync-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.gla-sync-change {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  align-items: baseline;
+}
+
+.gla-change-field {
+  color: var(--text);
+  font-weight: 600;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.gla-change-from {
+  color: var(--error);
+  text-decoration: line-through;
+  opacity: 0.85;
+}
+
+.gla-change-arrow {
+  color: var(--text);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.gla-change-to {
+  color: var(--success, #16a34a);
+  font-weight: 600;
+}
+
+/* ── Footer ── */
+
+.gla-sync-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.gla-sync-footer-count {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.gla-sync-footer-count strong {
+  color: var(--text-h);
+}

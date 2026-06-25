@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\WorkshopController;
+use App\Http\Controllers\Admin\WorkshopSyncController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
@@ -44,6 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/workshops/{workshop}/leave', [WorkshopController::class, 'leave']);
         Route::post('/workshops/{workshop}/join-requests/{user}/approve', [WorkshopController::class, 'approveJoinRequest']);
         Route::post('/workshops/{workshop}/join-requests/{user}/reject', [WorkshopController::class, 'rejectJoinRequest']);
+
+        Route::post('/workshops/gla/preview', [WorkshopSyncController::class, 'preview']);
+        Route::post('/workshops/gla/apply',   [WorkshopSyncController::class, 'apply']);
 
         Route::get('/workshops/{workshop}/users', [WorkshopController::class, 'users']);
         Route::post('/workshops/{workshop}/users', [WorkshopController::class, 'assignUsers']);

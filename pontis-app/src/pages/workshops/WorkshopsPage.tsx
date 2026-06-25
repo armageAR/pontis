@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
+import { RefreshCw, RefreshCcw } from 'lucide-react'
 import * as api from '@/api/workshops'
+import * as syncApi from '@/api/sync'
 import type { Workshop, WorkshopFilters as Filters, WorkshopFormData } from '@/api/workshops'
+import type { GlaDiff } from '@/api/sync'
 import { useAuth } from '@/context/AuthContext'
 import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import Spinner from '@/components/Spinner'
+import GlaSyncModal from './GlaSyncModal'
 import Pagination from '@/components/Pagination'
 import EmptyState from '@/components/EmptyState'
 import Modal from '@/components/Modal'
@@ -34,6 +38,9 @@ export default function WorkshopsPage() {
   const [toggling, setToggling] = useState(false)
   const [actionMsg, setActionMsg] = useState('')
 
+  const [refreshing, setRefreshing] = useState(false)
+  const [syncing, setSyncing]       = useState(false)
+  const [glaDiff, setGlaDiff]       = useState<GlaDiff | null>(null)
   const [workshopToLeave, setWorkshopToLeave] = useState<Workshop | null>(null)
   const [leaving, setLeaving] = useState(false)
   const [joiningId, setJoiningId] = useState<number | null>(null)
@@ -58,6 +65,31 @@ export default function WorkshopsPage() {
 
   function updateFilters(partial: Partial<Filters>) {
     setFilters((prev) => ({ ...prev, ...partial }))
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true)
+    await fetchWorkshops(filters)
+    setRefreshing(false)
+  }
+
+  async function handleGlaSync() {
+    setSyncing(true)
+    setError('')
+    try {
+      const diff = await syncApi.previewGlaSync()
+      setGlaDiff(diff)
+    } catch {
+      setError('No se pudo conectar con GLA para obtener los datos.')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  function handleGlaApplied() {
+    setGlaDiff(null)
+    setActionMsg('Sincronización con GLA aplicada correctamente.')
+    fetchWorkshops(filters)
   }
 
   function openCreate() {
@@ -166,7 +198,19 @@ export default function WorkshopsPage() {
     <AppLayout>
       <div className="workshops-header">
         <h1 className="workshops-title">Talleres</h1>
-        <Button onClick={openCreate}>Nuevo taller</Button>
+        <div className="workshops-header-actions">
+          <Button variant="outline" onClick={handleRefresh} loading={refreshing} title="Actualizar lista">
+            <RefreshCw size={15} />
+            Actualizar
+          </Button>
+          {currentUser?.role === 'superadmin' && (
+            <Button variant="outline" onClick={handleGlaSync} loading={syncing}>
+              <RefreshCcw size={15} />
+              Sincronizar con GLA
+            </Button>
+          )}
+          <Button onClick={openCreate}>Nuevo taller</Button>
+        </div>
       </div>
 
       {actionMsg && <Alert variant="success">{actionMsg}</Alert>}
@@ -258,6 +302,16 @@ export default function WorkshopsPage() {
         confirmLabel="Salir"
         loading={leaving}
       />
+
+      {/* GLA sync modal */}
+      {glaDiff && (
+        <GlaSyncModal
+          open
+          diff={glaDiff}
+          onClose={() => setGlaDiff(null)}
+          onApplied={handleGlaApplied}
+        />
+      )}
     </AppLayout>
   )
 }
