@@ -50,7 +50,7 @@ class WorkshopSeeder extends Seeder
         ];
 
         foreach ($workshops as $workshop) {
-            Workshop::create($workshop);
+            Workshop::firstOrCreate(['number' => $workshop['number']], $workshop);
         }
     }
 }
