@@ -61,6 +61,11 @@ export default function ContactRequestsPage() {
     await api.cancelContactRequest(cr.id); load()
   }
 
+  async function handleClose(cr: ContactRequest) {
+    if (!confirm('¿Cerrar esta solicitud? Indica que el contacto fue resuelto.')) return
+    await api.closeContactRequest(cr.id); load()
+  }
+
   return (
     <AppLayout>
       <div className="cont-header">
@@ -120,6 +125,9 @@ export default function ContactRequestsPage() {
                   )}
                   {direction === 'sent' && cr.status === 'pending' && (
                     <Button variant="outline" onClick={() => handleCancel(cr)}>Cancelar</Button>
+                  )}
+                  {cr.status === 'accepted' && (
+                    <Button variant="outline" onClick={() => handleClose(cr)}>Cerrar</Button>
                   )}
                 </div>
               </div>

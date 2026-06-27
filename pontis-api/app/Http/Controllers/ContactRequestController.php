@@ -57,4 +57,15 @@ class ContactRequestController extends Controller {
         $contactRequest->update(['status'=>'cancelled']);
         return response()->json($contactRequest->fresh());
     }
+
+    public function close(Request $request, ContactRequest $contactRequest): JsonResponse {
+        $user = $request->user();
+        abort_if(
+            $contactRequest->requester_id !== $user->id && $contactRequest->requestee_id !== $user->id,
+            403
+        );
+        abort_if($contactRequest->status !== 'accepted', 422, 'Solo se pueden cerrar solicitudes aceptadas.');
+        $contactRequest->update(['status' => 'closed']);
+        return response()->json($contactRequest->fresh());
+    }
 }

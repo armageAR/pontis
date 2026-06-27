@@ -177,8 +177,9 @@ class UserController extends Controller
 
     public function updateWorkshopRole(Request $request, User $user, Workshop $workshop): UserResource|JsonResponse
     {
-        $request->validate([
-            'role' => ['required', 'string', 'in:admin,member'],
+        $data = $request->validate([
+            'role'   => ['sometimes', 'required', 'string', 'in:admin,member'],
+            'status' => ['sometimes', 'required', 'string', 'in:active,pending,rejected,correction_requested,inactive,suspended,ended,historical'],
         ]);
 
         $currentUser = $request->user();
@@ -191,7 +192,11 @@ class UserController extends Controller
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
-        $user->workshops()->updateExistingPivot($workshop->id, ['role' => $request->input('role')]);
+        $pivot = [];
+        if (isset($data['role']))   $pivot['role']   = $data['role'];
+        if (isset($data['status'])) $pivot['status'] = $data['status'];
+
+        $user->workshops()->updateExistingPivot($workshop->id, $pivot);
 
         return new UserResource($user->load('workshops'));
     }

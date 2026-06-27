@@ -46,3 +46,8 @@ export async function cancelContactRequest(id: number): Promise<ContactRequest> 
   const { data } = await client.post<ContactRequest>(`/contact-requests/${id}/cancel`)
   return data
 }
+
+export async function closeContactRequest(id: number): Promise<ContactRequest> {
+  const { data } = await client.post<ContactRequest>(`/contact-requests/${id}/close`)
+  return data
+}

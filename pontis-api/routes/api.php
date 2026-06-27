@@ -142,6 +142,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/contact-requests/{contactRequest}/accept', [ContactRequestController::class, 'accept']);
     Route::post('/contact-requests/{contactRequest}/reject', [ContactRequestController::class, 'reject']);
     Route::post('/contact-requests/{contactRequest}/cancel', [ContactRequestController::class, 'cancel']);
+    Route::post('/contact-requests/{contactRequest}/close', [ContactRequestController::class, 'close']);
 
     Route::prefix('admin')->group(function () {
         Route::get('/workshops', [WorkshopController::class, 'index']);
