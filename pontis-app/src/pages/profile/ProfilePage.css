@@ -1,0 +1,22 @@
+.profile-page { max-width: 760px; }
+.profile-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0 0 24px; }
+.profile-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 20px; }
+.profile-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.profile-section-title { font-size: 17px; font-weight: 600; color: var(--text-h); margin: 0 0 16px; }
+.profile-section-header .profile-section-title { margin-bottom: 0; }
+.profile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.profile-grid:last-child { margin-bottom: 0; }
+.profile-select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; }
+.profile-textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; resize: vertical; font-family: inherit; box-sizing: border-box; }
+.profile-save-row { display: flex; justify-content: flex-end; margin-bottom: 24px; }
+.profile-loading { display: flex; justify-content: center; padding: 64px 0; }
+.profile-empty { color: var(--text-muted); font-size: 14px; margin: 0; }
+.profile-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.profile-table th { text-align: left; padding: 8px 10px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.profile-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.profile-table tr:last-child td { border-bottom: none; }
+.profile-table-actions { display: flex; gap: 8px; }
+.profile-link-btn { background: none; border: none; cursor: pointer; color: var(--accent); font-size: 13px; padding: 0; }
+.profile-link-danger { color: var(--error, #e53e3e); }
+.profile-modal-form { display: flex; flex-direction: column; gap: 14px; }
+.profile-modal-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }

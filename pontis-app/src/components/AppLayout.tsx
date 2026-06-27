@@ -31,13 +31,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div className="app-nav-links">
             <Link to="/dashboard" className="app-nav-link">Panel</Link>
             <Link to="/workshops" className="app-nav-link">Talleres</Link>
-            <Link to="/users" className="app-nav-link">Usuarios</Link>
+            <Link to="/people" className="app-nav-link">Personas</Link>
+            <Link to="/services" className="app-nav-link">Servicios</Link>
+            <Link to="/needs" className="app-nav-link">Necesidades</Link>
+            {user?.role === 'superadmin' && <Link to="/users" className="app-nav-link">Usuarios</Link>}
           </div>
         </div>
         <div className="app-nav-right">
-          <span className="app-nav-user">{user?.name}</span>
+          <Link to="/profile" className="app-nav-link">{user?.name}</Link>
           <Button variant="outline" onClick={handleLogout} loading={loggingOut}>
-            Cerrar sesión
+            Salir
           </Button>
         </div>
       </nav>

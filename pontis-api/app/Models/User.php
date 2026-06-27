@@ -3,23 +3,34 @@
 namespace App\Models;
 
 use App\Enums\UserStatus;
+use App\Models\UserDegree;
+use App\Models\UserPosition;
+use App\Models\Service;
+use App\Models\Need;
 use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected $fillable = [
+        'name', 'last_name', 'email', 'password', 'role', 'status',
+        'dni', 'masonic_id', 'birth_date', 'initiation_date', 'masonic_status',
+        'phone', 'whatsapp', 'alternative_email', 'contact_preference',
+        'country', 'province', 'locality', 'neighborhood', 'address',
+        'profession', 'occupation', 'company', 'profession_description', 'bio',
+    ];
+
+    protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
@@ -27,8 +38,15 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'status' => UserStatus::class,
+            'birth_date' => 'date',
+            'initiation_date' => 'date',
         ];
     }
+
+    public function userDegrees(): HasMany { return $this->hasMany(UserDegree::class); }
+    public function userPositions(): HasMany { return $this->hasMany(UserPosition::class); }
+    public function services(): HasMany { return $this->hasMany(Service::class); }
+    public function needs(): HasMany { return $this->hasMany(Need::class); }
 
     public function workshops(): BelongsToMany
     {

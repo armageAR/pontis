@@ -4,7 +4,15 @@ use App\Http\Controllers\Admin\WorkshopController;
 use App\Http\Controllers\Admin\WorkshopSyncController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DegreeController;
+use App\Http\Controllers\NeedController;
+use App\Http\Controllers\PeopleController;
+use App\Http\Controllers\PositionCatalogController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ServiceCategoryController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserPositionController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -31,6 +39,51 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/users/{user}/workshops/{workshop}', [UserController::class, 'addWorkshop']);
     Route::patch('/users/{user}/workshops/{workshop}', [UserController::class, 'updateWorkshopRole']);
     Route::delete('/users/{user}/workshops/{workshop}', [UserController::class, 'removeWorkshop']);
+
+    // Perfil propio
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::patch('/profile', [ProfileController::class, 'update']);
+
+    // Grados del usuario autenticado
+    Route::get('/profile/degrees', [DegreeController::class, 'index']);
+    Route::post('/profile/degrees', [DegreeController::class, 'store']);
+    Route::patch('/profile/degrees/{degree}', [DegreeController::class, 'update']);
+    Route::delete('/profile/degrees/{degree}', [DegreeController::class, 'destroy']);
+
+    // Cargos del usuario autenticado
+    Route::get('/profile/positions', [UserPositionController::class, 'index']);
+    Route::post('/profile/positions', [UserPositionController::class, 'store']);
+    Route::patch('/profile/positions/{userPosition}', [UserPositionController::class, 'update']);
+    Route::delete('/profile/positions/{userPosition}', [UserPositionController::class, 'destroy']);
+
+    // Catálogo de cargos
+    Route::get('/positions', [PositionCatalogController::class, 'index']);
+    Route::post('/positions', [PositionCatalogController::class, 'store']);
+    Route::patch('/positions/{position}', [PositionCatalogController::class, 'update']);
+    Route::delete('/positions/{position}', [PositionCatalogController::class, 'destroy']);
+
+    // Catálogo de categorías de servicios
+    Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
+    Route::post('/service-categories', [ServiceCategoryController::class, 'store']);
+    Route::patch('/service-categories/{serviceCategory}', [ServiceCategoryController::class, 'update']);
+    Route::delete('/service-categories/{serviceCategory}', [ServiceCategoryController::class, 'destroy']);
+
+    // Servicios ofrecidos
+    Route::get('/services', [ServiceController::class, 'index']);
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::get('/services/{service}', [ServiceController::class, 'show']);
+    Route::patch('/services/{service}', [ServiceController::class, 'update']);
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    // Necesidades
+    Route::get('/needs', [NeedController::class, 'index']);
+    Route::post('/needs', [NeedController::class, 'store']);
+    Route::get('/needs/{need}', [NeedController::class, 'show']);
+    Route::patch('/needs/{need}', [NeedController::class, 'update']);
+    Route::delete('/needs/{need}', [NeedController::class, 'destroy']);
+
+    // Búsqueda de personas
+    Route::get('/people', [PeopleController::class, 'index']);
 
     Route::prefix('admin')->group(function () {
         Route::get('/workshops', [WorkshopController::class, 'index']);

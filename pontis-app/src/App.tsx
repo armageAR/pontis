@@ -9,6 +9,10 @@ import VerifyEmailPage from '@/pages/verify-email/VerifyEmailPage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import WorkshopsPage from '@/pages/workshops/WorkshopsPage'
 import UsersPage from '@/pages/users/UsersPage'
+import ProfilePage from '@/pages/profile/ProfilePage'
+import ServicesPage from '@/pages/services/ServicesPage'
+import NeedsPage from '@/pages/needs/NeedsPage'
+import PeoplePage from '@/pages/people/PeoplePage'
 
 export default function App() {
   return (
@@ -24,6 +28,10 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/workshops" element={<WorkshopsPage />} />
             <Route path="/users" element={<UsersPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/needs" element={<NeedsPage />} />
+            <Route path="/people" element={<PeoplePage />} />
           </Route>
         </Routes>
       </AuthProvider>

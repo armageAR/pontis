@@ -1,0 +1,15 @@
+.people-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0 0 24px; }
+.people-search-form { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+.people-search-input { flex: 1; min-width: 200px; }
+.people-select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; }
+.people-loading { display: flex; justify-content: center; padding: 48px 0; }
+.people-results-count { font-size: 14px; color: var(--text-muted); margin-bottom: 14px; }
+.people-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.person-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+.person-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.person-name { font-size: 16px; font-weight: 600; color: var(--text-h); }
+.person-masonic-id { margin-left: 10px; font-size: 13px; color: var(--text-muted); }
+.person-meta { display: flex; gap: 12px; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.person-meta-item::before { content: ''; }
+.person-workshops { display: flex; flex-wrap: wrap; gap: 6px; }
+.person-workshop-tag { font-size: 12px; background: var(--accent-bg); color: var(--accent); border-radius: 4px; padding: 2px 8px; }
