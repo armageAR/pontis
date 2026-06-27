@@ -144,11 +144,43 @@ class WorkshopController extends Controller
         Gate::authorize('approveMember', $workshop);
 
         $user->workshopMemberships()->updateExistingPivot($workshop->id, [
-            'status'       => 'active',
-            'user_seen_at' => null,
+            'status'            => 'active',
+            'user_seen_at'      => null,
+            'correction_notes'  => null,
+        ]);
+
+        \App\Models\PontisNotification::create([
+            'user_id' => $user->id,
+            'type'    => 'membership_approved',
+            'title'   => 'Membresía aprobada',
+            'body'    => "Tu solicitud de ingreso al taller \"{$workshop->name}\" fue aprobada.",
+            'data'    => ['workshop_id' => $workshop->id],
         ]);
 
         return response()->json(['message' => 'Solicitud aprobada.']);
+    }
+
+    public function requestCorrection(Request $request, Workshop $workshop, User $user): JsonResponse
+    {
+        Gate::authorize('approveMember', $workshop);
+
+        $data = $request->validate(['notes' => 'required|string|max:1000']);
+
+        $user->workshopMemberships()->updateExistingPivot($workshop->id, [
+            'status'           => 'correction_requested',
+            'user_seen_at'     => null,
+            'correction_notes' => $data['notes'],
+        ]);
+
+        \App\Models\PontisNotification::create([
+            'user_id' => $user->id,
+            'type'    => 'membership_correction_requested',
+            'title'   => 'Se requieren correcciones',
+            'body'    => "El taller \"{$workshop->name}\" solicitó que corrijas tus datos antes de aprobar tu ingreso.",
+            'data'    => ['workshop_id' => $workshop->id, 'notes' => $data['notes']],
+        ]);
+
+        return response()->json(['message' => 'Solicitud de corrección enviada.']);
     }
 
     public function rejectJoinRequest(Request $request, Workshop $workshop, User $user): JsonResponse
@@ -158,6 +190,14 @@ class WorkshopController extends Controller
         $user->workshopMemberships()->updateExistingPivot($workshop->id, [
             'status'       => 'rejected',
             'user_seen_at' => null,
+        ]);
+
+        \App\Models\PontisNotification::create([
+            'user_id' => $user->id,
+            'type'    => 'membership_rejected',
+            'title'   => 'Solicitud rechazada',
+            'body'    => "Tu solicitud de ingreso al taller \"{$workshop->name}\" fue rechazada.",
+            'data'    => ['workshop_id' => $workshop->id],
         ]);
 
         return response()->json(['message' => 'Solicitud rechazada.']);

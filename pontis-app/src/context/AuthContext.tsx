@@ -14,7 +14,7 @@ interface AuthState {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string, passwordConfirmation: string, workshopId: number) => Promise<void>
+  register: (name: string, email: string, password: string, passwordConfirmation: string, workshopId: number, extra?: { last_name?: string; dni?: string; masonic_id?: string }) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -51,8 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const register = useCallback(
-    async (name: string, email: string, password: string, passwordConfirmation: string, workshopId: number) => {
-      const { token, user } = await authApi.register(name, email, password, passwordConfirmation, workshopId)
+    async (name: string, email: string, password: string, passwordConfirmation: string, workshopId: number, extra?: { last_name?: string; dni?: string; masonic_id?: string }) => {
+      const { token, user } = await authApi.register(name, email, password, passwordConfirmation, workshopId, extra)
       localStorage.setItem('token', token)
       setUser(user)
     },

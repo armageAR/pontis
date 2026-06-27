@@ -12,9 +12,11 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\PositionCatalogController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LocalityController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\VisibilitySettingsController;
+use App\Http\Controllers\ZoneController;
 use App\Http\Controllers\ServiceCategoryController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
@@ -91,6 +93,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Provincias (catálogo)
     Route::get('/provinces', [ProvinceController::class, 'index']);
 
+    // Localidades (catálogo, filtrables por province_id)
+    Route::get('/localities', [LocalityController::class, 'index']);
+
+    // Zonas masónicas
+    Route::get('/zones', [ZoneController::class, 'index']);
+    Route::post('/zones', [ZoneController::class, 'store']);
+    Route::patch('/zones/{zone}', [ZoneController::class, 'update']);
+    Route::delete('/zones/{zone}', [ZoneController::class, 'destroy']);
+
     // Configuración de visibilidad por bloque
     Route::get('/profile/visibility', [VisibilitySettingsController::class, 'index']);
     Route::post('/profile/visibility', [VisibilitySettingsController::class, 'update']);
@@ -131,6 +142,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/workshops/{workshop}/join', [WorkshopController::class, 'join']);
         Route::delete('/workshops/{workshop}/leave', [WorkshopController::class, 'leave']);
         Route::post('/workshops/{workshop}/join-requests/{user}/approve', [WorkshopController::class, 'approveJoinRequest']);
+        Route::post('/workshops/{workshop}/join-requests/{user}/request-correction', [WorkshopController::class, 'requestCorrection']);
         Route::post('/workshops/{workshop}/join-requests/{user}/reject', [WorkshopController::class, 'rejectJoinRequest']);
 
         Route::post('/workshops/gla/preview', [WorkshopSyncController::class, 'preview']);

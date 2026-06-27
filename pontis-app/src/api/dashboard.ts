@@ -3,11 +3,14 @@ import client from './client'
 export interface PendingRequest {
   user_id: number
   user_name: string
+  user_last_name: string | null
   user_email: string
   user_status: string
   workshop_id: number
   workshop_name: string
   workshop_number: number
+  membership_status: 'pending' | 'correction_requested'
+  correction_notes: string | null
   requested_at: string
 }
 
@@ -15,7 +18,8 @@ export interface MembershipNotification {
   workshop_id: number
   workshop_name: string
   workshop_number: number
-  status: 'active' | 'rejected'
+  status: 'active' | 'rejected' | 'correction_requested'
+  correction_notes: string | null
   resolved_at: string
 }
 
@@ -35,6 +39,10 @@ export async function approveJoinRequest(workshopId: number, userId: number): Pr
 
 export async function rejectJoinRequest(workshopId: number, userId: number): Promise<void> {
   await client.post(`/admin/workshops/${workshopId}/join-requests/${userId}/reject`)
+}
+
+export async function requestCorrection(workshopId: number, userId: number, notes: string): Promise<void> {
+  await client.post(`/admin/workshops/${workshopId}/join-requests/${userId}/request-correction`, { notes })
 }
 
 export async function dismissMembershipNotification(workshopId: number): Promise<void> {

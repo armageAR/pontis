@@ -17,8 +17,11 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name'        => 'required|string|max:255',
+            'last_name'   => 'nullable|string|max:255',
             'email'       => 'required|email|unique:users',
             'password'    => 'required|string|min:8|confirmed',
+            'dni'         => 'nullable|string|max:20',
+            'masonic_id'  => 'nullable|string|max:50',
             'workshop_id' => 'required|integer|exists:workshops,id',
         ]);
 
@@ -29,6 +32,21 @@ class AuthController extends Controller
 
         $user = User::create($data);
         $user->workshops()->attach($workshopId);
+
+        // Notify workshop admins about new pending member
+        $workshop = \App\Models\Workshop::find($workshopId);
+        $admins = \App\Models\User::whereHas('workshopMemberships', function ($q) use ($workshopId) {
+            $q->where('workshop_id', $workshopId)->where('role', 'admin')->where('status', 'active');
+        })->get();
+        foreach ($admins as $admin) {
+            \App\Models\PontisNotification::create([
+                'user_id' => $admin->id,
+                'type'    => 'new_member_pending',
+                'title'   => 'Nuevo miembro pendiente',
+                'body'    => "{$user->name}" . ($user->last_name ? " {$user->last_name}" : '') . " solicitó unirse al taller \"{$workshop->name}\".",
+                'data'    => ['user_id' => $user->id, 'workshop_id' => $workshopId],
+            ]);
+        }
 
         $token = $user->createToken('api')->plainTextToken;
 
@@ -118,11 +136,23 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
+        $memberships = $user->workshopMemberships()
+            ->withPivot('status', 'correction_notes')
+            ->get(['workshops.id','workshops.name','workshops.number'])
+            ->map(fn($w) => [
+                'workshop_id'      => $w->id,
+                'workshop_name'    => $w->name,
+                'workshop_number'  => $w->number,
+                'status'           => $w->pivot->status,
+                'correction_notes' => $w->pivot->correction_notes,
+            ]);
+
         return response()->json([
             'status'               => $user->status,
             'email_verified'       => $user->hasVerifiedEmail(),
             'email_verified_at'    => $user->email_verified_at,
             'verification_sent_at' => $user->created_at,
+            'memberships'          => $memberships,
         ]);
     }
 

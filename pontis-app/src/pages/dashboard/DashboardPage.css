@@ -307,3 +307,12 @@
   font-size: 13px;
   color: var(--text-h);
 }
+.pending-request-card.correction-requested { border-left: 3px solid var(--warning, #f59e0b); }
+.dot-correction { background: var(--warning, #f59e0b) !important; }
+.pending-correction-badge { font-size: 11px; font-weight: 600; color: #b45309; background: #fef3c7; border-radius: 4px; padding: 2px 6px; margin-left: auto; }
+.pending-correction-notes { font-size: 12px; color: #92400e; background: #fef9c3; border-radius: 4px; padding: 6px 10px; margin: 4px 0; }
+.notification-correction { background: #fffbeb; border-left: 3px solid #f59e0b; }
+.correction-modal-body { display: flex; flex-direction: column; gap: 12px; }
+.correction-modal-info { font-size: 14px; color: var(--text); margin: 0; }
+.correction-textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; resize: vertical; font-family: inherit; box-sizing: border-box; }
+.correction-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }

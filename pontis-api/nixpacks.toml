@@ -32,4 +32,4 @@ cmds = [
 ]
 
 [start]
-cmd = "php artisan migrate --force && php artisan db:seed --class=SuperAdminSeeder --force && php artisan db:seed --class=WorkshopSeeder --force && php artisan db:seed --class=PositionSeeder --force && php artisan db:seed --class=ServiceCategorySeeder --force && php artisan db:seed --class=ProvinceSeeder --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+cmd = "php artisan migrate --force && php artisan db:seed --class=SuperAdminSeeder --force && php artisan db:seed --class=WorkshopSeeder --force && php artisan db:seed --class=PositionSeeder --force && php artisan db:seed --class=ServiceCategorySeeder --force && php artisan db:seed --class=ProvinceSeeder --force && php artisan db:seed --class=LocalitySeeder --force && php artisan db:seed --class=ZoneSeeder --force && php artisan serve --host=0.0.0.0 --port=$PORT"

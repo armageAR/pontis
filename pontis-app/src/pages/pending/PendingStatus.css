@@ -73,3 +73,7 @@
   border-color: var(--success-border);
   color: var(--success);
 }
+.pending-corrections { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.pending-correction-item { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px 14px; text-align: left; }
+.pending-correction-workshop { font-weight: 600; font-size: 14px; margin: 0 0 4px; color: #92400e; }
+.pending-correction-notes { font-size: 14px; color: #78350f; margin: 0; }

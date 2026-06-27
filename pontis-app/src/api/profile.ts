@@ -26,6 +26,12 @@ export interface Profile {
   company: string | null
   profession_description: string | null
   bio: string | null
+  photo_url: string | null
+  linkedin: string | null
+  website: string | null
+  facebook: string | null
+  instagram: string | null
+  availability_notes: string | null
 }
 
 export interface UserDegree {

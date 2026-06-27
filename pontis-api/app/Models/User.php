@@ -31,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone', 'whatsapp', 'alternative_email', 'contact_preference',
         'country', 'province', 'locality', 'neighborhood', 'address',
         'profession', 'occupation', 'company', 'profession_description', 'bio',
+        'photo_url', 'linkedin', 'website', 'facebook', 'instagram', 'availability_notes', 'admin_notes',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -58,7 +59,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function workshops(): BelongsToMany
     {
         return $this->belongsToMany(Workshop::class)
-            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at')
+            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at', 'correction_notes')
             ->withTimestamps()
             ->wherePivot('status', 'active');
     }
@@ -66,7 +67,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function workshopMemberships(): BelongsToMany
     {
         return $this->belongsToMany(Workshop::class)
-            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at')
+            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at', 'correction_notes')
             ->withTimestamps();
     }
 

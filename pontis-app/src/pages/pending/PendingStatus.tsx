@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Clock, Mail } from 'lucide-react'
+import { Clock, Mail, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import * as authApi from '@/api/auth'
 import type { AccountStatus } from '@/api/auth'
@@ -80,13 +80,16 @@ export default function PendingStatus() {
   const canResend = status && !emailVerified && hoursAgo(status.verification_sent_at) >= 24
 
   if (emailVerified) {
+    const corrections = (status?.memberships ?? []).filter(m => m.status === 'correction_requested')
     return (
       <div className="pending-status">
         {error && <Alert variant="error">{error}</Alert>}
 
-        <div className="pending-icon"><Clock size={48} strokeWidth={1.5} /></div>
+        <div className="pending-icon">
+          {corrections.length > 0 ? <AlertCircle size={48} strokeWidth={1.5} color="#f59e0b" /> : <Clock size={48} strokeWidth={1.5} />}
+        </div>
 
-        <h2 className="pending-title">Esperando aprobación</h2>
+        <h2 className="pending-title">{corrections.length > 0 ? 'Correcciones requeridas' : 'Esperando aprobación'}</h2>
 
         <div className="pending-verification">
           <div className="pending-verification-badge pending-badge-ok">Email verificado</div>
@@ -95,10 +98,22 @@ export default function PendingStatus() {
           </p>
         </div>
 
-        <p className="pending-text">
-          Tu cuenta está pendiente de aprobación por un administrador.
-          Te notificaremos cuando esté lista.
-        </p>
+        {corrections.length > 0 ? (
+          <div className="pending-corrections">
+            {corrections.map(m => (
+              <div key={m.workshop_id} className="pending-correction-item">
+                <p className="pending-correction-workshop">Taller #{m.workshop_number} {m.workshop_name}</p>
+                <p className="pending-correction-notes">{m.correction_notes}</p>
+              </div>
+            ))}
+            <p className="pending-text">Por favor <a href="/profile">actualizá tu ficha</a> con los datos correctos. El admin revisará nuevamente tu solicitud.</p>
+          </div>
+        ) : (
+          <p className="pending-text">
+            Tu cuenta está pendiente de aprobación por un administrador.
+            Te notificaremos cuando esté lista.
+          </p>
+        )}
 
         <Button variant="ghost" onClick={handleRefreshStatus}>
           Actualizar estado

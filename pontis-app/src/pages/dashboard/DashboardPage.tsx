@@ -16,6 +16,8 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<MembershipNotification[]>([])
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [userInfoModal, setUserInfoModal] = useState<PendingRequest | null>(null)
+  const [correctionModal, setCorrectionModal] = useState<PendingRequest | null>(null)
+  const [correctionNotes, setCorrectionNotes] = useState('')
 
   useEffect(() => {
     dashApi.getDashboard().then((data) => {
@@ -45,6 +47,24 @@ export default function DashboardPage() {
       setPendingRequests((prev) => prev.filter(
         (r) => !(r.workshop_id === req.workshop_id && r.user_id === req.user_id)
       ))
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function handleRequestCorrection() {
+    if (!correctionModal || !correctionNotes.trim()) return
+    const req = correctionModal
+    const key = `correction-${req.workshop_id}-${req.user_id}`
+    setActionLoading(key)
+    try {
+      await dashApi.requestCorrection(req.workshop_id, req.user_id, correctionNotes)
+      setPendingRequests(prev => prev.map(r =>
+        r.workshop_id === req.workshop_id && r.user_id === req.user_id
+          ? { ...r, membership_status: 'correction_requested', correction_notes: correctionNotes }
+          : r
+      ))
+      setCorrectionModal(null); setCorrectionNotes('')
     } finally {
       setActionLoading(null)
     }
@@ -88,18 +108,18 @@ export default function DashboardPage() {
           {notifications.map((n) => (
             <div
               key={n.workshop_id}
-              className={`dashboard-notification ${n.status === 'active' ? 'notification-accepted' : 'notification-rejected'}`}
+              className={`dashboard-notification ${n.status === 'active' ? 'notification-accepted' : n.status === 'correction_requested' ? 'notification-correction' : 'notification-rejected'}`}
             >
               <div className="notification-icon">
-                {n.status === 'active' ? <Check size={18} /> : <X size={18} />}
+                {n.status === 'active' ? <Check size={18} /> : n.status === 'correction_requested' ? <Info size={18} /> : <X size={18} />}
               </div>
               <div className="notification-body">
                 <p className="notification-title">
-                  {n.status === 'active' ? 'Solicitud aceptada' : 'Solicitud rechazada'}
+                  {n.status === 'active' ? 'Solicitud aceptada' : n.status === 'correction_requested' ? 'Se requieren correcciones' : 'Solicitud rechazada'}
                 </p>
                 <p className="notification-text">
-                  Tu solicitud para <strong>#{n.workshop_number} {n.workshop_name}</strong> fue{' '}
-                  {n.status === 'active' ? 'aceptada' : 'rechazada'}.
+                  Tu solicitud para <strong>#{n.workshop_number} {n.workshop_name}</strong>{' '}
+                  {n.status === 'active' ? 'fue aceptada.' : n.status === 'correction_requested' ? `requiere correcciones: ${n.correction_notes ?? ''}` : 'fue rechazada.'}
                 </p>
               </div>
               <Button
@@ -122,39 +142,32 @@ export default function DashboardPage() {
             {pendingRequests.map((req) => {
               const approveKey = `approve-${req.workshop_id}-${req.user_id}`
               const rejectKey = `reject-${req.workshop_id}-${req.user_id}`
-              const busy = actionLoading === approveKey || actionLoading === rejectKey
+              const correctionKey = `correction-${req.workshop_id}-${req.user_id}`
+              const busy = actionLoading === approveKey || actionLoading === rejectKey || actionLoading === correctionKey
+              const isCorrection = req.membership_status === 'correction_requested'
               return (
-                <div key={`${req.workshop_id}-${req.user_id}`} className="pending-request-card">
+                <div key={`${req.workshop_id}-${req.user_id}`} className={`pending-request-card ${isCorrection ? 'correction-requested' : ''}`}>
                   <div className="pending-request-header">
-                    <span className="pending-dot" />
+                    <span className={`pending-dot ${isCorrection ? 'dot-correction' : ''}`} />
                     <span className="pending-workshop">#{req.workshop_number} · {req.workshop_name}</span>
+                    {isCorrection && <span className="pending-correction-badge">Corrección solicitada</span>}
                   </div>
-                  <p className="pending-user-name">{req.user_name}</p>
+                  <p className="pending-user-name">{req.user_last_name ? `${req.user_last_name}, ${req.user_name}` : req.user_name}</p>
                   <p className="pending-date">Solicitó el ingreso el {formatDate(req.requested_at)}</p>
+                  {isCorrection && req.correction_notes && (
+                    <p className="pending-correction-notes">Corrección pedida: {req.correction_notes}</p>
+                  )}
                   <div className="pending-request-actions">
-                    <button
-                      type="button"
-                      className="pending-info-btn"
-                      onClick={() => setUserInfoModal(req)}
-                    >
-                      <Info size={14} />
-                      Ver info
+                    <button type="button" className="pending-info-btn" onClick={() => setUserInfoModal(req)}>
+                      <Info size={14} /> Ver info
                     </button>
-                    <Button
-                      variant="outline"
-                      className="pending-reject-btn"
-                      loading={actionLoading === rejectKey}
-                      disabled={busy}
-                      onClick={() => handleReject(req)}
-                    >
+                    <button type="button" className="pending-info-btn" onClick={() => { setCorrectionModal(req); setCorrectionNotes(req.correction_notes ?? '') }}>
+                      Pedir corrección
+                    </button>
+                    <Button variant="outline" className="pending-reject-btn" loading={actionLoading === rejectKey} disabled={busy} onClick={() => handleReject(req)}>
                       Rechazar
                     </Button>
-                    <Button
-                      className="pending-approve-btn"
-                      loading={actionLoading === approveKey}
-                      disabled={busy}
-                      onClick={() => handleApprove(req)}
-                    >
+                    <Button className="pending-approve-btn" loading={actionLoading === approveKey} disabled={busy} onClick={() => handleApprove(req)}>
                       Aceptar
                     </Button>
                   </div>
@@ -200,6 +213,29 @@ export default function DashboardPage() {
             <div className="user-info-row">
               <span className="user-info-label">Fecha de solicitud</span>
               <span className="user-info-value">{formatDate(userInfoModal.requested_at)}</span>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={correctionModal !== null} onClose={() => { setCorrectionModal(null); setCorrectionNotes('') }} title="Solicitar corrección de datos">
+        {correctionModal && (
+          <div className="correction-modal-body">
+            <p className="correction-modal-info">Indicá qué datos debe corregir <strong>{correctionModal.user_last_name ? `${correctionModal.user_last_name}, ${correctionModal.user_name}` : correctionModal.user_name}</strong> antes de aprobar su ingreso.</p>
+            <textarea
+              className="correction-textarea"
+              rows={4}
+              value={correctionNotes}
+              onChange={e => setCorrectionNotes(e.target.value)}
+              placeholder="Ej: El DNI no coincide con el nombre, por favor actualizá tus datos..."
+            />
+            <div className="correction-modal-actions">
+              <Button variant="outline" onClick={() => { setCorrectionModal(null); setCorrectionNotes('') }}>Cancelar</Button>
+              <Button
+                loading={actionLoading === `correction-${correctionModal.workshop_id}-${correctionModal.user_id}`}
+                disabled={!correctionNotes.trim()}
+                onClick={handleRequestCorrection}
+              >Enviar solicitud de corrección</Button>
             </div>
           </div>
         )}

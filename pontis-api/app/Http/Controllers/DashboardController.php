@@ -26,16 +26,19 @@ class DashboardController extends Controller
         $query = DB::table('user_workshop')
             ->join('users', 'users.id', '=', 'user_workshop.user_id')
             ->join('workshops', 'workshops.id', '=', 'user_workshop.workshop_id')
-            ->where('user_workshop.status', 'pending')
+            ->whereIn('user_workshop.status', ['pending', 'correction_requested'])
             ->whereNull('workshops.deleted_at')
             ->select([
                 'user_workshop.user_id',
                 'users.name as user_name',
+                'users.last_name as user_last_name',
                 'users.email as user_email',
                 'users.status as user_status',
                 'user_workshop.workshop_id',
                 'workshops.name as workshop_name',
                 'workshops.number as workshop_number',
+                'user_workshop.status as membership_status',
+                'user_workshop.correction_notes',
                 'user_workshop.created_at as requested_at',
             ]);
 
@@ -60,7 +63,7 @@ class DashboardController extends Controller
             ->join('workshops', 'workshops.id', '=', 'user_workshop.workshop_id')
             ->where('user_workshop.user_id', $user->id)
             ->where('user_workshop.requested_by_user', true)
-            ->whereIn('user_workshop.status', ['active', 'rejected'])
+            ->whereIn('user_workshop.status', ['active', 'rejected', 'correction_requested'])
             ->whereNull('user_workshop.user_seen_at')
             ->whereNull('workshops.deleted_at')
             ->select([
@@ -68,6 +71,7 @@ class DashboardController extends Controller
                 'workshops.name as workshop_name',
                 'workshops.number as workshop_number',
                 'user_workshop.status',
+                'user_workshop.correction_notes',
                 'user_workshop.updated_at as resolved_at',
             ])
             ->orderBy('user_workshop.updated_at', 'desc')

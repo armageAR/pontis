@@ -31,6 +31,12 @@ class ProfileController extends Controller {
             'company'               => 'nullable|string|max:255',
             'profession_description'=> 'nullable|string',
             'bio'                   => 'nullable|string',
+            'photo_url'             => 'nullable|url|max:512',
+            'linkedin'              => 'nullable|url|max:255',
+            'website'               => 'nullable|url|max:255',
+            'facebook'              => 'nullable|string|max:255',
+            'instagram'             => 'nullable|string|max:255',
+            'availability_notes'    => 'nullable|string|max:500',
         ]);
         $user->update($data);
         return response()->json($user->fresh());

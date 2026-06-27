@@ -14,11 +14,20 @@ interface AuthResponse {
   user: User
 }
 
+export interface MembershipStatus {
+  workshop_id: number
+  workshop_name: string
+  workshop_number: number
+  status: 'pending' | 'active' | 'rejected' | 'correction_requested'
+  correction_notes: string | null
+}
+
 export interface AccountStatus {
   status: 'pending' | 'active' | 'rejected'
   email_verified: boolean
   email_verified_at: string | null
   verification_sent_at: string
+  memberships: MembershipStatus[]
 }
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
@@ -32,6 +41,7 @@ export async function register(
   password: string,
   password_confirmation: string,
   workshop_id: number,
+  extra?: { last_name?: string; dni?: string; masonic_id?: string },
 ): Promise<AuthResponse> {
   const { data } = await client.post<AuthResponse>('/register', {
     name,
@@ -39,6 +49,7 @@ export async function register(
     password,
     password_confirmation,
     workshop_id,
+    ...extra,
   })
   return data
 }

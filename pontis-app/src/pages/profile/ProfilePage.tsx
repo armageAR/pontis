@@ -40,6 +40,7 @@ export default function ProfilePage() {
   const [positionCatalog, setPositionCatalog] = useState<PositionCatalogItem[]>([])
   const [myWorkshops, setMyWorkshops] = useState<WorkshopItem[]>([])
   const [provinces, setProvinces] = useState<provinceApi.Province[]>([])
+  const [localities, setLocalities] = useState<{ id: number; name: string }[]>([])
   const [visibility, setVisibility] = useState<VisibilityMap>({})
   const [savingVisibility, setSavingVisibility] = useState(false)
 
@@ -73,6 +74,15 @@ export default function ProfilePage() {
       setVisibility(vis)
     }).catch(() => setError('Error cargando el perfil.')).finally(() => setLoading(false))
   }, [])
+
+  // Load localities when province changes
+  useEffect(() => {
+    const province = provinces.find(p => p.name === profile?.province)
+    if (!province) { setLocalities([]); return }
+    client.get<{ id: number; name: string }[]>(`/localities?province_id=${province.id}`)
+      .then(r => setLocalities(r.data))
+      .catch(() => setLocalities([]))
+  }, [profile?.province, provinces])
 
   async function handleSave(e: FormEvent) {
     e.preventDefault()
@@ -167,6 +177,7 @@ export default function ProfilePage() {
               <FormField label="DNI / Documento"><Input value={profile?.dni ?? ''} onChange={field('dni')} disabled={!isSuperAdmin} /></FormField>
               <FormField label="Email"><Input value={profile?.email ?? ''} disabled /></FormField>
               <FormField label="Fecha de nacimiento"><Input type="date" value={profile?.birth_date ?? ''} onChange={field('birth_date')} /></FormField>
+              <FormField label="Foto de perfil (URL)"><Input type="url" placeholder="https://..." value={profile?.photo_url ?? ''} onChange={field('photo_url')} /></FormField>
             </div>
           </section>
 
@@ -189,7 +200,14 @@ export default function ProfilePage() {
               <FormField label="Teléfono"><Input value={profile?.phone ?? ''} onChange={field('phone')} /></FormField>
               <FormField label="WhatsApp"><Input value={profile?.whatsapp ?? ''} onChange={field('whatsapp')} /></FormField>
               <FormField label="Email alternativo"><Input type="email" value={profile?.alternative_email ?? ''} onChange={field('alternative_email')} /></FormField>
+              <FormField label="LinkedIn"><Input type="url" placeholder="https://linkedin.com/in/..." value={profile?.linkedin ?? ''} onChange={field('linkedin')} /></FormField>
+              <FormField label="Sitio web"><Input type="url" placeholder="https://..." value={profile?.website ?? ''} onChange={field('website')} /></FormField>
+              <FormField label="Instagram"><Input placeholder="@usuario" value={profile?.instagram ?? ''} onChange={field('instagram')} /></FormField>
+              <FormField label="Facebook"><Input placeholder="URL o usuario" value={profile?.facebook ?? ''} onChange={field('facebook')} /></FormField>
             </div>
+            <FormField label="Disponibilidad / notas de horario">
+              <textarea className="profile-textarea" value={profile?.availability_notes ?? ''} onChange={field('availability_notes')} rows={2} placeholder="Ej: disponible de lunes a viernes por las tardes..." />
+            </FormField>
           </section>
 
           <section className="profile-section">
@@ -202,7 +220,12 @@ export default function ProfilePage() {
                   {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                 </select>
               </FormField>
-              <FormField label="Localidad"><Input value={profile?.locality ?? ''} onChange={field('locality')} /></FormField>
+              <FormField label="Localidad">
+                <select className="profile-select" value={profile?.locality ?? ''} onChange={e => setProfile(p => p ? { ...p, locality: e.target.value } : p)}>
+                  <option value="">-- Seleccionar --</option>
+                  {localities.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
+                </select>
+              </FormField>
               <FormField label="Barrio"><Input value={profile?.neighborhood ?? ''} onChange={field('neighborhood')} /></FormField>
               <FormField label="Dirección"><Input value={profile?.address ?? ''} onChange={field('address')} /></FormField>
             </div>

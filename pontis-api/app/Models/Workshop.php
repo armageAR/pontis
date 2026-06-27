@@ -6,6 +6,7 @@ use App\Enums\WorkshopStatus;
 use Database\Factories\WorkshopFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,6 +16,7 @@ class Workshop extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'zone_id',
         'zone_number',
         'zone_name',
         'name',
@@ -42,6 +44,8 @@ class Workshop extends Model
             'last_synced_at' => 'datetime',
         ];
     }
+
+    public function zone(): BelongsTo { return $this->belongsTo(Zone::class); }
 
     public function users(): BelongsToMany
     {
