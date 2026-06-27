@@ -1,0 +1,261 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1782586684408,
+  "projectRoot": "/var/www/html/pontis",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "cd /var/www/html/pontis/pontis-app && npx tsc --noEmit 2>&1",
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "pontis-api": {
+      "path": "pontis-api",
+      "purpose": null,
+      "fileCount": 16,
+      "lastAccessed": 1782586684398,
+      "keyFiles": [
+        "README.md",
+        "artisan",
+        "composer.json",
+        "composer.lock",
+        "nixpacks.toml"
+      ]
+    },
+    "pontis-app": {
+      "path": "pontis-app",
+      "purpose": null,
+      "fileCount": 13,
+      "lastAccessed": 1782586684402,
+      "keyFiles": [
+        "README.md",
+        "eslint.config.js",
+        "index.html",
+        "nixpacks.toml",
+        "package-lock.json"
+      ]
+    },
+    "pontis-api/app": {
+      "path": "pontis-api/app",
+      "purpose": "Application code",
+      "fileCount": 0,
+      "lastAccessed": 1782586684403,
+      "keyFiles": []
+    },
+    "pontis-app/dist": {
+      "path": "pontis-app/dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 3,
+      "lastAccessed": 1782586684404,
+      "keyFiles": [
+        "favicon.svg",
+        "icons.svg",
+        "index.html"
+      ]
+    },
+    "pontis-app/node_modules": {
+      "path": "pontis-app/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1782586684405,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "pontis-api/routes/api.php",
+      "accessCount": 5,
+      "lastAccessed": 1782587557887,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/profile/ProfilePage.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1782587054851,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/people/PeoplePage.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1782587286430,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/components/AppLayout.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1782587619279,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/App.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1782587671984,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Models/User.php",
+      "accessCount": 2,
+      "lastAccessed": 1782586856744,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/api/changeRequests.ts",
+      "accessCount": 2,
+      "lastAccessed": 1782586906850,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/VisibilitySettingsController.php",
+      "accessCount": 2,
+      "lastAccessed": 1782587116497,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/explore/ExplorePage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1782587655403,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/database/migrations/2026_06_27_190000_add_extra_profile_fields_to_users_table.php",
+      "accessCount": 1,
+      "lastAccessed": 1782586753066,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/database/migrations/2026_06_27_190001_add_authorization_fields_to_services_and_needs.php",
+      "accessCount": 1,
+      "lastAccessed": 1782586758993,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/ServiceController.php",
+      "accessCount": 1,
+      "lastAccessed": 1782586788356,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/NeedController.php",
+      "accessCount": 1,
+      "lastAccessed": 1782586812160,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/ChangeRequestController.php",
+      "accessCount": 1,
+      "lastAccessed": 1782586832823,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/ProfileController.php",
+      "accessCount": 1,
+      "lastAccessed": 1782586842815,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Models/Service.php",
+      "accessCount": 1,
+      "lastAccessed": 1782586875096,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Models/Need.php",
+      "accessCount": 1,
+      "lastAccessed": 1782586876255,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/api/services.ts",
+      "accessCount": 1,
+      "lastAccessed": 1782586888121,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/api/needs.ts",
+      "accessCount": 1,
+      "lastAccessed": 1782586892865,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/api/profile.ts",
+      "accessCount": 1,
+      "lastAccessed": 1782586908278,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/change-requests/ChangeRequestsPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1782586950371,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/services/ServicesPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1782586992110,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/needs/NeedsPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1782587032619,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/api/visibility.ts",
+      "accessCount": 1,
+      "lastAccessed": 1782587092424,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/PublicProfileController.php",
+      "accessCount": 1,
+      "lastAccessed": 1782587110946,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/ExploreController.php",
+      "accessCount": 1,
+      "lastAccessed": 1782587531287,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/database/migrations/2026_06_27_190002_expand_user_workshop_status.php",
+      "accessCount": 1,
+      "lastAccessed": 1782587540539,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/api/explore.ts",
+      "accessCount": 1,
+      "lastAccessed": 1782587566560,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/explore/ExplorePage.css",
+      "accessCount": 1,
+      "lastAccessed": 1782587606691,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

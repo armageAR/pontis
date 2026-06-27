@@ -33,6 +33,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <Link to="/dashboard" className="app-nav-link">Panel</Link>
             <Link to="/workshops" className="app-nav-link">Talleres</Link>
             <Link to="/people" className="app-nav-link">Hermanos</Link>
+            <Link to="/explore" className="app-nav-link">Explorar</Link>
             <Link to="/services" className="app-nav-link">Servicios</Link>
             <Link to="/needs" className="app-nav-link">Necesidades</Link>
             {user?.role === 'superadmin' && <Link to="/users" className="app-nav-link">Admin hermanos</Link>}

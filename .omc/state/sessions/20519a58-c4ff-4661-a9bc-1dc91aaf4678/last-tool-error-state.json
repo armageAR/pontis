@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"TOKEN=$(curl -s -X POST https://pontis-api-production.up.railway.app/api/login \\\\\\n  -H \\\"Content-Type: application/json\\\" \\\\\\n  -d '{\\\"email\\\":\\\"admin@pontis.com\\\",\\\"password\\\":\\\"password...",
+  "error": "Exit code 1\nTraceback (most recent call last):\n  File \"<string>\", line 4, in <module>\nKeyError: 'meta'\nError in sys.excepthook:\nTraceback (most recent call last):\n  File \"/usr/lib/python3/dist-packages/apport_python_hook.py\", line 228, in partial_apport_excepthook\n    return apport_excepthook(binary, exc_type, exc_obj, exc_tb)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3/dist-packages/apport_python_hook.py\", line 114, in apport_excepthook\n    report[\"E...",
+  "timestamp": "2026-06-27T17:46:29.970Z",
+  "retry_count": 1
+}

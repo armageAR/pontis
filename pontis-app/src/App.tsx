@@ -16,6 +16,7 @@ import PeoplePage from '@/pages/people/PeoplePage'
 import ContactRequestsPage from '@/pages/contact-requests/ContactRequestsPage'
 import ChangeRequestsPage from '@/pages/change-requests/ChangeRequestsPage'
 import PersonPage from '@/pages/person/PersonPage'
+import ExplorePage from '@/pages/explore/ExplorePage'
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/needs" element={<NeedsPage />} />
             <Route path="/people" element={<PeoplePage />} />
+            <Route path="/explore" element={<ExplorePage />} />
             <Route path="/contact-requests" element={<ContactRequestsPage />} />
             <Route path="/change-requests" element={<ChangeRequestsPage />} />
             <Route path="/people/:id" element={<PersonPage />} />

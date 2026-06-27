@@ -19,6 +19,7 @@ use App\Http\Controllers\VisibilitySettingsController;
 use App\Http\Controllers\ZoneController;
 use App\Http\Controllers\ServiceCategoryController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserPositionController;
 use Illuminate\Support\Facades\Route;
@@ -114,6 +115,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Búsqueda de personas
     Route::get('/people', [PeopleController::class, 'index']);
+
+    // Explorar servicios y necesidades de otros hermanos (con filtro de visibilidad)
+    Route::get('/explore/services', [ExploreController::class, 'services']);
+    Route::get('/explore/needs', [ExploreController::class, 'needs']);
 
     // Ficha pública de persona
     Route::get('/people/{user}', [PublicProfileController::class, 'show']);

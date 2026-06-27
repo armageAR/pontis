@@ -1,0 +1,25 @@
+.explore-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0 0 4px; }
+.explore-subtitle { font-size: 14px; color: var(--text-muted); margin: 0 0 20px; }
+.explore-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+.explore-tab { background: none; border: none; border-bottom: 3px solid transparent; padding: 10px 18px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text-muted); margin-bottom: -1px; }
+.explore-tab-active { color: var(--accent); border-bottom-color: var(--accent); }
+.explore-filters { margin-bottom: 20px; }
+.explore-filters-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.explore-search-input { flex: 2; min-width: 200px; }
+.explore-province-input { flex: 1; min-width: 120px; }
+.explore-select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; flex: 1; min-width: 140px; }
+.explore-loading { display: flex; justify-content: center; padding: 48px; }
+.explore-results-count { font-size: 13px; color: var(--text-muted); margin: 0 0 16px; }
+.explore-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.explore-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+.explore-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.explore-card-title { font-size: 16px; font-weight: 600; color: var(--text-h); }
+.explore-card-category { display: inline-block; margin-left: 8px; font-size: 13px; color: var(--text-muted); }
+.explore-card-desc { font-size: 14px; color: var(--text); margin: 0 0 8px; }
+.explore-card-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.explore-card-footer { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; }
+.explore-anonymous { color: var(--text-muted); font-style: italic; }
+.explore-user-link { color: var(--accent); text-decoration: none; font-weight: 500; }
+.explore-user-link:hover { text-decoration: underline; }
+.explore-user-profession { color: var(--text-muted); font-weight: 400; }
+.explore-user-location { color: var(--text-muted); font-weight: 400; }
