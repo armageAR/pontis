@@ -18,7 +18,11 @@ nixPkgs = [
 ]
 
 [phases.install]
-cmds = ["composer install --no-dev --optimize-autoloader"]
+cmds = [
+  "mkdir -p bootstrap/cache storage/logs storage/app storage/framework/cache storage/framework/sessions storage/framework/views",
+  "chmod -R 777 bootstrap/cache storage",
+  "composer install --no-dev --optimize-autoloader"
+]
 
 [phases.build]
 cmds = [
