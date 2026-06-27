@@ -36,7 +36,7 @@ class AuthController extends Controller
         // Notify workshop admins about new pending member
         $workshop = \App\Models\Workshop::find($workshopId);
         $admins = \App\Models\User::whereHas('workshopMemberships', function ($q) use ($workshopId) {
-            $q->where('workshop_id', $workshopId)->where('role', 'admin')->where('status', 'active');
+            $q->where('user_workshop.workshop_id', $workshopId)->where('user_workshop.role', 'admin')->where('user_workshop.status', 'active');
         })->get();
         foreach ($admins as $admin) {
             \App\Models\PontisNotification::create([
