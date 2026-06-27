@@ -12,6 +12,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            // Catalogs first (localities reference provinces).
+            ProvinceSeeder::class,
+            LocalitySeeder::class,
+            ZoneSeeder::class,
+            ServiceCategorySeeder::class,
+            PositionSeeder::class,
+            // Core data and demo content.
             SuperAdminSeeder::class,
             WorkshopSeeder::class,
             DemoUsersSeeder::class,
