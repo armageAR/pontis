@@ -9,14 +9,27 @@ import Alert from '@/components/Alert'
 import Spinner from '@/components/Spinner'
 import EmptyState from '@/components/EmptyState'
 import Pagination from '@/components/Pagination'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import { useAuth } from '@/context/AuthContext'
 import * as api from '@/api/changeRequests'
 import type { ChangeRequest } from '@/api/changeRequests'
 import './ChangeRequestsPage.css'
 
 const FIELD_LABELS: Record<string, string> = { name: 'Nombre', last_name: 'Apellido', dni: 'DNI / Documento', masonic_id: 'Matrícula masónica' }
-const STATUS_LABELS: Record<string, string> = { pending: 'Pendiente', approved: 'Aprobada', rejected: 'Rechazada' }
-const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { pending: 'warning', approved: 'success', rejected: 'error' }
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendiente',
+  approved: 'Aprobada',
+  rejected: 'Rechazada',
+  requires_info: 'Requiere información adicional',
+  cancelled_by_user: 'Cancelada por el usuario',
+}
+const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
+  pending: 'warning',
+  approved: 'success',
+  rejected: 'error',
+  requires_info: 'warning',
+  cancelled_by_user: 'default',
+}
 
 export default function ChangeRequestsPage() {
   const { user } = useAuth()
@@ -35,6 +48,7 @@ export default function ChangeRequestsPage() {
   const [reviewNotes, setReviewNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [actionMsg, setActionMsg] = useState('')
+  const [cancelId, setCancelId] = useState<number | null>(null)
 
   async function load() {
     setLoading(true)
@@ -76,6 +90,25 @@ export default function ChangeRequestsPage() {
     finally { setSaving(false) }
   }
 
+  async function handleRequireInfo() {
+    if (!reviewModal || !reviewNotes.trim()) return; setSaving(true)
+    try {
+      await api.requireInfoChangeRequest(reviewModal.id, reviewNotes)
+      setReviewModal(null); load()
+    } catch { alert('Error al solicitar información.') }
+    finally { setSaving(false) }
+  }
+
+  async function handleCancel(id: number) {
+    try {
+      await api.cancelChangeRequest(id)
+      setCancelId(null); load()
+    } catch { alert('Error al cancelar la solicitud.') }
+  }
+
+  const canCancel = (r: ChangeRequest) =>
+    !isSuperAdmin && r.user_id === user?.id && ['pending', 'requires_info'].includes(r.status)
+
   return (
     <AppLayout>
       <div className="cr-header">
@@ -90,13 +123,15 @@ export default function ChangeRequestsPage() {
         <select className="cr-select" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
           <option value="">Todos</option>
           <option value="pending">Pendientes</option>
+          <option value="requires_info">Requiere información</option>
           <option value="approved">Aprobadas</option>
           <option value="rejected">Rechazadas</option>
+          <option value="cancelled_by_user">Canceladas</option>
         </select>
       </div>
 
       {loading ? <div className="cr-loading"><Spinner /></div> : requests.length === 0 ? (
-        <EmptyState title="Sin solicitudes" description={isSuperAdmin ? 'No hay solicitudes de cambio pendientes.' : 'No enviaste ninguna solicitud de cambio aún.'} />
+        <EmptyState title="Sin solicitudes" description={isSuperAdmin ? 'No hay solicitudes de cambio para este filtro.' : 'No enviaste ninguna solicitud de cambio aún.'} />
       ) : (
         <>
           <div className="cr-list">
@@ -115,13 +150,21 @@ export default function ChangeRequestsPage() {
                   <span className="cr-value-label">Nuevo valor:</span> <span className="cr-value cr-value-new">{r.new_value}</span>
                 </div>
                 {r.reason && <p className="cr-reason">Motivo: {r.reason}</p>}
-                {r.reviewer_notes && <p className="cr-reason">Nota del revisor: {r.reviewer_notes}</p>}
-                <div className="cr-meta">Solicitado: {new Date(r.created_at).toLocaleDateString('es-AR')}</div>
-                {isSuperAdmin && r.status === 'pending' && (
-                  <div className="cr-actions">
-                    <Button onClick={() => { setReviewModal(r); setReviewNotes('') }}>Revisar</Button>
-                  </div>
+                {r.reviewer_notes && (
+                  <p className="cr-reason cr-reviewer-notes">
+                    {r.status === 'requires_info' ? 'Información requerida: ' : 'Nota del revisor: '}
+                    {r.reviewer_notes}
+                  </p>
                 )}
+                <div className="cr-meta">Solicitado: {new Date(r.created_at).toLocaleDateString('es-AR')}</div>
+                <div className="cr-actions">
+                  {isSuperAdmin && ['pending', 'requires_info'].includes(r.status) && (
+                    <Button onClick={() => { setReviewModal(r); setReviewNotes('') }}>Revisar</Button>
+                  )}
+                  {canCancel(r) && (
+                    <button className="cr-link-btn cr-link-danger" onClick={() => setCancelId(r.id)}>Cancelar solicitud</button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -154,17 +197,26 @@ export default function ChangeRequestsPage() {
             <p><strong>Valor actual:</strong> {reviewModal.current_value ?? '(vacío)'}</p>
             <p><strong>Nuevo valor:</strong> {reviewModal.new_value}</p>
             {reviewModal.reason && <p><strong>Motivo:</strong> {reviewModal.reason}</p>}
-            <FormField label="Nota (opcional)">
-              <textarea className="cr-textarea" value={reviewNotes} onChange={e => setReviewNotes(e.target.value)} rows={3} />
+            <FormField label="Nota para el usuario">
+              <textarea className="cr-textarea" value={reviewNotes} onChange={e => setReviewNotes(e.target.value)} rows={3} placeholder="Requerida para 'Requiere información adicional'" />
             </FormField>
-            <div className="cr-modal-actions">
-              <Button type="button" variant="outline" onClick={() => setReviewModal(null)}>Cancelar</Button>
+            <div className="cr-modal-actions cr-modal-actions-multi">
+              <Button type="button" variant="outline" onClick={() => setReviewModal(null)}>Cerrar</Button>
+              <Button type="button" variant="outline" onClick={handleRequireInfo} loading={saving} disabled={!reviewNotes.trim()}>Requiere info</Button>
               <Button type="button" variant="outline" onClick={handleReject} loading={saving}>Rechazar</Button>
               <Button type="button" onClick={handleApprove} loading={saving}>Aprobar</Button>
             </div>
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={cancelId !== null}
+        title="Cancelar solicitud"
+        message="¿Querés cancelar esta solicitud de cambio? No podrás revertirlo."
+        onConfirm={() => cancelId !== null && handleCancel(cancelId)}
+        onClose={() => setCancelId(null)}
+      />
     </AppLayout>
   )
 }

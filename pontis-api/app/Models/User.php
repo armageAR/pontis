@@ -32,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'country', 'province', 'locality', 'neighborhood', 'address',
         'profession', 'occupation', 'company', 'profession_description', 'bio',
         'photo_url', 'linkedin', 'website', 'facebook', 'instagram', 'availability_notes', 'admin_notes',
+        'phone_fixed', 'secondary_activities', 'knowledge_areas', 'certifications',
     ];
 
     protected $hidden = ['password', 'remember_token'];

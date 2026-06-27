@@ -20,3 +20,7 @@
 .cr-modal-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
 .cr-textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; resize: vertical; font-family: inherit; box-sizing: border-box; }
 .cr-info { font-size: 13px; color: var(--text-muted); background: var(--accent-bg); padding: 10px 12px; border-radius: 6px; margin: 0; }
+.cr-link-btn { background: none; border: none; cursor: pointer; color: var(--accent); font-size: 13px; padding: 0; }
+.cr-link-danger { color: var(--error, #e53e3e); }
+.cr-reviewer-notes { font-style: italic; }
+.cr-modal-actions-multi { flex-wrap: wrap; }

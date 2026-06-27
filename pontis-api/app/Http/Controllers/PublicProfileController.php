@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class PublicProfileController extends Controller {
     // Levels ordered from most restrictive to least
-    private const LEVELS = ['private','workshop','my_workshops','registered','anonymous'];
+    private const LEVELS = ['private','workshop','my_workshops','talleres_seleccionados','registered','anonymous'];
 
     public function show(Request $request, User $user): JsonResponse {
         $viewer = $request->user();

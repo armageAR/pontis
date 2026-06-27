@@ -32,6 +32,10 @@ export interface Profile {
   facebook: string | null
   instagram: string | null
   availability_notes: string | null
+  phone_fixed: string | null
+  secondary_activities: string | null
+  knowledge_areas: string | null
+  certifications: string | null
 }
 
 export interface UserDegree {

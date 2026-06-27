@@ -32,7 +32,7 @@ export default function PeoplePage() {
     try {
       const r = await api.searchPeople({ q: q || undefined, province: province || undefined, masonic_status: masonicStatus || undefined, page: p })
       setPeople(r.data); setLastPage(r.last_page); setTotal(r.total); setSearched(true)
-    } catch { setError('Error al buscar personas.') }
+    } catch { setError('Error al buscar hermanos.') }
     finally { setLoading(false) }
   }
 
@@ -42,7 +42,7 @@ export default function PeoplePage() {
 
   return (
     <AppLayout>
-      <h1 className="people-title">Buscar personas</h1>
+      <h1 className="people-title">Buscar hermanos</h1>
       <form onSubmit={handleSearch} className="people-search-form">
         <Input className="people-search-input" placeholder="Nombre, apellido, matrícula o email…" value={q} onChange={e => setQ(e.target.value)} />
         <Input placeholder="Provincia" value={province} onChange={e => setProvince(e.target.value)} />
@@ -58,7 +58,7 @@ export default function PeoplePage() {
       {loading ? (
         <div className="people-loading"><Spinner /></div>
       ) : !searched ? null : people.length === 0 ? (
-        <EmptyState title="Sin resultados" description="No se encontraron personas con esos criterios." />
+        <EmptyState title="Sin resultados" description="No se encontraron hermanos registrados con esos criterios." />
       ) : (
         <>
           <p className="people-results-count">{total} resultado{total !== 1 ? 's' : ''}</p>

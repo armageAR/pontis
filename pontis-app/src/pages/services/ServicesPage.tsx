@@ -10,17 +10,38 @@ import Badge from '@/components/Badge'
 import EmptyState from '@/components/EmptyState'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import Pagination from '@/components/Pagination'
+import { useAuth } from '@/context/AuthContext'
 import * as api from '@/api/services'
 import type { Service, ServiceCategory } from '@/api/services'
 import './ServicesPage.css'
 
-const STATUS_LABELS: Record<string, string> = { draft: 'Borrador', active: 'Activo', paused: 'Pausado', hidden: 'Oculto', disabled: 'Dado de baja' }
-const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { draft: 'default', active: 'success', paused: 'warning', hidden: 'default', disabled: 'error' }
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Borrador',
+  active: 'Activo',
+  paused: 'Pausado',
+  hidden: 'Oculto',
+  disabled: 'Dado de baja',
+  pending_authorization: 'Pendiente de autorización',
+  requires_correction: 'Requiere corrección',
+  rejected: 'Rechazado',
+  closed: 'Cerrado',
+  cancelled: 'Cancelado',
+}
+const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
+  draft: 'default', active: 'success', paused: 'warning', hidden: 'default', disabled: 'error',
+  pending_authorization: 'warning', requires_correction: 'warning', rejected: 'error', closed: 'default', cancelled: 'default',
+}
 const MODALITY_LABELS: Record<string, string> = { presencial: 'Presencial', remoto: 'Remoto', both: 'Ambas' }
-const VISIBILITY_LABELS: Record<string, string> = { private: 'Privado', workshop: 'Mi taller', my_workshops: 'Mis talleres', registered: 'Masones registrados', anonymous: 'Búsqueda anónima' }
+const VISIBILITY_LABELS: Record<string, string> = {
+  private: 'Privado', workshop: 'Mi taller', my_workshops: 'Mis talleres',
+  talleres_seleccionados: 'Talleres seleccionados', registered: 'Masones registrados', anonymous: 'Búsqueda anónima',
+}
 const EMPTY_FORM = { title: '', description: '', service_category_id: '', modality: 'both', location: '', availability: '', conditions: '', visibility: 'private', status: 'draft' }
 
 export default function ServicesPage() {
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === 'superadmin'
+
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,6 +55,8 @@ export default function ServicesPage() {
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  const [authModal, setAuthModal] = useState<{ service: Service; action: 'authorize' | 'reject' | 'correction' } | null>(null)
+  const [authNotes, setAuthNotes] = useState('')
 
   async function load() {
     setLoading(true)
@@ -72,7 +95,22 @@ export default function ServicesPage() {
     await api.deleteService(id); setServices(ss => ss.filter(s => s.id !== id)); setTotal(t => t - 1); setConfirmDelete(null)
   }
 
+  async function handleAuth() {
+    if (!authModal) return; setSaving(true)
+    try {
+      let updated: Service
+      if (authModal.action === 'authorize') updated = await api.authorizeService(authModal.service.id, authNotes || undefined)
+      else if (authModal.action === 'reject') updated = await api.rejectService(authModal.service.id, authNotes || undefined)
+      else updated = await api.requestServiceCorrection(authModal.service.id, authNotes)
+      setServices(ss => ss.map(s => s.id === updated.id ? updated : s))
+      setAuthModal(null)
+    } catch { alert('Error al procesar la acción.') }
+    finally { setSaving(false) }
+  }
+
   function setField(k: string) { return (e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>) => setForm(f => ({ ...f, [k]: e.target.value })) }
+
+  const authActionLabel = authModal?.action === 'authorize' ? 'Aprobar' : authModal?.action === 'reject' ? 'Rechazar' : 'Pedir corrección'
 
   return (
     <AppLayout>
@@ -96,11 +134,21 @@ export default function ServicesPage() {
               <div key={s.id} className="service-card">
                 <div className="service-card-header">
                   <div>
+                    {isSuperAdmin && <span className="service-user-name">{(s as any).user?.name}</span>}
                     <span className="service-title">{s.title}</span>
                     {s.category && <span className="service-category">{s.category.name}</span>}
                   </div>
                   <Badge variant={STATUS_VARIANTS[s.status]}>{STATUS_LABELS[s.status]}</Badge>
                 </div>
+                {s.status === 'pending_authorization' && (
+                  <Alert variant="warning">Este servicio está pendiente de autorización por un Maestro o administrador del taller.</Alert>
+                )}
+                {s.status === 'requires_correction' && s.authorization_notes && (
+                  <Alert variant="warning">Corrección requerida: {s.authorization_notes}</Alert>
+                )}
+                {s.status === 'rejected' && s.authorization_notes && (
+                  <Alert variant="error">Motivo de rechazo: {s.authorization_notes}</Alert>
+                )}
                 {s.description && <p className="service-desc">{s.description}</p>}
                 <div className="service-meta">
                   <span>{MODALITY_LABELS[s.modality]}</span>
@@ -110,6 +158,13 @@ export default function ServicesPage() {
                 <div className="service-actions">
                   <button className="services-link-btn" onClick={() => openEdit(s)}>Editar</button>
                   <button className="services-link-btn services-link-danger" onClick={() => setConfirmDelete(s.id)}>Eliminar</button>
+                  {isSuperAdmin && s.status === 'pending_authorization' && (
+                    <>
+                      <button className="services-link-btn services-link-success" onClick={() => { setAuthModal({ service: s, action: 'authorize' }); setAuthNotes('') }}>Aprobar</button>
+                      <button className="services-link-btn" onClick={() => { setAuthModal({ service: s, action: 'correction' }); setAuthNotes('') }}>Pedir corrección</button>
+                      <button className="services-link-btn services-link-danger" onClick={() => { setAuthModal({ service: s, action: 'reject' }); setAuthNotes('') }}>Rechazar</button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -151,6 +206,24 @@ export default function ServicesPage() {
             <Button type="submit" loading={saving}>Guardar</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={authModal !== null} onClose={() => setAuthModal(null)} title={authActionLabel}>
+        {authModal && (
+          <div className="services-form">
+            <p><strong>Servicio:</strong> {authModal.service.title}</p>
+            <FormField label={authModal.action === 'correction' ? 'Correcciones requeridas *' : 'Nota (opcional)'}>
+              <textarea className="services-textarea" value={authNotes} onChange={e => setAuthNotes(e.target.value)} rows={3} />
+            </FormField>
+            <div className="services-modal-actions">
+              <Button type="button" variant="outline" onClick={() => setAuthModal(null)}>Cancelar</Button>
+              <Button type="button" loading={saving} onClick={handleAuth}
+                disabled={authModal.action === 'correction' && !authNotes.trim()}>
+                {authActionLabel}
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <ConfirmDialog open={confirmDelete !== null} title="Eliminar servicio" message="¿Eliminar este servicio?" onConfirm={() => confirmDelete !== null && handleDelete(confirmDelete)} onClose={() => setConfirmDelete(null)} />

@@ -82,6 +82,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/services/{service}', [ServiceController::class, 'show']);
     Route::patch('/services/{service}', [ServiceController::class, 'update']);
     Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+    Route::post('/services/{service}/authorize', [ServiceController::class, 'authorize']);
+    Route::post('/services/{service}/reject', [ServiceController::class, 'rejectPublication']);
+    Route::post('/services/{service}/request-correction', [ServiceController::class, 'requestCorrection']);
 
     // Necesidades
     Route::get('/needs', [NeedController::class, 'index']);
@@ -89,6 +92,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/needs/{need}', [NeedController::class, 'show']);
     Route::patch('/needs/{need}', [NeedController::class, 'update']);
     Route::delete('/needs/{need}', [NeedController::class, 'destroy']);
+    Route::post('/needs/{need}/authorize', [NeedController::class, 'authorize']);
+    Route::post('/needs/{need}/reject', [NeedController::class, 'rejectPublication']);
+    Route::post('/needs/{need}/request-correction', [NeedController::class, 'requestCorrection']);
 
     // Provincias (catálogo)
     Route::get('/provinces', [ProvinceController::class, 'index']);
@@ -122,6 +128,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/change-requests', [ChangeRequestController::class, 'store']);
     Route::post('/change-requests/{changeRequest}/approve', [ChangeRequestController::class, 'approve']);
     Route::post('/change-requests/{changeRequest}/reject', [ChangeRequestController::class, 'reject']);
+    Route::post('/change-requests/{changeRequest}/require-info', [ChangeRequestController::class, 'requireInfo']);
+    Route::post('/change-requests/{changeRequest}/cancel', [ChangeRequestController::class, 'cancel']);
 
     // Solicitudes de contacto
     Route::get('/contact-requests', [ContactRequestController::class, 'index']);

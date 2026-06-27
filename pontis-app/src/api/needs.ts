@@ -9,8 +9,9 @@ export interface Need {
   description: string | null
   location: string | null
   urgency: 'low' | 'medium' | 'high' | null
-  visibility: 'private' | 'workshop' | 'my_workshops' | 'registered' | 'anonymous'
-  status: 'draft' | 'open' | 'searching' | 'with_matches' | 'contact_requested' | 'linked' | 'closed' | 'cancelled'
+  visibility: 'private' | 'workshop' | 'my_workshops' | 'talleres_seleccionados' | 'registered' | 'anonymous'
+  status: 'draft' | 'open' | 'searching' | 'with_matches' | 'contact_requested' | 'linked' | 'closed' | 'cancelled' | 'pending_authorization' | 'requires_correction' | 'rejected'
+  authorization_notes: string | null
   category?: ServiceCategory
   created_at: string
 }
@@ -44,4 +45,19 @@ export async function updateNeed(id: number, payload: Partial<Need>): Promise<Ne
 
 export async function deleteNeed(id: number): Promise<void> {
   await client.delete(`/needs/${id}`)
+}
+
+export async function authorizeNeed(id: number, notes?: string): Promise<Need> {
+  const { data } = await client.post<Need>(`/needs/${id}/authorize`, { notes })
+  return data
+}
+
+export async function rejectNeed(id: number, notes?: string): Promise<Need> {
+  const { data } = await client.post<Need>(`/needs/${id}/reject`, { notes })
+  return data
+}
+
+export async function requestNeedCorrection(id: number, notes: string): Promise<Need> {
+  const { data } = await client.post<Need>(`/needs/${id}/request-correction`, { notes })
+  return data
 }

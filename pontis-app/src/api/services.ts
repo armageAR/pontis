@@ -16,8 +16,9 @@ export interface Service {
   location: string | null
   availability: string | null
   conditions: string | null
-  visibility: 'private' | 'workshop' | 'my_workshops' | 'registered' | 'anonymous'
-  status: 'draft' | 'active' | 'paused' | 'hidden' | 'disabled'
+  visibility: 'private' | 'workshop' | 'my_workshops' | 'talleres_seleccionados' | 'registered' | 'anonymous'
+  status: 'draft' | 'active' | 'paused' | 'hidden' | 'disabled' | 'pending_authorization' | 'requires_correction' | 'rejected' | 'closed' | 'cancelled'
+  authorization_notes: string | null
   category?: ServiceCategory
   created_at: string
 }
@@ -56,4 +57,19 @@ export async function updateService(id: number, payload: Partial<Service>): Prom
 
 export async function deleteService(id: number): Promise<void> {
   await client.delete(`/services/${id}`)
+}
+
+export async function authorizeService(id: number, notes?: string): Promise<Service> {
+  const { data } = await client.post<Service>(`/services/${id}/authorize`, { notes })
+  return data
+}
+
+export async function rejectService(id: number, notes?: string): Promise<Service> {
+  const { data } = await client.post<Service>(`/services/${id}/reject`, { notes })
+  return data
+}
+
+export async function requestServiceCorrection(id: number, notes: string): Promise<Service> {
+  const { data } = await client.post<Service>(`/services/${id}/request-correction`, { notes })
+  return data
 }

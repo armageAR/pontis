@@ -7,7 +7,7 @@ export interface ChangeRequest {
   current_value: string | null
   new_value: string
   reason: string | null
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'requires_info' | 'cancelled_by_user'
   reviewer_notes: string | null
   reviewed_at: string | null
   created_at: string
@@ -38,5 +38,15 @@ export async function approveChangeRequest(id: number, reviewer_notes?: string):
 
 export async function rejectChangeRequest(id: number, reviewer_notes?: string): Promise<ChangeRequest> {
   const { data } = await client.post<ChangeRequest>(`/change-requests/${id}/reject`, { reviewer_notes })
+  return data
+}
+
+export async function requireInfoChangeRequest(id: number, reviewer_notes: string): Promise<ChangeRequest> {
+  const { data } = await client.post<ChangeRequest>(`/change-requests/${id}/require-info`, { reviewer_notes })
+  return data
+}
+
+export async function cancelChangeRequest(id: number): Promise<ChangeRequest> {
+  const { data } = await client.post<ChangeRequest>(`/change-requests/${id}/cancel`)
   return data
 }

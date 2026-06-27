@@ -10,20 +10,35 @@ import Badge from '@/components/Badge'
 import EmptyState from '@/components/EmptyState'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import Pagination from '@/components/Pagination'
+import { useAuth } from '@/context/AuthContext'
 import * as api from '@/api/needs'
 import { getCategories } from '@/api/services'
 import type { Need } from '@/api/needs'
 import type { ServiceCategory } from '@/api/services'
 import './NeedsPage.css'
 
-const STATUS_LABELS: Record<string, string> = { draft: 'Borrador', open: 'Abierta', searching: 'En búsqueda', with_matches: 'Con coincidencias', contact_requested: 'Contacto solicitado', linked: 'Vinculada', closed: 'Cerrada', cancelled: 'Cancelada' }
-const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { draft: 'default', open: 'default', searching: 'warning', with_matches: 'success', contact_requested: 'warning', linked: 'success', closed: 'default', cancelled: 'error' }
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Borrador', open: 'Abierta', searching: 'En búsqueda', with_matches: 'Con coincidencias',
+  contact_requested: 'Contacto solicitado', linked: 'Vinculada', closed: 'Cerrada', cancelled: 'Cancelada',
+  pending_authorization: 'Pendiente de autorización', requires_correction: 'Requiere corrección', rejected: 'Rechazada',
+}
+const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
+  draft: 'default', open: 'default', searching: 'warning', with_matches: 'success', contact_requested: 'warning',
+  linked: 'success', closed: 'default', cancelled: 'error',
+  pending_authorization: 'warning', requires_correction: 'warning', rejected: 'error',
+}
 const URGENCY_LABELS: Record<string, string> = { low: 'Urgencia baja', medium: 'Urgencia media', high: 'Urgencia alta' }
 const URGENCY_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { low: 'success', medium: 'warning', high: 'error' }
-const VISIBILITY_LABELS: Record<string, string> = { private: 'Privado', workshop: 'Mi taller', my_workshops: 'Mis talleres', registered: 'Masones registrados', anonymous: 'Búsqueda anónima' }
+const VISIBILITY_LABELS: Record<string, string> = {
+  private: 'Privado', workshop: 'Mi taller', my_workshops: 'Mis talleres',
+  talleres_seleccionados: 'Talleres seleccionados', registered: 'Masones registrados', anonymous: 'Búsqueda anónima',
+}
 const EMPTY_FORM = { title: '', description: '', service_category_id: '', location: '', urgency: '', visibility: 'private', status: 'draft' }
 
 export default function NeedsPage() {
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === 'superadmin'
+
   const [needs, setNeeds] = useState<Need[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,6 +52,8 @@ export default function NeedsPage() {
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  const [authModal, setAuthModal] = useState<{ need: Need; action: 'authorize' | 'reject' | 'correction' } | null>(null)
+  const [authNotes, setAuthNotes] = useState('')
 
   async function load() {
     setLoading(true)
@@ -75,7 +92,22 @@ export default function NeedsPage() {
     await api.deleteNeed(id); setNeeds(ns => ns.filter(n => n.id !== id)); setTotal(t => t - 1); setConfirmDelete(null)
   }
 
+  async function handleAuth() {
+    if (!authModal) return; setSaving(true)
+    try {
+      let updated: Need
+      if (authModal.action === 'authorize') updated = await api.authorizeNeed(authModal.need.id, authNotes || undefined)
+      else if (authModal.action === 'reject') updated = await api.rejectNeed(authModal.need.id, authNotes || undefined)
+      else updated = await api.requestNeedCorrection(authModal.need.id, authNotes)
+      setNeeds(ns => ns.map(n => n.id === updated.id ? updated : n))
+      setAuthModal(null)
+    } catch { alert('Error al procesar la acción.') }
+    finally { setSaving(false) }
+  }
+
   function setField(k: string) { return (e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>) => setForm(f => ({ ...f, [k]: e.target.value })) }
+
+  const authActionLabel = authModal?.action === 'authorize' ? 'Aprobar' : authModal?.action === 'reject' ? 'Rechazar' : 'Pedir corrección'
 
   return (
     <AppLayout>
@@ -99,6 +131,7 @@ export default function NeedsPage() {
               <div key={n.id} className="need-card">
                 <div className="need-card-header">
                   <div>
+                    {isSuperAdmin && <span className="need-user-name">{(n as any).user?.name}</span>}
                     <span className="need-title">{n.title}</span>
                     {n.category && <span className="need-category">{n.category.name}</span>}
                   </div>
@@ -107,6 +140,15 @@ export default function NeedsPage() {
                     {n.urgency && <Badge variant={URGENCY_VARIANTS[n.urgency]}>{URGENCY_LABELS[n.urgency]}</Badge>}
                   </div>
                 </div>
+                {n.status === 'pending_authorization' && (
+                  <Alert variant="warning">Esta necesidad está pendiente de autorización por un Maestro o administrador del taller.</Alert>
+                )}
+                {n.status === 'requires_correction' && n.authorization_notes && (
+                  <Alert variant="warning">Corrección requerida: {n.authorization_notes}</Alert>
+                )}
+                {n.status === 'rejected' && n.authorization_notes && (
+                  <Alert variant="error">Motivo de rechazo: {n.authorization_notes}</Alert>
+                )}
                 {n.description && <p className="need-desc">{n.description}</p>}
                 <div className="need-meta">
                   {n.location && <span>{n.location} · </span>}
@@ -115,6 +157,13 @@ export default function NeedsPage() {
                 <div className="need-actions">
                   <button className="needs-link-btn" onClick={() => openEdit(n)}>Editar</button>
                   <button className="needs-link-btn needs-link-danger" onClick={() => setConfirmDelete(n.id)}>Eliminar</button>
+                  {isSuperAdmin && n.status === 'pending_authorization' && (
+                    <>
+                      <button className="needs-link-btn needs-link-success" onClick={() => { setAuthModal({ need: n, action: 'authorize' }); setAuthNotes('') }}>Aprobar</button>
+                      <button className="needs-link-btn" onClick={() => { setAuthModal({ need: n, action: 'correction' }); setAuthNotes('') }}>Pedir corrección</button>
+                      <button className="needs-link-btn needs-link-danger" onClick={() => { setAuthModal({ need: n, action: 'reject' }); setAuthNotes('') }}>Rechazar</button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -157,6 +206,24 @@ export default function NeedsPage() {
             <Button type="submit" loading={saving}>Guardar</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={authModal !== null} onClose={() => setAuthModal(null)} title={authActionLabel}>
+        {authModal && (
+          <div className="needs-form">
+            <p><strong>Necesidad:</strong> {authModal.need.title}</p>
+            <FormField label={authModal.action === 'correction' ? 'Correcciones requeridas *' : 'Nota (opcional)'}>
+              <textarea className="needs-textarea" value={authNotes} onChange={e => setAuthNotes(e.target.value)} rows={3} />
+            </FormField>
+            <div className="needs-modal-actions">
+              <Button type="button" variant="outline" onClick={() => setAuthModal(null)}>Cancelar</Button>
+              <Button type="button" loading={saving} onClick={handleAuth}
+                disabled={authModal.action === 'correction' && !authNotes.trim()}>
+                {authActionLabel}
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <ConfirmDialog open={confirmDelete !== null} title="Eliminar necesidad" message="¿Eliminar esta necesidad?" onConfirm={() => confirmDelete !== null && handleDelete(confirmDelete)} onClose={() => setConfirmDelete(null)} />

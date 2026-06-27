@@ -197,7 +197,8 @@ export default function ProfilePage() {
           <section className="profile-section">
             <h2 className="profile-section-title">Contacto</h2>
             <div className="profile-grid">
-              <FormField label="Teléfono"><Input value={profile?.phone ?? ''} onChange={field('phone')} /></FormField>
+              <FormField label="Teléfono móvil"><Input value={profile?.phone ?? ''} onChange={field('phone')} /></FormField>
+              <FormField label="Teléfono fijo"><Input value={profile?.phone_fixed ?? ''} onChange={field('phone_fixed')} /></FormField>
               <FormField label="WhatsApp"><Input value={profile?.whatsapp ?? ''} onChange={field('whatsapp')} /></FormField>
               <FormField label="Email alternativo"><Input type="email" value={profile?.alternative_email ?? ''} onChange={field('alternative_email')} /></FormField>
               <FormField label="LinkedIn"><Input type="url" placeholder="https://linkedin.com/in/..." value={profile?.linkedin ?? ''} onChange={field('linkedin')} /></FormField>
@@ -240,6 +241,15 @@ export default function ProfilePage() {
             </div>
             <FormField label="Descripción profesional">
               <textarea className="profile-textarea" value={profile?.profession_description ?? ''} onChange={field('profession_description')} rows={3} />
+            </FormField>
+            <FormField label="Actividades secundarias">
+              <textarea className="profile-textarea" value={profile?.secondary_activities ?? ''} onChange={field('secondary_activities')} rows={2} placeholder="Otras actividades profesionales o laborales" />
+            </FormField>
+            <FormField label="Áreas de conocimiento">
+              <textarea className="profile-textarea" value={profile?.knowledge_areas ?? ''} onChange={field('knowledge_areas')} rows={2} placeholder="Ej: derecho laboral, desarrollo web, diseño gráfico..." />
+            </FormField>
+            <FormField label="Matrículas / Habilitaciones">
+              <textarea className="profile-textarea" value={profile?.certifications ?? ''} onChange={field('certifications')} rows={2} placeholder="Ej: Abogado matriculado (CABA), Contador habilitado..." />
             </FormField>
           </section>
 

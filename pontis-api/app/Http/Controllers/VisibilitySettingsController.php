@@ -12,7 +12,7 @@ class VisibilitySettingsController extends Controller {
         $data = $request->validate([
             'settings' => 'required|array',
             'settings.*.block' => 'required|string|in:identity,masonic,contact,location,profession,bio,degrees,positions',
-            'settings.*.visibility' => 'required|string|in:private,workshop,my_workshops,registered,anonymous',
+            'settings.*.visibility' => 'required|string|in:private,workshop,my_workshops,talleres_seleccionados,registered,anonymous',
         ]);
         $userId = $request->user()->id;
         foreach ($data['settings'] as $s) {
