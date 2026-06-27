@@ -1,0 +1,9 @@
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm ci && npm run build"
+
+[start]
+cmd = "npx serve -s dist -l $PORT"
