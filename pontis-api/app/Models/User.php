@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Enums\UserStatus;
+use App\Models\ChangeRequest;
+use App\Models\ContactRequest;
+use App\Models\Need;
+use App\Models\PontisNotification;
+use App\Models\Service;
 use App\Models\UserDegree;
 use App\Models\UserPosition;
-use App\Models\Service;
-use App\Models\Need;
 use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -47,6 +50,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function userPositions(): HasMany { return $this->hasMany(UserPosition::class); }
     public function services(): HasMany { return $this->hasMany(Service::class); }
     public function needs(): HasMany { return $this->hasMany(Need::class); }
+    public function changeRequests(): HasMany { return $this->hasMany(ChangeRequest::class); }
+    public function sentContactRequests(): HasMany { return $this->hasMany(ContactRequest::class, 'requester_id'); }
+    public function receivedContactRequests(): HasMany { return $this->hasMany(ContactRequest::class, 'requestee_id'); }
+    public function pontisNotifications(): HasMany { return $this->hasMany(PontisNotification::class); }
 
     public function workshops(): BelongsToMany
     {

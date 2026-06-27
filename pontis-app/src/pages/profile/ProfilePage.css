@@ -20,3 +20,10 @@
 .profile-link-danger { color: var(--error, #e53e3e); }
 .profile-modal-form { display: flex; flex-direction: column; gap: 14px; }
 .profile-modal-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
+.profile-sensitive-note { font-size: 13px; color: var(--text-muted); background: var(--accent-bg); padding: 8px 12px; border-radius: 6px; margin-bottom: 14px; } .profile-sensitive-note a { color: var(--accent); }
+.profile-select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; font-family: inherit; }
+.profile-select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.profile-visibility-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.profile-visibility-row { display: flex; align-items: center; gap: 12px; }
+.profile-visibility-label { flex: 1; font-size: 14px; color: var(--text); }
+.profile-select-sm { width: 200px; flex-shrink: 0; }

@@ -13,6 +13,9 @@ import ProfilePage from '@/pages/profile/ProfilePage'
 import ServicesPage from '@/pages/services/ServicesPage'
 import NeedsPage from '@/pages/needs/NeedsPage'
 import PeoplePage from '@/pages/people/PeoplePage'
+import ContactRequestsPage from '@/pages/contact-requests/ContactRequestsPage'
+import ChangeRequestsPage from '@/pages/change-requests/ChangeRequestsPage'
+import PersonPage from '@/pages/person/PersonPage'
 
 export default function App() {
   return (
@@ -32,6 +35,9 @@ export default function App() {
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/needs" element={<NeedsPage />} />
             <Route path="/people" element={<PeoplePage />} />
+            <Route path="/contact-requests" element={<ContactRequestsPage />} />
+            <Route path="/change-requests" element={<ChangeRequestsPage />} />
+            <Route path="/people/:id" element={<PersonPage />} />
           </Route>
         </Routes>
       </AuthProvider>

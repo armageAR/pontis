@@ -13,3 +13,5 @@
 .person-meta-item::before { content: ''; }
 .person-workshops { display: flex; flex-wrap: wrap; gap: 6px; }
 .person-workshop-tag { font-size: 12px; background: var(--accent-bg); color: var(--accent); border-radius: 4px; padding: 2px 8px; }
+.person-name { color: var(--accent); text-decoration: none; font-weight: 600; }
+.person-name:hover { text-decoration: underline; }

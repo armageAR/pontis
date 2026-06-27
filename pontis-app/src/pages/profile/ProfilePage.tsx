@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import FormField from '@/components/FormField'
@@ -8,8 +9,12 @@ import Spinner from '@/components/Spinner'
 import Badge from '@/components/Badge'
 import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import { useAuth } from '@/context/AuthContext'
 import * as profileApi from '@/api/profile'
 import type { Profile, UserDegree, UserPosition } from '@/api/profile'
+import * as provinceApi from '@/api/provinces'
+import * as visibilityApi from '@/api/visibility'
+import type { VisibilityLevel, VisibilityBlock, VisibilityMap } from '@/api/visibility'
 import client from '@/api/client'
 import './ProfilePage.css'
 
@@ -22,6 +27,8 @@ const MASONIC_STATUS_LABELS: Record<string, string> = {
 }
 
 export default function ProfilePage() {
+  const { user: authUser } = useAuth()
+  const isSuperAdmin = authUser?.role === 'superadmin'
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -32,6 +39,9 @@ export default function ProfilePage() {
   const [positions, setPositions] = useState<UserPosition[]>([])
   const [positionCatalog, setPositionCatalog] = useState<PositionCatalogItem[]>([])
   const [myWorkshops, setMyWorkshops] = useState<WorkshopItem[]>([])
+  const [provinces, setProvinces] = useState<provinceApi.Province[]>([])
+  const [visibility, setVisibility] = useState<VisibilityMap>({})
+  const [savingVisibility, setSavingVisibility] = useState(false)
 
   const [showDegreeModal, setShowDegreeModal] = useState(false)
   const [showPositionModal, setShowPositionModal] = useState(false)
@@ -50,13 +60,17 @@ export default function ProfilePage() {
       profileApi.getPositions(),
       client.get<PositionCatalogItem[]>('/positions').then(r => r.data),
       client.get('/my-workshops').then(r => r.data),
-    ]).then(([p, d, pos, catalog, ws]) => {
+      provinceApi.getProvinces(),
+      visibilityApi.getVisibility(),
+    ]).then(([p, d, pos, catalog, ws, prov, vis]) => {
       setProfile(p)
       setDegrees(d)
       setPositions(pos)
       setPositionCatalog(catalog)
       const wsArr = Array.isArray(ws) ? ws : (ws.data ?? [])
       setMyWorkshops(wsArr)
+      setProvinces(prov)
+      setVisibility(vis)
     }).catch(() => setError('Error cargando el perfil.')).finally(() => setLoading(false))
   }, [])
 
@@ -75,6 +89,18 @@ export default function ProfilePage() {
   function field(key: keyof Profile) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setProfile(p => p ? { ...p, [key]: e.target.value || null } : p)
+  }
+
+  async function handleSaveVisibility(e: FormEvent) {
+    e.preventDefault(); setSavingVisibility(true)
+    const blocks: VisibilityBlock[] = ['identity','masonic','contact','location','profession','bio','degrees','positions']
+    const settings = blocks.map(b => ({ block: b, visibility: ((visibility[b]?.visibility) ?? 'workshop') as VisibilityLevel }))
+    try {
+      const updated = await visibilityApi.updateVisibility(settings)
+      setVisibility(updated)
+      setSuccess('Configuración de visibilidad guardada.')
+    } catch { setError('Error guardando visibilidad.') }
+    finally { setSavingVisibility(false) }
   }
 
   async function handleSaveDegree(e: FormEvent) {
@@ -132,10 +158,13 @@ export default function ProfilePage() {
         <form onSubmit={handleSave}>
           <section className="profile-section">
             <h2 className="profile-section-title">Identidad</h2>
+            {!isSuperAdmin && (
+              <p className="profile-sensitive-note">Nombre, apellido y DNI son datos sensibles. Para modificarlos, <Link to="/change-requests">solicitá un cambio</Link>.</p>
+            )}
             <div className="profile-grid">
-              <FormField label="Nombre"><Input value={profile?.name ?? ''} onChange={field('name')} /></FormField>
-              <FormField label="Apellido"><Input value={profile?.last_name ?? ''} onChange={field('last_name')} /></FormField>
-              <FormField label="DNI / Documento"><Input value={profile?.dni ?? ''} onChange={field('dni')} /></FormField>
+              <FormField label="Nombre"><Input value={profile?.name ?? ''} onChange={field('name')} disabled={!isSuperAdmin} /></FormField>
+              <FormField label="Apellido"><Input value={profile?.last_name ?? ''} onChange={field('last_name')} disabled={!isSuperAdmin} /></FormField>
+              <FormField label="DNI / Documento"><Input value={profile?.dni ?? ''} onChange={field('dni')} disabled={!isSuperAdmin} /></FormField>
               <FormField label="Email"><Input value={profile?.email ?? ''} disabled /></FormField>
               <FormField label="Fecha de nacimiento"><Input type="date" value={profile?.birth_date ?? ''} onChange={field('birth_date')} /></FormField>
             </div>
@@ -144,7 +173,7 @@ export default function ProfilePage() {
           <section className="profile-section">
             <h2 className="profile-section-title">Datos masónicos</h2>
             <div className="profile-grid">
-              <FormField label="Matrícula masónica"><Input value={profile?.masonic_id ?? ''} onChange={field('masonic_id')} /></FormField>
+              <FormField label="Matrícula masónica"><Input value={profile?.masonic_id ?? ''} onChange={field('masonic_id')} disabled={!isSuperAdmin} /></FormField>
               <FormField label="Estado masónico">
                 <select className="profile-select" value={profile?.masonic_status ?? 'active'} onChange={field('masonic_status')}>
                   {Object.entries(MASONIC_STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -167,7 +196,12 @@ export default function ProfilePage() {
             <h2 className="profile-section-title">Ubicación</h2>
             <div className="profile-grid">
               <FormField label="País"><Input value={profile?.country ?? ''} onChange={field('country')} /></FormField>
-              <FormField label="Provincia"><Input value={profile?.province ?? ''} onChange={field('province')} /></FormField>
+              <FormField label="Provincia">
+                <select className="profile-select" value={profile?.province ?? ''} onChange={e => setProfile(p => p ? { ...p, province: e.target.value } : p)}>
+                  <option value="">-- Seleccionar --</option>
+                  {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                </select>
+              </FormField>
               <FormField label="Localidad"><Input value={profile?.locality ?? ''} onChange={field('locality')} /></FormField>
               <FormField label="Barrio"><Input value={profile?.neighborhood ?? ''} onChange={field('neighborhood')} /></FormField>
               <FormField label="Dirección"><Input value={profile?.address ?? ''} onChange={field('address')} /></FormField>
@@ -196,6 +230,31 @@ export default function ProfilePage() {
           <div className="profile-save-row">
             <Button type="submit" loading={saving}>Guardar cambios</Button>
           </div>
+        </form>
+
+        {/* Visibilidad */}
+        <form onSubmit={handleSaveVisibility}>
+          <section className="profile-section">
+            <h2 className="profile-section-title">Privacidad por sección</h2>
+            <p className="profile-sensitive-note">Controlá quién puede ver cada sección de tu perfil.</p>
+            <div className="profile-visibility-grid">
+              {([ ['identity','Identidad'], ['masonic','Información masónica'], ['contact','Contacto'], ['location','Ubicación'], ['profession','Profesión'], ['bio','Presentación'], ['degrees','Grados'], ['positions','Cargos'] ] as [VisibilityBlock, string][]).map(([block, label]) => (
+                <div key={block} className="profile-visibility-row">
+                  <span className="profile-visibility-label">{label}</span>
+                  <select className="profile-select profile-select-sm"
+                    value={visibility[block]?.visibility ?? 'workshop'}
+                    onChange={e => setVisibility(v => ({ ...v, [block]: { ...(v[block] as object), block, visibility: e.target.value as VisibilityLevel } }))}>
+                    {(Object.entries(visibilityApi.VISIBILITY_LABELS) as [VisibilityLevel, string][]).map(([k, lbl]) => (
+                      <option key={k} value={k}>{lbl}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <div className="profile-save-row">
+              <Button type="submit" loading={savingVisibility}>Guardar privacidad</Button>
+            </div>
+          </section>
         </form>
 
         {/* Grados */}

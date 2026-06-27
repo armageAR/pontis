@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import AppLayout from '@/components/AppLayout'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
@@ -66,7 +67,7 @@ export default function PeoplePage() {
               <div key={p.id} className="person-card">
                 <div className="person-card-header">
                   <div>
-                    <span className="person-name">{p.last_name ? `${p.last_name}, ${p.name}` : p.name}</span>
+                    <Link to={`/people/${p.id}`} className="person-name">{p.last_name ? `${p.last_name}, ${p.name}` : p.name}</Link>
                     {p.masonic_id && <span className="person-masonic-id">Mat. {p.masonic_id}</span>}
                   </div>
                   {p.masonic_status && (

@@ -1,0 +1,21 @@
+.cont-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.cont-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0; }
+.cont-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); }
+.cont-tab { background: none; border: none; padding: 8px 16px; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.cont-tab-active { color: var(--accent); border-bottom-color: var(--accent); }
+.cont-filters { margin-bottom: 20px; }
+.cont-select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; }
+.cont-loading { display: flex; justify-content: center; padding: 48px; }
+.cont-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.cont-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+.cont-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.cont-person { display: block; font-size: 15px; font-weight: 600; color: var(--text-h); }
+.cont-date { font-size: 12px; color: var(--text-muted); }
+.cont-message { font-size: 14px; color: var(--text); margin: 0 0 8px; }
+.cont-response { font-size: 13px; color: var(--text-muted); margin: 0 0 8px; }
+.cont-contact-info { font-size: 13px; color: var(--accent); background: var(--accent-bg); padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; }
+.cont-actions { display: flex; gap: 10px; }
+.cont-form { display: flex; flex-direction: column; gap: 14px; }
+.cont-modal-msg { background: var(--accent-bg); padding: 10px 12px; border-radius: 6px; font-size: 14px; color: var(--text); margin: -4px 0 0; }
+.cont-textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; resize: vertical; font-family: inherit; box-sizing: border-box; }
+.cont-modal-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }

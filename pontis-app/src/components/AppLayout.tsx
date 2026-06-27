@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import Button from './Button'
 import Logo from './Logo'
+import NotificationBell from './NotificationBell'
 import './AppLayout.css'
 import './Logo.css'
 
@@ -38,6 +39,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
         </div>
         <div className="app-nav-right">
+          <Link to="/contact-requests" className="app-nav-link app-nav-link-sm">Contactos</Link>
+          <Link to="/change-requests" className="app-nav-link app-nav-link-sm">Solicitudes</Link>
+          <NotificationBell />
           <Link to="/profile" className="app-nav-link">{user?.name}</Link>
           <Button variant="outline" onClick={handleLogout} loading={loggingOut}>
             Salir

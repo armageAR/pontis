@@ -3,12 +3,18 @@
 use App\Http\Controllers\Admin\WorkshopController;
 use App\Http\Controllers\Admin\WorkshopSyncController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChangeRequestController;
+use App\Http\Controllers\ContactRequestController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DegreeController;
 use App\Http\Controllers\NeedController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\PositionCatalogController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProvinceController;
+use App\Http\Controllers\PublicProfileController;
+use App\Http\Controllers\VisibilitySettingsController;
 use App\Http\Controllers\ServiceCategoryController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
@@ -82,8 +88,36 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/needs/{need}', [NeedController::class, 'update']);
     Route::delete('/needs/{need}', [NeedController::class, 'destroy']);
 
+    // Provincias (catálogo)
+    Route::get('/provinces', [ProvinceController::class, 'index']);
+
+    // Configuración de visibilidad por bloque
+    Route::get('/profile/visibility', [VisibilitySettingsController::class, 'index']);
+    Route::post('/profile/visibility', [VisibilitySettingsController::class, 'update']);
+
     // Búsqueda de personas
     Route::get('/people', [PeopleController::class, 'index']);
+
+    // Ficha pública de persona
+    Route::get('/people/{user}', [PublicProfileController::class, 'show']);
+
+    // Notificaciones
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markRead']);
+    Route::patch('/notifications/{notification}', [NotificationController::class, 'markOne']);
+
+    // Solicitudes de cambio sensible
+    Route::get('/change-requests', [ChangeRequestController::class, 'index']);
+    Route::post('/change-requests', [ChangeRequestController::class, 'store']);
+    Route::post('/change-requests/{changeRequest}/approve', [ChangeRequestController::class, 'approve']);
+    Route::post('/change-requests/{changeRequest}/reject', [ChangeRequestController::class, 'reject']);
+
+    // Solicitudes de contacto
+    Route::get('/contact-requests', [ContactRequestController::class, 'index']);
+    Route::post('/contact-requests', [ContactRequestController::class, 'store']);
+    Route::post('/contact-requests/{contactRequest}/accept', [ContactRequestController::class, 'accept']);
+    Route::post('/contact-requests/{contactRequest}/reject', [ContactRequestController::class, 'reject']);
+    Route::post('/contact-requests/{contactRequest}/cancel', [ContactRequestController::class, 'cancel']);
 
     Route::prefix('admin')->group(function () {
         Route::get('/workshops', [WorkshopController::class, 'index']);
