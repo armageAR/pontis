@@ -1,7 +1,7 @@
 import './Alert.css'
 
 interface AlertProps {
-  variant?: 'error' | 'success'
+  variant?: 'error' | 'success' | 'warning'
   children: React.ReactNode
 }
 
