@@ -31,7 +31,10 @@ class AuthController extends Controller
         $data['status'] = UserStatus::VERIFYING->value;
 
         $user = User::create($data);
-        $user->workshopMemberships()->attach($workshopId);
+        $user->workshopMemberships()->attach($workshopId, [
+            'status'            => 'pending',
+            'requested_by_user' => true,
+        ]);
 
         $token = $user->createToken('api')->plainTextToken;
 

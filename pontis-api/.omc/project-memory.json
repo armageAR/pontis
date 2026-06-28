@@ -213,15 +213,15 @@
   },
   "hotPaths": [
     {
-      "path": "app/Http/Controllers/AuthController.php",
-      "accessCount": 3,
-      "lastAccessed": 1782684902216,
+      "path": "tests/Feature/SanctumAuthTest.php",
+      "accessCount": 5,
+      "lastAccessed": 1782685900542,
       "type": "file"
     },
     {
-      "path": "tests/Feature/SanctumAuthTest.php",
+      "path": "app/Http/Controllers/AuthController.php",
       "accessCount": 3,
-      "lastAccessed": 1782684922296,
+      "lastAccessed": 1782684902216,
       "type": "file"
     },
     {

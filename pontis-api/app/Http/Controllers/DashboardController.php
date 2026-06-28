@@ -27,6 +27,7 @@ class DashboardController extends Controller
             ->join('users', 'users.id', '=', 'user_workshop.user_id')
             ->join('workshops', 'workshops.id', '=', 'user_workshop.workshop_id')
             ->whereIn('user_workshop.status', ['pending', 'correction_requested'])
+            ->where('users.status', 'pending')
             ->whereNull('workshops.deleted_at')
             ->select([
                 'user_workshop.user_id',

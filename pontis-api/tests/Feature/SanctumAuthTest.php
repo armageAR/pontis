@@ -73,7 +73,13 @@ class SanctumAuthTest extends TestCase
         ])->assertStatus(201);
 
         $user = User::where('email', 'workshop@test.com')->first();
-        $this->assertTrue($user->workshops()->where('workshop_id', $workshop->id)->exists());
+        $this->assertTrue($user->workshopMemberships()->where('workshop_id', $workshop->id)->exists());
+        $this->assertDatabaseHas('user_workshop', [
+            'user_id'            => $user->id,
+            'workshop_id'        => $workshop->id,
+            'status'             => 'pending',
+            'requested_by_user'  => true,
+        ]);
     }
 
     public function test_register_fails_without_workshop(): void

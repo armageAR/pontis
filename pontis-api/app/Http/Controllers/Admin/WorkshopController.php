@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserStatus;
 use App\Enums\WorkshopStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AssignWorkshopUsersRequest;
@@ -148,6 +149,11 @@ class WorkshopController extends Controller
             'user_seen_at'      => null,
             'correction_notes'  => null,
         ]);
+
+        if ($user->status === UserStatus::PENDING) {
+            $user->status = UserStatus::ACTIVE;
+            $user->save();
+        }
 
         \App\Models\PontisNotification::create([
             'user_id' => $user->id,
