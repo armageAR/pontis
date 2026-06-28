@@ -1,58 +1,62 @@
-/* ── Shell ── */
+/* ── Shell: flex row (sidebar + content) ── */
 .app-layout {
   min-height: 100svh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   background: var(--bg);
 }
 
-/* ── Header bar ── */
-.app-nav {
-  position: sticky;
+/* ── Sidebar wrapper: reserva el espacio en el flujo normal (desktop) ── */
+.app-sidebar-wrapper {
+  width: 240px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* ── Sidebar fijo a la izquierda ── */
+.app-sidebar {
+  width: 240px;
+  height: 100vh;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+  z-index: 200;
+  overflow-y: auto;
 }
 
-.app-nav-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-5);
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-/* ── Lado izquierdo: logo + links ── */
-.app-nav-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  flex: 1;
-  min-width: 0;
-}
-
-.app-nav-logo {
-  text-decoration: none;
-  display: flex;
-  align-items: center;
+/* ── Área del logo ── */
+.app-sidebar-logo {
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
-.app-nav-links {
-  display: flex;
+.app-sidebar-logo-link {
+  text-decoration: none;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  flex-wrap: wrap;
 }
 
-/* ── Nav link base ── */
-.app-nav-link {
-  padding: 5px var(--space-3);
+/* ── Navegación vertical ── */
+.app-sidebar-nav {
+  flex: 1;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.app-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 8px var(--space-3);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   font-weight: 500;
@@ -60,88 +64,162 @@
   text-decoration: none;
   white-space: nowrap;
   transition: color 0.12s, background 0.12s;
+  position: relative;
 }
 
-.app-nav-link:hover {
+.app-sidebar-link:hover {
   color: var(--text);
   background: var(--accent-bg);
 }
 
-/* Activo: marcado por NavLink className="… active" */
-.app-nav-link.active {
+/* Activo: indicador borde izquierdo + texto accent */
+.app-sidebar-link.active {
   color: var(--accent);
   background: var(--accent-bg);
   font-weight: 600;
-  position: relative;
 }
 
-.app-nav-link.active::after {
+.app-sidebar-link.active::before {
   content: '';
   position: absolute;
-  bottom: -1px;
   left: 0;
-  right: 0;
-  height: 2px;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
   background: var(--accent);
-  border-radius: 1px 1px 0 0;
+  border-radius: 0 2px 2px 0;
 }
 
-/* ── Lado derecho ── */
-.app-nav-right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
+.app-sidebar-icon {
   flex-shrink: 0;
+  opacity: 0.65;
 }
 
-/* Link de perfil (nombre de usuario) */
-.app-nav-user {
+.app-sidebar-link:hover .app-sidebar-icon,
+.app-sidebar-link.active .app-sidebar-icon {
+  opacity: 1;
+}
+
+/* ── Footer de usuario ── */
+.app-sidebar-footer {
+  flex-shrink: 0;
+  padding: var(--space-4);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.app-sidebar-user {
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text);
   text-decoration: none;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.12s;
 }
 
-.app-nav-user:hover {
+.app-sidebar-user:hover {
   color: var(--accent);
 }
 
 /* ── Contenido principal ── */
 .app-main {
   flex: 1;
+  min-width: 0;
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
   padding: var(--space-6) var(--space-5);
 }
 
-/* ── Responsive: pantallas pequeñas ── */
+/* ── Top bar móvil (oculto en desktop) ── */
+.app-topbar {
+  display: none;
+}
+
+/* ── Overlay (oculto en desktop) ── */
+.app-sidebar-overlay {
+  display: none;
+}
+
+/* ── Responsive: pantallas pequeñas (<= 768px) ── */
 @media (max-width: 768px) {
-  .app-nav-inner {
-    height: auto;
-    flex-wrap: wrap;
-    padding: var(--space-3) var(--space-4);
-    gap: var(--space-2);
-  }
-
-  .app-nav-left {
+  .app-layout {
     flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-    width: 100%;
   }
 
-  .app-nav-links {
-    gap: var(--space-1);
-  }
-
-  .app-nav-right {
-    width: 100%;
-    border-top: 1px solid var(--border);
-    padding-top: var(--space-2);
+  /* Top bar con hamburguesa */
+  .app-topbar {
+    display: flex;
+    align-items: center;
     gap: var(--space-3);
+    height: 52px;
+    padding: 0 var(--space-4);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 300;
+    flex-shrink: 0;
+  }
+
+  .app-topbar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background 0.12s;
+    flex-shrink: 0;
+  }
+
+  .app-topbar-toggle:hover {
+    background: var(--accent-bg);
+  }
+
+  .app-topbar-logo {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Wrapper off-canvas: escondido por defecto */
+  .app-sidebar-wrapper {
+    width: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 250;
+    overflow: hidden;
+    transition: width 0.22s ease;
+  }
+
+  .app-sidebar-wrapper.is-open {
+    width: 240px;
+  }
+
+  .app-sidebar {
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Overlay con blur suave */
+  .app-sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
+    z-index: 240;
+    backdrop-filter: blur(1px);
   }
 
   .app-main {

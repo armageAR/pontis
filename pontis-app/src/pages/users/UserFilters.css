@@ -1,8 +1,8 @@
 .user-filters {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .user-filters-search {

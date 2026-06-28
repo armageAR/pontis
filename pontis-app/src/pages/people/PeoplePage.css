@@ -1,17 +1,38 @@
-.people-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0 0 24px; }
-.people-search-form { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+.people-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0 0 var(--space-5); }
+.people-search-form { display: flex; gap: var(--space-3); margin-bottom: var(--space-5); flex-wrap: wrap; }
 .people-search-input { flex: 1; min-width: 200px; }
-.people-select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px; }
-.people-loading { display: flex; justify-content: center; padding: 48px 0; }
-.people-results-count { font-size: 14px; color: var(--text-muted); margin-bottom: 14px; }
-.people-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-.person-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
-.person-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.person-name { font-size: 16px; font-weight: 600; color: var(--text-h); }
-.person-masonic-id { margin-left: 10px; font-size: 13px; color: var(--text-muted); }
-.person-meta { display: flex; gap: 12px; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.people-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+.people-loading { display: flex; justify-content: center; padding: var(--space-6) 0; }
+.people-results-count { font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-3); }
+.people-list { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-5); }
+.person-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 140ms;
+}
+.person-card:hover { box-shadow: var(--shadow-md); }
+.person-card-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.person-name { font-size: var(--text-base); font-weight: 600; color: var(--text-h); }
+.person-masonic-id { margin-left: var(--space-2); font-size: var(--text-sm); color: var(--text-muted); }
+.person-meta { display: flex; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-2); }
 .person-meta-item::before { content: ''; }
-.person-workshops { display: flex; flex-wrap: wrap; gap: 6px; }
-.person-workshop-tag { font-size: 12px; background: var(--accent-bg); color: var(--accent); border-radius: 4px; padding: 2px 8px; }
+.person-workshops { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.person-workshop-tag {
+  font-size: var(--text-xs);
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+}
 .person-name { color: var(--accent); text-decoration: none; font-weight: 600; }
 .person-name:hover { text-decoration: underline; }

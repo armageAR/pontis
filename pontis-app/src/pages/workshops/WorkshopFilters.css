@@ -1,8 +1,8 @@
 .workshop-filters {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
   align-items: center;
 }
 
@@ -21,17 +21,17 @@
 .workshop-filter-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   background: none;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 12px;
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3);
   height: 38px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text);
   white-space: nowrap;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.14s, color 0.14s;
   user-select: none;
 }
 
@@ -52,7 +52,7 @@
   width: 28px;
   height: 16px;
   border-radius: 99px;
-  background: var(--border);
+  background: var(--border-strong);
   transition: background 0.2s;
   flex-shrink: 0;
 }
@@ -68,9 +68,9 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   transition: transform 0.2s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .workshop-filter-toggle--on .toggle-thumb {

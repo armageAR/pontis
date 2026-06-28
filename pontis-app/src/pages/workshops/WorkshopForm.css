@@ -1,13 +1,13 @@
 .workshop-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .workshop-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .workshop-form-row-3 {
@@ -30,6 +30,6 @@
 .workshop-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding-top: 4px;
+  gap: var(--space-3);
+  padding-top: var(--space-1);
 }

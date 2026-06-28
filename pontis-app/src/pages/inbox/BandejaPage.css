@@ -1,6 +1,35 @@
-.bdj-header { margin-bottom: 20px; }
-.bdj-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0; }
-.bdj-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
-.bdj-tab { background: none; border: none; padding: 8px 16px; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-.bdj-tab-active { color: var(--accent); border-bottom-color: var(--accent); }
+.bdj-header {
+  margin-bottom: var(--space-5);
+}
+.bdj-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+.bdj-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+.bdj-tab {
+  background: none;
+  border: none;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 140ms;
+}
+.bdj-tab:hover {
+  color: var(--text);
+}
+.bdj-tab-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
 .bdj-content { }

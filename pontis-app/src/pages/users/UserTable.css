@@ -1,21 +1,24 @@
 .user-table-wrapper {
   overflow-x: auto;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
 }
 
 .user-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .user-table th {
   text-align: left;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   font-weight: 600;
-  font-size: 13px;
-  color: var(--text);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
   user-select: none;
@@ -30,10 +33,18 @@
 }
 
 .user-table td {
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   color: var(--text);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
+}
+
+.user-table tbody tr {
+  transition: background 0.14s;
+}
+
+.user-table tbody tr:hover {
+  background: var(--accent-bg);
 }
 
 .user-table tbody tr:last-child td {
@@ -45,7 +56,7 @@
   color: var(--text-h);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .user-name-text {
@@ -59,18 +70,10 @@
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  background: rgba(234, 179, 8, 0.15);
-  color: #ca8a04;
-  border: 1px solid rgba(202, 138, 4, 0.35);
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid var(--warning-border);
   flex-shrink: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .user-superadmin-badge {
-    background: rgba(250, 204, 21, 0.12);
-    color: #facc15;
-    border-color: rgba(250, 204, 21, 0.3);
-  }
 }
 
 .user-cell-email {
@@ -80,14 +83,14 @@
 .user-cell-workshops {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .user-cell-workshop-tag {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 13px;
+  font-size: var(--text-xs);
   color: var(--accent);
   font-weight: 500;
   white-space: nowrap;
@@ -101,17 +104,17 @@
   height: 15px;
   border-radius: 3px;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-fg);
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
 }
 
 .user-cell-date {
-  font-size: 13px;
-  color: var(--text);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 
 .user-cell-actions {
-  padding-right: 8px;
+  padding-right: var(--space-2);
 }
