@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"php artisan migrate 2>&1 && echo \\\"---\\\" && php artisan db:seed --class=ProvinceSeeder --force 2>&1\",\"description\":\"Run new migrations and seed provinces\"}",
-  "error": "Exit code 1\n\n INFO Running migrations. \n\n 2026_06_27_183441_create_provinces_table .. 26.85ms DONE\n 2026_06_27_183442_create_user_visibility_settings_table .. 28.15ms DONE\n\n---\n\n INFO Seeding database. \n\n\n   Error \n\n  Class \"App\\Models\\Province\" not found\n\n  at database/seeders/ProvinceSeeder.php:34\n     30▕             ['name' => 'Tierra del Fuego', 'code' => 'TF'],\n     31▕             ['name' => 'Tucumán', 'code' => 'TU'],\n     32▕         ];\n     33▕         foreach ($provinces as $p) {\n  ➜ ...",
-  "timestamp": "2026-06-27T18:35:10.927Z",
+  "tool_input_preview": "{\"command\":\"cd /var/www/html/pontis/pontis-api\\nAPI=\\\"https://pontis-api-dev.up.railway.app\\\"\\nTS=$(date +%s)\\n( timeout 40 railway logs --environment dev --service pontis-api 2>&1 > /tmp/maillog_$TS....",
+  "error": "Exit code 143\nCommand timed out after 1m 0s\nRegistrando armage@gmail.com (dueño de cuenta Resend)...",
+  "timestamp": "2026-06-28T15:11:28.126Z",
   "retry_count": 1
 }

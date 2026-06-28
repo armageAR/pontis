@@ -1,0 +1,16 @@
+{"t":0,"agent":"ac96ef8","agent_type":"unknown","event":"agent_stop","success":true,"duration_ms":0}
+{"t":0,"agent":"a1244f0","agent_type":"unknown","event":"agent_stop","success":true,"duration_ms":0}
+{"t":0,"agent":"aarchit","agent_type":"architect-review","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a6389bf","agent_type":"architect-review","event":"agent_stop","success":true,"duration_ms":13819}
+{"t":0,"agent":"aarchit","agent_type":"architect-review","event":"agent_stop","success":true,"duration_ms":163020}
+{"t":0,"agent":"aarchit","agent_type":"architect-review","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"acfa359","agent_type":"architect-review","event":"agent_stop","success":true,"duration_ms":12922}
+{"t":0,"agent":"aarchit","agent_type":"architect-review","event":"agent_stop","success":true,"duration_ms":32074}
+{"t":0,"agent":"acritic","agent_type":"critic-review","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a4d65ba","agent_type":"critic-review","event":"agent_stop","success":true,"duration_ms":6488}
+{"t":0,"agent":"acritic","agent_type":"critic-review","event":"agent_stop","success":true,"duration_ms":120421}
+{"t":0,"agent":"ac3e0a0","agent_type":"unknown","event":"agent_stop","success":true,"duration_ms":0}
+{"t":0,"agent":"system","event":"keyword_detected","keyword":"ralph"}
+{"t":0,"agent":"system","event":"mode_change","mode_from":"none","mode_to":"ralph"}
+{"t":0,"agent":"aralph-","agent_type":"ralph-reviewer","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"oh-my-claudecode:ai-slop-cleaner"}

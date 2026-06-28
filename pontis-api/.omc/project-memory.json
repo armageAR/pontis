@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1782580283190,
+  "lastScanned": 1782684630443,
   "projectRoot": "/var/www/html/pontis/pontis-api",
   "techStack": {
     "languages": [
@@ -32,7 +32,7 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "cd /var/www/html/pontis/pontis-app && npm run build 2>&1",
+    "buildCommand": "npm run build",
     "testCommand": null,
     "lintCommand": null,
     "devCommand": "npm run dev",
@@ -63,14 +63,14 @@
       "path": "app",
       "purpose": "Application code",
       "fileCount": 0,
-      "lastAccessed": 1782580283165,
+      "lastAccessed": 1782684630427,
       "keyFiles": []
     },
     "bootstrap": {
       "path": "bootstrap",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1782580283165,
+      "lastAccessed": 1782684630428,
       "keyFiles": [
         "app.php",
         "providers.php"
@@ -79,21 +79,21 @@
     "config": {
       "path": "config",
       "purpose": "Configuration files",
-      "fileCount": 11,
-      "lastAccessed": 1782580283172,
+      "fileCount": 12,
+      "lastAccessed": 1782684630434,
       "keyFiles": [
         "app.php",
         "auth.php",
         "cache.php",
-        "database.php",
-        "filesystems.php"
+        "cors.php",
+        "database.php"
       ]
     },
     "database": {
       "path": "database",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1782580283173,
+      "lastAccessed": 1782684630436,
       "keyFiles": [
         "database.sqlite"
       ]
@@ -102,7 +102,7 @@
       "path": "public",
       "purpose": "Public files",
       "fileCount": 4,
-      "lastAccessed": 1782580283173,
+      "lastAccessed": 1782684630436,
       "keyFiles": [
         "favicon.ico",
         "index.php",
@@ -113,14 +113,14 @@
       "path": "resources",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1782580283174,
+      "lastAccessed": 1782684630437,
       "keyFiles": []
     },
     "routes": {
       "path": "routes",
       "purpose": "Route handlers",
       "fileCount": 3,
-      "lastAccessed": 1782580283177,
+      "lastAccessed": 1782684630437,
       "keyFiles": [
         "api.php",
         "console.php",
@@ -131,14 +131,14 @@
       "path": "storage",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1782580283177,
+      "lastAccessed": 1782684630438,
       "keyFiles": []
     },
     "tests": {
       "path": "tests",
       "purpose": "Test files",
       "fileCount": 1,
-      "lastAccessed": 1782580283177,
+      "lastAccessed": 1782684630438,
       "keyFiles": [
         "TestCase.php"
       ]
@@ -147,7 +147,7 @@
       "path": "vendor",
       "purpose": "Third-party code",
       "fileCount": 1,
-      "lastAccessed": 1782580283181,
+      "lastAccessed": 1782684630438,
       "keyFiles": [
         "autoload.php"
       ]
@@ -155,18 +155,19 @@
     "app/Models": {
       "path": "app/Models",
       "purpose": "Data models",
-      "fileCount": 2,
-      "lastAccessed": 1782580283182,
+      "fileCount": 15,
+      "lastAccessed": 1782684630439,
       "keyFiles": [
-        "User.php",
-        "Workshop.php"
+        "ChangeRequest.php",
+        "ContactRequest.php",
+        "Locality.php"
       ]
     },
     "app/Services": {
       "path": "app/Services",
       "purpose": "Business logic services",
       "fileCount": 1,
-      "lastAccessed": 1782580283182,
+      "lastAccessed": 1782684630439,
       "keyFiles": [
         "GlaSyncService.php"
       ]
@@ -174,8 +175,8 @@
     "database/migrations": {
       "path": "database/migrations",
       "purpose": "Database migrations",
-      "fileCount": 11,
-      "lastAccessed": 1782580283186,
+      "fileCount": 31,
+      "lastAccessed": 1782684630441,
       "keyFiles": [
         "0001_01_01_000000_create_users_table.php",
         "0001_01_01_000001_create_cache_table.php",
@@ -186,7 +187,7 @@
       "path": "resources/views",
       "purpose": "View templates",
       "fileCount": 1,
-      "lastAccessed": 1782580283187,
+      "lastAccessed": 1782684630442,
       "keyFiles": [
         "welcome.blade.php"
       ]
@@ -195,14 +196,14 @@
       "path": "storage/app",
       "purpose": "Application code",
       "fileCount": 1,
-      "lastAccessed": 1782580283187,
+      "lastAccessed": 1782684630442,
       "keyFiles": []
     },
     "vendor/bin": {
       "path": "vendor/bin",
       "purpose": "Executable scripts",
       "fileCount": 14,
-      "lastAccessed": 1782580283190,
+      "lastAccessed": 1782684630443,
       "keyFiles": [
         "carbon",
         "carbon.bat",
@@ -212,111 +213,21 @@
   },
   "hotPaths": [
     {
-      "path": "routes/api.php",
-      "accessCount": 11,
-      "lastAccessed": 1782586002164,
-      "type": "file"
-    },
-    {
-      "path": "app/Models/User.php",
-      "accessCount": 6,
-      "lastAccessed": 1782584856633,
-      "type": "file"
-    },
-    {
-      "path": "app/Models/Workshop.php",
-      "accessCount": 4,
-      "lastAccessed": 1782585932947,
-      "type": "file"
-    },
-    {
-      "path": "app/Http/Controllers/DashboardController.php",
-      "accessCount": 4,
-      "lastAccessed": 1782586060072,
-      "type": "file"
-    },
-    {
       "path": "app/Http/Controllers/AuthController.php",
       "accessCount": 3,
-      "lastAccessed": 1782586341678,
+      "lastAccessed": 1782684902216,
       "type": "file"
     },
     {
-      "path": "app/Http/Controllers/ProfileController.php",
+      "path": "tests/Feature/SanctumAuthTest.php",
       "accessCount": 3,
-      "lastAccessed": 1782586393462,
+      "lastAccessed": 1782684922296,
       "type": "file"
     },
     {
-      "path": "bootstrap/app.php",
+      "path": "app/Enums/UserStatus.php",
       "accessCount": 2,
-      "lastAccessed": 1782580809650,
-      "type": "file"
-    },
-    {
-      "path": "nixpacks.toml",
-      "accessCount": 2,
-      "lastAccessed": 1782583957889,
-      "type": "file"
-    },
-    {
-      "path": "app/Http/Controllers/PublicProfileController.php",
-      "accessCount": 2,
-      "lastAccessed": 1782585525611,
-      "type": "file"
-    },
-    {
-      "path": "database/migrations/2026_06_27_184351_create_zones_table.php",
-      "accessCount": 2,
-      "lastAccessed": 1782585846818,
-      "type": "file"
-    },
-    {
-      "path": "database/migrations/2026_06_27_184351_create_localities_table.php",
-      "accessCount": 2,
-      "lastAccessed": 1782585848348,
-      "type": "file"
-    },
-    {
-      "path": "database/migrations/2026_06_27_184352_add_zone_to_workshops_table.php",
-      "accessCount": 2,
-      "lastAccessed": 1782585852215,
-      "type": "file"
-    },
-    {
-      "path": "database/migrations/2026_06_27_184352_add_extra_fields_to_users_table.php",
-      "accessCount": 2,
-      "lastAccessed": 1782585853536,
-      "type": "file"
-    },
-    {
-      "path": "database/migrations/2026_06_27_184604_add_correction_fields_to_user_workshop_table.php",
-      "accessCount": 2,
-      "lastAccessed": 1782585973247,
-      "type": "file"
-    },
-    {
-      "path": "app/Http/Controllers/Admin/WorkshopController.php",
-      "accessCount": 2,
-      "lastAccessed": 1782585996796,
-      "type": "file"
-    },
-    {
-      "path": "config/cors.php",
-      "accessCount": 1,
-      "lastAccessed": 1782580801053,
-      "type": "file"
-    },
-    {
-      "path": "railway.toml",
-      "accessCount": 1,
-      "lastAccessed": 1782580822216,
-      "type": "file"
-    },
-    {
-      "path": "database/seeders/WorkshopSeeder.php",
-      "accessCount": 1,
-      "lastAccessed": 1782580830500,
+      "lastAccessed": 1782684871370,
       "type": "file"
     }
   ],

@@ -1,0 +1,60 @@
+{
+  "agents": [
+    {
+      "agent_id": "ac96ef822c770e911",
+      "agent_type": "unknown",
+      "started_at": "2026-06-28T20:29:24.170Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T20:29:24.170Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "a1244f055c2063516",
+      "agent_type": "unknown",
+      "started_at": "2026-06-28T20:33:55.855Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T20:33:55.855Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "aarchitect-review-ad30bffcc91bfc76",
+      "agent_type": "architect-review",
+      "started_at": "2026-06-28T21:20:04.957Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T21:20:37.031Z",
+      "duration_ms": 32074
+    },
+    {
+      "agent_id": "acritic-review-7c627466564d1a7d",
+      "agent_type": "critic-review",
+      "started_at": "2026-06-28T21:21:40.403Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T21:23:40.824Z",
+      "duration_ms": 120421
+    },
+    {
+      "agent_id": "ac3e0a041c798c5c2",
+      "agent_type": "unknown",
+      "started_at": "2026-06-28T21:24:31.301Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T21:24:31.301Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "aralph-reviewer-e58212dfab213240",
+      "agent_type": "ralph-reviewer",
+      "started_at": "2026-06-28T21:46:23.373Z",
+      "parent_mode": "none",
+      "status": "running"
+    }
+  ],
+  "total_spawned": 4,
+  "total_completed": 9,
+  "total_failed": 0,
+  "last_updated": "2026-06-28T21:46:23.474Z"
+}

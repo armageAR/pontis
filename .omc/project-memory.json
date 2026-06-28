@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1782586684408,
+  "lastScanned": 1782676484833,
   "projectRoot": "/var/www/html/pontis",
   "techStack": {
     "languages": [],
@@ -24,16 +24,25 @@
   "structure": {
     "isMonorepo": false,
     "workspaces": [],
-    "mainDirectories": [],
+    "mainDirectories": [
+      "docs"
+    ],
     "gitBranches": null
   },
   "customNotes": [],
   "directoryMap": {
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1782676484819,
+      "keyFiles": []
+    },
     "pontis-api": {
       "path": "pontis-api",
       "purpose": null,
       "fileCount": 16,
-      "lastAccessed": 1782586684398,
+      "lastAccessed": 1782676484821,
       "keyFiles": [
         "README.md",
         "artisan",
@@ -46,7 +55,7 @@
       "path": "pontis-app",
       "purpose": null,
       "fileCount": 13,
-      "lastAccessed": 1782586684402,
+      "lastAccessed": 1782676484826,
       "keyFiles": [
         "README.md",
         "eslint.config.js",
@@ -59,14 +68,14 @@
       "path": "pontis-api/app",
       "purpose": "Application code",
       "fileCount": 0,
-      "lastAccessed": 1782586684403,
+      "lastAccessed": 1782676484828,
       "keyFiles": []
     },
     "pontis-app/dist": {
       "path": "pontis-app/dist",
       "purpose": "Distribution/build output",
       "fileCount": 3,
-      "lastAccessed": 1782586684404,
+      "lastAccessed": 1782676484829,
       "keyFiles": [
         "favicon.svg",
         "icons.svg",
@@ -77,15 +86,33 @@
       "path": "pontis-app/node_modules",
       "purpose": "Dependencies",
       "fileCount": 1,
-      "lastAccessed": 1782586684405,
+      "lastAccessed": 1782676484830,
       "keyFiles": []
     }
   },
   "hotPaths": [
     {
       "path": "pontis-api/routes/api.php",
+      "accessCount": 7,
+      "lastAccessed": 1782680806259,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/components/AppLayout.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1782611781400,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/components/AppLayout.css",
       "accessCount": 5,
-      "lastAccessed": 1782587557887,
+      "lastAccessed": 1782663876404,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/App.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1782680895975,
       "type": "file"
     },
     {
@@ -95,27 +122,33 @@
       "type": "file"
     },
     {
+      "path": "pontis-app/src/pages/contact-requests/ContactRequestsPage.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1782587972000,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/AuthController.php",
+      "accessCount": 4,
+      "lastAccessed": 1782683258934,
+      "type": "file"
+    },
+    {
       "path": "pontis-app/src/pages/people/PeoplePage.tsx",
       "accessCount": 3,
       "lastAccessed": 1782587286430,
       "type": "file"
     },
     {
-      "path": "pontis-app/src/components/AppLayout.tsx",
+      "path": "pontis-app/src/pages/explore/ExplorePage.css",
       "accessCount": 3,
-      "lastAccessed": 1782587619279,
-      "type": "file"
-    },
-    {
-      "path": "pontis-app/src/App.tsx",
-      "accessCount": 3,
-      "lastAccessed": 1782587671984,
+      "lastAccessed": 1782611977419,
       "type": "file"
     },
     {
       "path": "pontis-api/app/Models/User.php",
-      "accessCount": 2,
-      "lastAccessed": 1782586856744,
+      "accessCount": 3,
+      "lastAccessed": 1782680805882,
       "type": "file"
     },
     {
@@ -134,6 +167,114 @@
       "path": "pontis-app/src/pages/explore/ExplorePage.tsx",
       "accessCount": 2,
       "lastAccessed": 1782587655403,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/ContactRequestController.php",
+      "accessCount": 2,
+      "lastAccessed": 1782587836351,
+      "type": "file"
+    },
+    {
+      "path": "pontis-api/app/Http/Controllers/UserController.php",
+      "accessCount": 2,
+      "lastAccessed": 1782587903875,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/api/contactRequests.ts",
+      "accessCount": 2,
+      "lastAccessed": 1782587937473,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/index.css",
+      "accessCount": 2,
+      "lastAccessed": 1782611757202,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/search/SearchPage.css",
+      "accessCount": 2,
+      "lastAccessed": 1782611924347,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/publications/MisPublicacionesPage.css",
+      "accessCount": 2,
+      "lastAccessed": 1782611926955,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/inbox/BandejaPage.css",
+      "accessCount": 2,
+      "lastAccessed": 1782611929350,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/inbox/NotificationsList.css",
+      "accessCount": 2,
+      "lastAccessed": 1782611939630,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/needs/NeedsPage.css",
+      "accessCount": 2,
+      "lastAccessed": 1782611947886,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/people/PeoplePage.css",
+      "accessCount": 2,
+      "lastAccessed": 1782611953991,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/person/PersonPage.css",
+      "accessCount": 2,
+      "lastAccessed": 1782611967907,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/admin/AdministracionPage.css",
+      "accessCount": 2,
+      "lastAccessed": 1782612015846,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/users/UsersPage.css",
+      "accessCount": 2,
+      "lastAccessed": 1782612017421,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/users/UserTable.css",
+      "accessCount": 2,
+      "lastAccessed": 1782612025957,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/users/UserFilters.css",
+      "accessCount": 2,
+      "lastAccessed": 1782612030102,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/users/UserEditModal.css",
+      "accessCount": 2,
+      "lastAccessed": 1782612036092,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/users/UserPasswordModal.css",
+      "accessCount": 2,
+      "lastAccessed": 1782612043449,
+      "type": "file"
+    },
+    {
+      "path": "pontis-app/src/pages/users/UserStatusSelect.css",
+      "accessCount": 2,
+      "lastAccessed": 1782612048431,
       "type": "file"
     },
     {
@@ -248,12 +389,6 @@
       "path": "pontis-app/src/api/explore.ts",
       "accessCount": 1,
       "lastAccessed": 1782587566560,
-      "type": "file"
-    },
-    {
-      "path": "pontis-app/src/pages/explore/ExplorePage.css",
-      "accessCount": 1,
-      "lastAccessed": 1782587606691,
       "type": "file"
     }
   ],

@@ -1,0 +1,61 @@
+{
+  "updatedAt": "2026-06-28T22:19:41.792Z",
+  "missions": [
+    {
+      "id": "session:3c008246-8d01-4edf-b32e-83c00f6bce30:none",
+      "source": "session",
+      "name": "none",
+      "objective": "Session mission",
+      "createdAt": "2026-06-28T21:49:45.452Z",
+      "updatedAt": "2026-06-28T22:19:41.792Z",
+      "status": "done",
+      "workerCount": 1,
+      "taskCounts": {
+        "total": 1,
+        "pending": 0,
+        "blocked": 0,
+        "inProgress": 0,
+        "completed": 1,
+        "failed": 0
+      },
+      "agents": [
+        {
+          "name": "ralph-reviewer:aralph-",
+          "role": "ralph-reviewer",
+          "ownership": "aralph-reviewer-e58212dfab213240",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T22:19:41.792Z"
+        }
+      ],
+      "timeline": [
+        {
+          "id": "session-start:aralph-reviewer-e58212dfab213240:2026-06-28T21:49:45.452Z",
+          "at": "2026-06-28T21:49:45.452Z",
+          "kind": "update",
+          "agent": "ralph-reviewer:aralph-",
+          "detail": "started ralph-reviewer:aralph-",
+          "sourceKey": "session-start:aralph-reviewer-e58212dfab213240"
+        },
+        {
+          "id": "session-stop:aralph-reviewer-e58212dfab213240:2026-06-28T21:50:21.293Z",
+          "at": "2026-06-28T21:50:21.293Z",
+          "kind": "completion",
+          "agent": "ralph-reviewer:aralph-",
+          "detail": "completed",
+          "sourceKey": "session-stop:aralph-reviewer-e58212dfab213240"
+        },
+        {
+          "id": "session-stop:a3f2680491e5f6af6:2026-06-28T22:19:41.792Z",
+          "at": "2026-06-28T22:19:41.792Z",
+          "kind": "completion",
+          "agent": "ralph-reviewer:aralph-",
+          "detail": "completed",
+          "sourceKey": "session-stop:a3f2680491e5f6af6"
+        }
+      ]
+    }
+  ]
+}

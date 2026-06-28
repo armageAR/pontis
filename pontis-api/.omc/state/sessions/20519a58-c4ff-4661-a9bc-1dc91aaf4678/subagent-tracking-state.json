@@ -26,10 +26,73 @@
       "status": "completed",
       "completed_at": "2026-06-27T18:33:43.806Z",
       "duration_ms": 0
+    },
+    {
+      "agent_id": "ac251fdbeb5a20689",
+      "agent_type": "unknown",
+      "started_at": "2026-06-27T23:56:40.937Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-27T23:56:40.937Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "a1bafc9a63acc3ff8",
+      "agent_type": "unknown",
+      "started_at": "2026-06-28T15:14:41.474Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T15:14:41.474Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "adb8a8ec7bb48c34c",
+      "agent_type": "unknown",
+      "started_at": "2026-06-28T15:16:37.415Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T15:16:37.415Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "a7c4349dd81e2b980",
+      "agent_type": "unknown",
+      "started_at": "2026-06-28T15:19:43.206Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T15:19:43.206Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "a050f77e063aff629",
+      "agent_type": "unknown",
+      "started_at": "2026-06-28T15:29:13.269Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T15:29:13.269Z",
+      "duration_ms": 0
+    },
+    {
+      "agent_id": "ac142d2c7adef54e5",
+      "agent_type": "fork",
+      "started_at": "2026-06-28T15:31:28.777Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T15:31:56.034Z",
+      "duration_ms": 27257
+    },
+    {
+      "agent_id": "a876b802b7660dd76",
+      "agent_type": "fork",
+      "started_at": "2026-06-28T15:32:56.960Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-06-28T15:33:39.296Z",
+      "duration_ms": 42336
     }
   ],
-  "total_spawned": 0,
-  "total_completed": 3,
+  "total_spawned": 2,
+  "total_completed": 12,
   "total_failed": 0,
-  "last_updated": "2026-06-27T18:33:43.911Z"
+  "last_updated": "2026-06-28T15:33:39.399Z"
 }

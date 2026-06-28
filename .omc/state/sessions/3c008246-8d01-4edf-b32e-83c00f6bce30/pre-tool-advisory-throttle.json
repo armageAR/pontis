@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "entries": {
+    "1bb6914bc42b891c26d46c8ae2fd4f44071f59862e89dc550f4c82877b700216": {
+      "last_emitted_at_ms": 1782683200284,
+      "message": "The boulder never stops. Continue until all tasks complete."
+    },
+    "cf4ffca516854b974ed84543d1e71b80e75bb6585bd960f97c4d89039c59240e": {
+      "last_emitted_at_ms": 1782683183202,
+      "message": "Spawning agent: oh-my-claudecode:architect (opus) | Task: Thorough reviewer verification for email verification bug fix"
+    },
+    "466399dafa2d20f60587180bad0a07358eb7f2bce724df0ff682f038ad33f5ad": {
+      "last_emitted_at_ms": 1782683119803,
+      "message": "Read multiple files in parallel when possible for faster analysis."
+    },
+    "445ed27a3872b681d98190bae61ccb84954e1bc4e140df5370be958dee776b3a": {
+      "last_emitted_at_ms": 1782683072591,
+      "message": "Verify changes work after editing. Test functionality before marking complete."
+    },
+    "79a93d4a2f8f50b95f852280616242fee1855dc99a3c75211917f55e72e95fae": {
+      "last_emitted_at_ms": 1782683053483,
+      "message": "Use parallel execution for independent tasks. Use run_in_background for long operations (npm install, builds, tests)."
+    },
+    "aebcdca32eb20b33174505b25f6d2f02b7fef902578628d588eb449d738fdae0": {
+      "last_emitted_at_ms": 1782681700244,
+      "message": "Spawning agent: oh-my-claudecode:critic (inherit) | Task: Critic evaluation of email verification plan after Architect iteration"
+    },
+    "e91fde4eae0630acfca934905a5b0eb993c79373436c9c70194d86fbaaeb2d02": {
+      "last_emitted_at_ms": 1782681406047,
+      "message": "Spawning agent: oh-my-claudecode:architect (inherit) | Task: Architect review of email verification bug fix plan"
+    }
+  },
+  "updated_at": "2026-06-28T21:46:40.284Z"
+}

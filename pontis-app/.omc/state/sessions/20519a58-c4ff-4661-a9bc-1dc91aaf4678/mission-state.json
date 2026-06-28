@@ -1,0 +1,189 @@
+{
+  "updatedAt": "2026-06-28T16:25:14.881Z",
+  "missions": [
+    {
+      "id": "session:20519a58-c4ff-4661-a9bc-1dc91aaf4678:none",
+      "source": "session",
+      "name": "none",
+      "objective": "Session mission",
+      "createdAt": "2026-06-28T00:04:05.509Z",
+      "updatedAt": "2026-06-28T16:25:14.881Z",
+      "status": "done",
+      "workerCount": 13,
+      "taskCounts": {
+        "total": 13,
+        "pending": 0,
+        "blocked": 0,
+        "inProgress": 0,
+        "completed": 13,
+        "failed": 0
+      },
+      "agents": [
+        {
+          "name": "claude:ac1e016",
+          "role": "claude",
+          "ownership": "ac1e0164cfb0a168a",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T15:46:58.430Z"
+        },
+        {
+          "name": "claude:a3044da",
+          "role": "claude",
+          "ownership": "a3044da0f8a4b225e",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T00:07:08.195Z"
+        },
+        {
+          "name": "claude:a1b58d0",
+          "role": "claude",
+          "ownership": "a1b58d07735d2870d",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T00:10:31.721Z"
+        },
+        {
+          "name": "claude:abb75bf",
+          "role": "claude",
+          "ownership": "abb75bf7b90c56947",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T01:09:59.308Z"
+        },
+        {
+          "name": "claude:a5f8245",
+          "role": "claude",
+          "ownership": "a5f824571327db6eb",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T01:10:57.743Z"
+        },
+        {
+          "name": "claude:a67349d",
+          "role": "claude",
+          "ownership": "a67349d840f56775a",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T01:11:16.173Z"
+        },
+        {
+          "name": "claude:a7a24e8",
+          "role": "claude",
+          "ownership": "a7a24e8747918c937",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T01:36:53.627Z"
+        },
+        {
+          "name": "claude:ab80599",
+          "role": "claude",
+          "ownership": "ab8059906359be93c",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T01:40:47.750Z"
+        },
+        {
+          "name": "claude:ac496ac",
+          "role": "claude",
+          "ownership": "ac496ac8a79c30a93",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T01:40:47.800Z"
+        },
+        {
+          "name": "fork:a423f60",
+          "role": "fork",
+          "ownership": "a423f60c9f9543571",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T15:47:10.553Z"
+        },
+        {
+          "name": "fork:ae6c1d3",
+          "role": "fork",
+          "ownership": "ae6c1d30d00d483bc",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T15:48:24.456Z"
+        },
+        {
+          "name": "fork:acc33fc",
+          "role": "fork",
+          "ownership": "acc33fcd75b59ed6a",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T15:48:57.170Z"
+        },
+        {
+          "name": "fork:a39ddb1",
+          "role": "fork",
+          "ownership": "a39ddb19490baaf95",
+          "status": "done",
+          "currentStep": null,
+          "latestUpdate": "completed",
+          "completedSummary": null,
+          "updatedAt": "2026-06-28T16:25:14.881Z"
+        }
+      ],
+      "timeline": [
+        {
+          "id": "session-start:acc33fcd75b59ed6a:2026-06-28T15:48:51.253Z",
+          "at": "2026-06-28T15:48:51.253Z",
+          "kind": "update",
+          "agent": "fork:acc33fc",
+          "detail": "started fork:acc33fc",
+          "sourceKey": "session-start:acc33fcd75b59ed6a"
+        },
+        {
+          "id": "session-stop:acc33fcd75b59ed6a:2026-06-28T15:48:57.170Z",
+          "at": "2026-06-28T15:48:57.170Z",
+          "kind": "completion",
+          "agent": "fork:acc33fc",
+          "detail": "completed",
+          "sourceKey": "session-stop:acc33fcd75b59ed6a"
+        },
+        {
+          "id": "session-start:a39ddb19490baaf95:2026-06-28T16:25:06.512Z",
+          "at": "2026-06-28T16:25:06.512Z",
+          "kind": "update",
+          "agent": "fork:a39ddb1",
+          "detail": "started fork:a39ddb1",
+          "sourceKey": "session-start:a39ddb19490baaf95"
+        },
+        {
+          "id": "session-stop:a39ddb19490baaf95:2026-06-28T16:25:14.881Z",
+          "at": "2026-06-28T16:25:14.881Z",
+          "kind": "completion",
+          "agent": "fork:a39ddb1",
+          "detail": "completed",
+          "sourceKey": "session-stop:a39ddb19490baaf95"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "active": true,
+  "started_at": "2026-06-28T15:44:30.551Z",
+  "current_phase": "ralplan",
+  "original_prompt": "/oh-my-claudecode:ralplan --architect codex mejorar la pagina buscar teninedo en cuenta: Buscar: cuando ponemos hermanos debe ser siempre con mayuscula, Hermanos. En los estados reemplazar Fallecidos por O :. Eterno (usar los tres puntos en triangulo que se usa en la masoneria)\nLuego del titulo poner una descripcion de la funcionalidad. QUE permite buscar Hermanos siempre y cuando el Hermano permita ser buscado (mejorar este texto)\nla busqueda tiene que ser más amplia, porq no solo la idea es...",
+  "session_id": "20519a58-c4ff-4661-a9bc-1dc91aaf4678",
+  "project_path": "/var/www/html/pontis/pontis-app",
+  "awaiting_confirmation": true,
+  "awaiting_confirmation_set_at": "2026-06-28T15:44:30.551Z",
+  "last_checked_at": "2026-06-28T15:44:30.551Z"
+}

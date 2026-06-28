@@ -1,0 +1,40 @@
+{
+  "title": "Fix email verification flow — false success and signature mismatch",
+  "description": "Two cooperating bugs cause the email verification flow to show a success screen but leave email_verified_at null in the DB. Bug 1 (frontend): { baseURL: '' } overrides the axios instance's baseURL, sending the request to the frontend origin instead of the API. Bug 2 (backend): temporarySignedRoute with absolute=false computes the HMAC from the relative URL, but hasValidSignature() validates against the absolute URL — mismatch causes 403.",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Fix frontend verifyEmail — remove { baseURL: '' } override",
+      "description": "Remove the per-request { baseURL: '' } override from verifyEmail() in auth.ts so the request routes through the axios instance's baseURL (same as all other API calls) instead of the frontend origin.",
+      "passes": true,
+      "acceptanceCriteria": [
+        "pontis-app/src/api/auth.ts: verifyEmail() no longer passes { baseURL: '' } as the second argument to client.get() — VERIFIED: edit applied, { baseURL: '' } removed",
+        "The path extraction logic (url.pathname + url.search) is preserved — VERIFIED: logic unchanged",
+        "client.get(path) is called with no second argument — VERIFIED",
+        "TypeScript compiles without errors — VERIFIED: tsc --noEmit exit code 0"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Fix backend VerifyEmailNotification — use absolute=true signed URL",
+      "description": "Remove the 'false' (absolute=false) argument from URL::temporarySignedRoute() and remove the redundant url() wrapper.",
+      "passes": true,
+      "acceptanceCriteria": [
+        "VerifyEmailNotification.php: temporarySignedRoute() called without 4th argument — VERIFIED: false argument removed",
+        "The url() wrapper around $apiUrl is removed — VERIFIED: urlencode($apiUrl) used directly",
+        "The returned URL still has format: {frontendUrl}/verify-email?verify_url={encodedApiUrl} — VERIFIED: format preserved",
+        "PHP syntax valid — VERIFIED: php -l reports no syntax errors"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Verify backend feature tests pass after the fix",
+      "description": "Run the existing backend test suite to confirm the changes don't break any existing tests.",
+      "passes": true,
+      "acceptanceCriteria": [
+        "SanctumAuthTest runs without failures — VERIFIED: 29/29 tests passed, 79 assertions, 761ms",
+        "No PHP parse or runtime errors — VERIFIED: php -l clean"
+      ]
+    }
+  ]
+}
