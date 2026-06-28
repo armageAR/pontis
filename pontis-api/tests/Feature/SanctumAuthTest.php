@@ -35,10 +35,10 @@ class SanctumAuthTest extends TestCase
         $response->assertStatus(201)
                  ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'status']]);
 
-        $this->assertDatabaseHas('users', ['email' => 'juan@test.com', 'status' => 'pending']);
+        $this->assertDatabaseHas('users', ['email' => 'juan@test.com', 'status' => 'verifying']);
     }
 
-    public function test_register_creates_user_as_pending(): void
+    public function test_register_creates_user_as_verifying(): void
     {
         Event::fake([Registered::class]);
         $workshop = Workshop::factory()->create();
@@ -52,10 +52,10 @@ class SanctumAuthTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-                 ->assertJsonPath('user.status', 'pending');
+                 ->assertJsonPath('user.status', 'verifying');
 
         $user = User::where('email', 'nuevo@test.com')->first();
-        $this->assertEquals('pending', $user->status->value);
+        $this->assertEquals('verifying', $user->status->value);
         $this->assertNull($user->email_verified_at);
     }
 

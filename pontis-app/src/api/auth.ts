@@ -5,7 +5,7 @@ export interface User {
   name: string
   email: string
   role: string
-  status: 'pending' | 'active' | 'rejected'
+  status: 'verifying' | 'pending' | 'active' | 'rejected'
   email_verified_at: string | null
 }
 
@@ -23,7 +23,7 @@ export interface MembershipStatus {
 }
 
 export interface AccountStatus {
-  status: 'pending' | 'active' | 'rejected'
+  status: 'verifying' | 'pending' | 'active' | 'rejected'
   email_verified: boolean
   email_verified_at: string | null
   verification_sent_at: string
@@ -75,7 +75,7 @@ export async function resendVerification(): Promise<{ message: string }> {
 
 export async function verifyEmail(fullSignedUrl: string): Promise<{ message: string }> {
   const url = new URL(fullSignedUrl)
-  const path = url.pathname + url.search
-  const { data } = await client.get<{ message: string }>(path, { baseURL: '' })
+  const path = url.pathname.replace(/^\/api/, '') + url.search
+  const { data } = await client.get<{ message: string }>(path)
   return data
 }

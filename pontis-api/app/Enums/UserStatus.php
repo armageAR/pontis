@@ -4,6 +4,7 @@ namespace App\Enums;
 
 enum UserStatus: string
 {
+    case VERIFYING = 'verifying';
     case PENDING = 'pending';
     case ACTIVE = 'active';
     case REJECTED = 'rejected';

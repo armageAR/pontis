@@ -22,13 +22,12 @@ class VerifyEmailNotification extends VerifyEmail implements ShouldQueue
             [
                 'id' => $notifiable->getKey(),
                 'hash' => sha1($notifiable->getEmailForVerification()),
-            ],
-            false
+            ]
         );
 
         $frontendUrl = rtrim(config('app.frontend_url'), '/');
 
-        return $frontendUrl . '/verify-email?verify_url=' . urlencode(url($apiUrl));
+        return $frontendUrl . '/verify-email?verify_url=' . urlencode($apiUrl);
     }
 
     public function toMail($notifiable): MailMessage

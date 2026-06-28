@@ -28,25 +28,10 @@ class AuthController extends Controller
         $workshopId = $data['workshop_id'];
         unset($data['workshop_id']);
 
-        $data['status'] = UserStatus::PENDING->value;
+        $data['status'] = UserStatus::VERIFYING->value;
 
         $user = User::create($data);
-        $user->workshops()->attach($workshopId);
-
-        // Notify workshop admins about new pending member
-        $workshop = \App\Models\Workshop::find($workshopId);
-        $admins = \App\Models\User::whereHas('workshopMemberships', function ($q) use ($workshopId) {
-            $q->where('user_workshop.workshop_id', $workshopId)->where('user_workshop.role', 'admin')->where('user_workshop.status', 'active');
-        })->get();
-        foreach ($admins as $admin) {
-            \App\Models\PontisNotification::create([
-                'user_id' => $admin->id,
-                'type'    => 'new_member_pending',
-                'title'   => 'Nuevo miembro pendiente',
-                'body'    => "{$user->name}" . ($user->last_name ? " {$user->last_name}" : '') . " solicitó unirse al taller \"{$workshop->name}\".",
-                'data'    => ['user_id' => $user->id, 'workshop_id' => $workshopId],
-            ]);
-        }
+        $user->workshopMemberships()->attach($workshopId);
 
         $token = $user->createToken('api')->plainTextToken;
 
@@ -183,6 +168,28 @@ class AuthController extends Controller
 
         if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
+
+            if ($user->status === UserStatus::VERIFYING) {
+                $user->status = UserStatus::PENDING;
+                $user->save();
+
+                foreach ($user->workshopMemberships()->get() as $workshop) {
+                    $admins = User::whereHas('workshopMemberships', function ($q) use ($workshop) {
+                        $q->where('user_workshop.workshop_id', $workshop->id)
+                          ->where('user_workshop.role', 'admin')
+                          ->where('user_workshop.status', 'active');
+                    })->get();
+                    foreach ($admins as $admin) {
+                        \App\Models\PontisNotification::create([
+                            'user_id' => $admin->id,
+                            'type'    => 'new_member_pending',
+                            'title'   => 'Nuevo miembro pendiente',
+                            'body'    => "{$user->name}" . ($user->last_name ? " {$user->last_name}" : '') . " verificó su email y está pendiente de aprobación para el taller \"{$workshop->name}\".",
+                            'data'    => ['user_id' => $user->id, 'workshop_id' => $workshop->id],
+                        ]);
+                    }
+                }
+            }
         }
 
         return response()->json(['message' => 'Email verificado correctamente.']);
