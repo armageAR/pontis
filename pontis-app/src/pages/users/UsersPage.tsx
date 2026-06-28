@@ -13,7 +13,11 @@ import UserEditModal from './UserEditModal'
 import UserPasswordModal from './UserPasswordModal'
 import './UsersPage.css'
 
-export default function UsersPage() {
+interface UsersPageProps {
+  embedded?: boolean
+}
+
+export default function UsersPage({ embedded = false }: UsersPageProps) {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<UserListItem[]>([])
   const [meta, setMeta] = useState({ current_page: 1, last_page: 1, per_page: 15, total: 0 })
@@ -117,8 +121,8 @@ export default function UsersPage() {
     notify(`Contraseña de ${target?.name ?? 'usuario'} actualizada.`)
   }
 
-  return (
-    <AppLayout>
+  const content = (
+    <>
       <div className="users-header">
         <h1 className="users-title">Usuarios</h1>
       </div>
@@ -178,6 +182,9 @@ export default function UsersPage() {
         onClose={() => setPasswordUser(null)}
         onSave={handlePassword}
       />
-    </AppLayout>
+    </>
   )
+
+  if (embedded) return content
+  return <AppLayout>{content}</AppLayout>
 }

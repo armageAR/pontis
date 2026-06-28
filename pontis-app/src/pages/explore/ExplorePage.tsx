@@ -25,7 +25,7 @@ const MODALITY_LABELS: Record<string, string> = { presencial: 'Presencial', remo
 
 type Tab = 'services' | 'needs'
 
-export default function ExplorePage() {
+export default function ExplorePage({ embedded = false }: { embedded?: boolean }) {
   const [tab, setTab] = useState<Tab>('services')
   const [q, setQ] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -89,8 +89,8 @@ export default function ExplorePage() {
     setTab(t); setServices([]); setNeeds([]); setTotal(0); setSearched(false)
   }
 
-  return (
-    <AppLayout>
+  const content = (
+    <>
       <h1 className="explore-title">Buscar servicios y necesidades</h1>
       <p className="explore-subtitle">
         Encontrá hermanos que puedan ayudarte. Solo verás lo que cada hermano decidió compartir.
@@ -193,6 +193,8 @@ export default function ExplorePage() {
           <Pagination currentPage={page} lastPage={lastPage} total={total} onPageChange={handlePageChange} />
         </>
       )}
-    </AppLayout>
+    </>
   )
+  if (embedded) return content
+  return <AppLayout>{content}</AppLayout>
 }

@@ -15,7 +15,7 @@ import './PeoplePage.css'
 const MASONIC_STATUS_LABELS: Record<string, string> = { active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'Fallecido' }
 const MASONIC_STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { active: 'success', inactive: 'default', suspended: 'warning', discharged: 'error', deceased: 'default' }
 
-export default function PeoplePage() {
+export default function PeoplePage({ embedded = false }: { embedded?: boolean }) {
   const [people, setPeople] = useState<Person[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -40,8 +40,8 @@ export default function PeoplePage() {
 
   function handlePageChange(p: number) { setPage(p); load(p) }
 
-  return (
-    <AppLayout>
+  const content = (
+    <>
       <h1 className="people-title">Buscar hermanos</h1>
       <form onSubmit={handleSearch} className="people-search-form">
         <Input className="people-search-input" placeholder="Nombre, apellido, matrícula o email…" value={q} onChange={e => setQ(e.target.value)} />
@@ -89,6 +89,8 @@ export default function PeoplePage() {
           <Pagination currentPage={page} lastPage={lastPage} total={total} onPageChange={handlePageChange} />
         </>
       )}
-    </AppLayout>
+    </>
   )
+  if (embedded) return content
+  return <AppLayout>{content}</AppLayout>
 }

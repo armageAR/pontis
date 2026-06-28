@@ -20,7 +20,7 @@ function personName(p?: { name: string; last_name: string | null }) {
   return p.last_name ? `${p.last_name}, ${p.name}` : p.name
 }
 
-export default function ContactRequestsPage() {
+export default function ContactRequestsPage({ embedded = false }: { embedded?: boolean }) {
   const [requests, setRequests] = useState<ContactRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -66,8 +66,8 @@ export default function ContactRequestsPage() {
     await api.closeContactRequest(cr.id); load()
   }
 
-  return (
-    <AppLayout>
+  const inner = (
+    <>
       <div className="cont-header">
         <h1 className="cont-title">Solicitudes de contacto</h1>
       </div>
@@ -153,6 +153,7 @@ export default function ContactRequestsPage() {
           </div>
         )}
       </Modal>
-    </AppLayout>
+    </>
   )
+  return embedded ? inner : <AppLayout>{inner}</AppLayout>
 }

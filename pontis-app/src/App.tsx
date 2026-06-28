@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import HomePage from '@/pages/home/HomePage'
@@ -8,15 +8,12 @@ import PendingPage from '@/pages/pending/PendingPage'
 import VerifyEmailPage from '@/pages/verify-email/VerifyEmailPage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import WorkshopsPage from '@/pages/workshops/WorkshopsPage'
-import UsersPage from '@/pages/users/UsersPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
-import ServicesPage from '@/pages/services/ServicesPage'
-import NeedsPage from '@/pages/needs/NeedsPage'
-import PeoplePage from '@/pages/people/PeoplePage'
-import ContactRequestsPage from '@/pages/contact-requests/ContactRequestsPage'
-import ChangeRequestsPage from '@/pages/change-requests/ChangeRequestsPage'
 import PersonPage from '@/pages/person/PersonPage'
-import ExplorePage from '@/pages/explore/ExplorePage'
+import SearchPage from '@/pages/search/SearchPage'
+import MisPublicacionesPage from '@/pages/publications/MisPublicacionesPage'
+import BandejaPage from '@/pages/inbox/BandejaPage'
+import AdministracionPage from '@/pages/admin/AdministracionPage'
 
 export default function App() {
   return (
@@ -31,15 +28,20 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/workshops" element={<WorkshopsPage />} />
-            <Route path="/users" element={<UsersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/needs" element={<NeedsPage />} />
-            <Route path="/people" element={<PeoplePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/contact-requests" element={<ContactRequestsPage />} />
-            <Route path="/change-requests" element={<ChangeRequestsPage />} />
             <Route path="/people/:id" element={<PersonPage />} />
+            <Route path="/buscar" element={<SearchPage />} />
+            <Route path="/mis-publicaciones" element={<MisPublicacionesPage />} />
+            <Route path="/bandeja" element={<BandejaPage />} />
+            <Route path="/administracion" element={<AdministracionPage />} />
+            {/* Redirects para no romper links viejos */}
+            <Route path="/people" element={<Navigate to="/buscar" replace />} />
+            <Route path="/explore" element={<Navigate to="/buscar" replace />} />
+            <Route path="/services" element={<Navigate to="/mis-publicaciones" replace />} />
+            <Route path="/needs" element={<Navigate to="/mis-publicaciones" replace />} />
+            <Route path="/contact-requests" element={<Navigate to="/bandeja" replace />} />
+            <Route path="/change-requests" element={<Navigate to="/bandeja" replace />} />
+            <Route path="/users" element={<Navigate to="/administracion" replace />} />
           </Route>
         </Routes>
       </AuthProvider>

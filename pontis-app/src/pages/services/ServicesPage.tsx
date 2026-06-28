@@ -38,7 +38,7 @@ const VISIBILITY_LABELS: Record<string, string> = {
 }
 const EMPTY_FORM = { title: '', description: '', service_category_id: '', modality: 'both', location: '', availability: '', conditions: '', visibility: 'private', status: 'draft' }
 
-export default function ServicesPage() {
+export default function ServicesPage({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superadmin'
 
@@ -112,8 +112,8 @@ export default function ServicesPage() {
 
   const authActionLabel = authModal?.action === 'authorize' ? 'Aprobar' : authModal?.action === 'reject' ? 'Rechazar' : 'Pedir corrección'
 
-  return (
-    <AppLayout>
+  const content = (
+    <>
       <div className="services-header">
         <h1 className="services-title">Mis servicios <span className="services-count">({total})</span></h1>
         <Button onClick={openCreate}>+ Agregar servicio</Button>
@@ -227,6 +227,8 @@ export default function ServicesPage() {
       </Modal>
 
       <ConfirmDialog open={confirmDelete !== null} title="Eliminar servicio" message="¿Eliminar este servicio?" onConfirm={() => confirmDelete !== null && handleDelete(confirmDelete)} onClose={() => setConfirmDelete(null)} />
-    </AppLayout>
+    </>
   )
+  if (embedded) return content
+  return <AppLayout>{content}</AppLayout>
 }

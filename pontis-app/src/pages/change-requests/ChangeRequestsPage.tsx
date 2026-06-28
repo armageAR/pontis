@@ -31,7 +31,7 @@ const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
   cancelled_by_user: 'default',
 }
 
-export default function ChangeRequestsPage() {
+export default function ChangeRequestsPage({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superadmin'
 
@@ -109,8 +109,8 @@ export default function ChangeRequestsPage() {
   const canCancel = (r: ChangeRequest) =>
     !isSuperAdmin && r.user_id === user?.id && ['pending', 'requires_info'].includes(r.status)
 
-  return (
-    <AppLayout>
+  const inner = (
+    <>
       <div className="cr-header">
         <h1 className="cr-title">Cambios de datos sensibles</h1>
         {!isSuperAdmin && <Button onClick={() => { setForm({ field: 'name', new_value: '', reason: '' }); setShowModal(true) }}>+ Solicitar cambio</Button>}
@@ -217,6 +217,7 @@ export default function ChangeRequestsPage() {
         onConfirm={() => cancelId !== null && handleCancel(cancelId)}
         onClose={() => setCancelId(null)}
       />
-    </AppLayout>
+    </>
   )
+  return embedded ? inner : <AppLayout>{inner}</AppLayout>
 }

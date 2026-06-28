@@ -31,17 +31,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <Link to="/dashboard" className="app-nav-logo"><Logo size="sm" /></Link>
           <div className="app-nav-links">
             <Link to="/dashboard" className="app-nav-link">Panel</Link>
+            <Link to="/buscar" className="app-nav-link">Buscar</Link>
             <Link to="/workshops" className="app-nav-link">Talleres</Link>
-            <Link to="/people" className="app-nav-link">Hermanos</Link>
-            <Link to="/explore" className="app-nav-link">Explorar</Link>
-            <Link to="/services" className="app-nav-link">Servicios</Link>
-            <Link to="/needs" className="app-nav-link">Necesidades</Link>
-            {user?.role === 'superadmin' && <Link to="/users" className="app-nav-link">Admin hermanos</Link>}
+            <Link to="/mis-publicaciones" className="app-nav-link">Mis publicaciones</Link>
+            <Link to="/bandeja" className="app-nav-link">Bandeja</Link>
+            {user?.role === 'superadmin' && <Link to="/administracion" className="app-nav-link">Administración</Link>}
           </div>
         </div>
         <div className="app-nav-right">
-          <Link to="/contact-requests" className="app-nav-link app-nav-link-sm">Contactos</Link>
-          <Link to="/change-requests" className="app-nav-link app-nav-link-sm">Solicitudes</Link>
           <NotificationBell />
           <Link to="/profile" className="app-nav-link">{user?.name}</Link>
           <Button variant="outline" onClick={handleLogout} loading={loggingOut}>

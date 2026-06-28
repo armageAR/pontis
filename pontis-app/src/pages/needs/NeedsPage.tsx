@@ -35,7 +35,7 @@ const VISIBILITY_LABELS: Record<string, string> = {
 }
 const EMPTY_FORM = { title: '', description: '', service_category_id: '', location: '', urgency: '', visibility: 'private', status: 'draft' }
 
-export default function NeedsPage() {
+export default function NeedsPage({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superadmin'
 
@@ -109,8 +109,8 @@ export default function NeedsPage() {
 
   const authActionLabel = authModal?.action === 'authorize' ? 'Aprobar' : authModal?.action === 'reject' ? 'Rechazar' : 'Pedir corrección'
 
-  return (
-    <AppLayout>
+  const content = (
+    <>
       <div className="needs-header">
         <h1 className="needs-title">Mis necesidades <span className="needs-count">({total})</span></h1>
         <Button onClick={openCreate}>+ Agregar necesidad</Button>
@@ -227,6 +227,8 @@ export default function NeedsPage() {
       </Modal>
 
       <ConfirmDialog open={confirmDelete !== null} title="Eliminar necesidad" message="¿Eliminar esta necesidad?" onConfirm={() => confirmDelete !== null && handleDelete(confirmDelete)} onClose={() => setConfirmDelete(null)} />
-    </AppLayout>
+    </>
   )
+  if (embedded) return content
+  return <AppLayout>{content}</AppLayout>
 }
