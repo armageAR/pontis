@@ -256,14 +256,15 @@
     align-items: center;
   }
 
-  /* Wrapper no ocupa espacio en mobile: sidebar overlay puro */
+  /* Wrapper: sin espacio en el layout, pero con altura y z-index correctos */
   .app-sidebar-wrapper {
-    width: 0 !important;
+    width: 0;
     position: fixed;
     top: 0;
     left: 0;
-    height: 0;
+    height: 100vh;
     overflow: visible;
+    z-index: 249;
     transition: none;
   }
 
@@ -279,14 +280,13 @@
     transform: translateX(0);
   }
 
-  /* Overlay con fade suave */
+  /* Overlay: backdrop-filter solo cuando visible (evita blur siempre-activo en iOS) */
   .app-sidebar-overlay {
     display: block;
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.35);
     z-index: 240;
-    backdrop-filter: blur(1px);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -295,6 +295,7 @@
   .app-sidebar-overlay.is-visible {
     opacity: 1;
     pointer-events: auto;
+    backdrop-filter: blur(1px);
   }
 
   /* Ocultar controles desktop en mobile */
