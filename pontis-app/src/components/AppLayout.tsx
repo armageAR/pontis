@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   LogOut,
+  PanelLeftClose,
 } from 'lucide-react'
 import './AppLayout.css'
 import './Logo.css'
@@ -32,8 +33,9 @@ const NAV_ITEMS = [
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const { user, logout } = useAuth()
-  const [loggingOut, setLoggingOut]   = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [loggingOut, setLoggingOut]         = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [desktopCollapsed, setDesktopCollapsed]   = useState(false)
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -44,9 +46,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
   }
 
-  function closeSidebar() {
-    setSidebarOpen(false)
+  function closeMobileSidebar() {
+    setMobileSidebarOpen(false)
   }
+
+  const wrapperClass = [
+    'app-sidebar-wrapper',
+    desktopCollapsed   ? 'desktop-collapsed' : '',
+    mobileSidebarOpen  ? 'mobile-open'       : '',
+  ].filter(Boolean).join(' ')
 
   return (
     <div className="app-layout">
@@ -54,33 +62,38 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <header className="app-topbar">
         <button
           className="app-topbar-toggle"
-          aria-label={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
-          onClick={() => setSidebarOpen(o => !o)}
+          aria-label={mobileSidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
+          onClick={() => setMobileSidebarOpen(o => !o)}
         >
-          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <Link to="/dashboard" className="app-topbar-logo" onClick={closeSidebar}>
+        <Link to="/dashboard" className="app-topbar-logo" onClick={closeMobileSidebar}>
           <Logo size="sm" />
         </Link>
       </header>
 
-      {/* ── Overlay (mobile only) ── */}
-      {sidebarOpen && (
-        <div
-          className="app-sidebar-overlay"
-          onClick={closeSidebar}
-          aria-hidden="true"
-        />
-      )}
+      {/* ── Overlay (mobile only, always in DOM for smooth fade) ── */}
+      <div
+        className={`app-sidebar-overlay${mobileSidebarOpen ? ' is-visible' : ''}`}
+        onClick={closeMobileSidebar}
+        aria-hidden="true"
+      />
 
-      {/* ── Sidebar wrapper: normal-flow on desktop, off-canvas on mobile ── */}
-      <div className={`app-sidebar-wrapper${sidebarOpen ? ' is-open' : ''}`}>
+      {/* ── Sidebar wrapper ── */}
+      <div className={wrapperClass}>
         <aside className="app-sidebar">
-          {/* Logo */}
+          {/* Logo + desktop collapse toggle */}
           <div className="app-sidebar-logo">
-            <Link to="/dashboard" className="app-sidebar-logo-link" onClick={closeSidebar}>
+            <Link to="/dashboard" className="app-sidebar-logo-link" onClick={closeMobileSidebar}>
               <Logo size="sm" />
             </Link>
+            <button
+              className="app-sidebar-desktop-toggle"
+              aria-label="Colapsar menú"
+              onClick={() => setDesktopCollapsed(true)}
+            >
+              <PanelLeftClose size={16} />
+            </button>
           </div>
 
           {/* Nav */}
@@ -90,7 +103,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 key={to}
                 to={to}
                 className="app-sidebar-link"
-                onClick={closeSidebar}
+                onClick={closeMobileSidebar}
               >
                 <Icon size={16} className="app-sidebar-icon" />
                 <span>{label}</span>
@@ -100,7 +113,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <NavLink
                 to="/administracion"
                 className="app-sidebar-link"
-                onClick={closeSidebar}
+                onClick={closeMobileSidebar}
               >
                 <Shield size={16} className="app-sidebar-icon" />
                 <span>Administración</span>
@@ -111,7 +124,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {/* User footer */}
           <div className="app-sidebar-footer">
             <NotificationBell />
-            <Link to="/profile" className="app-sidebar-user" onClick={closeSidebar}>
+            <Link to="/profile" className="app-sidebar-user" onClick={closeMobileSidebar}>
               {user?.name}
             </Link>
             <Button variant="outline" onClick={handleLogout} loading={loggingOut}>
@@ -121,6 +134,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
         </aside>
       </div>
+
+      {/* ── Floating reopen button (desktop only, when sidebar collapsed) ── */}
+      {desktopCollapsed && (
+        <button
+          className="app-sidebar-reopen-btn"
+          aria-label="Abrir menú"
+          onClick={() => setDesktopCollapsed(false)}
+        >
+          <Menu size={18} />
+        </button>
+      )}
 
       {/* ── Content ── */}
       <main className="app-main">{children}</main>

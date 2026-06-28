@@ -6,14 +6,20 @@
   background: var(--bg);
 }
 
-/* ── Sidebar wrapper: reserva el espacio en el flujo normal (desktop) ── */
+/* ── Sidebar wrapper: reserva espacio en el flujo (desktop) ── */
 .app-sidebar-wrapper {
   width: 240px;
   flex-shrink: 0;
   position: relative;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Sidebar fijo a la izquierda ── */
+/* Desktop cerrado: wrapper libera el espacio */
+.app-sidebar-wrapper.desktop-collapsed {
+  width: 0;
+}
+
+/* ── Sidebar: siempre position fixed, animado con transform ── */
 .app-sidebar {
   width: 240px;
   height: 100vh;
@@ -27,19 +33,77 @@
   box-shadow: var(--shadow-sm);
   z-index: 200;
   overflow-y: auto;
+  /* Slide animation: GPU-accelerated */
+  transform: translateX(0);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Área del logo ── */
+/* Desktop cerrado: sidebar sale hacia la izquierda */
+.app-sidebar-wrapper.desktop-collapsed .app-sidebar {
+  transform: translateX(-100%);
+}
+
+/* ── Área del logo + botón collapse ── */
 .app-sidebar-logo {
   padding: var(--space-5) var(--space-4) var(--space-4);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .app-sidebar-logo-link {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+}
+
+/* Botón de colapso dentro del sidebar (solo visible en desktop) */
+.app-sidebar-desktop-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.app-sidebar-desktop-toggle:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* ── Botón flotante para reabrir (desktop, cuando está colapsado) ── */
+.app-sidebar-reopen-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 201;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+
+.app-sidebar-reopen-btn:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ── Navegación vertical ── */
@@ -140,7 +204,7 @@
   display: none;
 }
 
-/* ── Overlay (oculto en desktop) ── */
+/* ── Overlay (siempre en DOM, fade con opacity) ── */
 .app-sidebar-overlay {
   display: none;
 }
@@ -192,27 +256,30 @@
     align-items: center;
   }
 
-  /* Wrapper off-canvas: escondido por defecto */
+  /* Wrapper no ocupa espacio en mobile: sidebar overlay puro */
   .app-sidebar-wrapper {
-    width: 0;
+    width: 0 !important;
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
-    z-index: 250;
-    overflow: hidden;
-    transition: width 0.22s ease;
+    height: 0;
+    overflow: visible;
+    transition: none;
   }
 
-  .app-sidebar-wrapper.is-open {
-    width: 240px;
-  }
-
+  /* En mobile: sidebar cerrado por defecto */
   .app-sidebar {
+    transform: translateX(-100%);
     box-shadow: var(--shadow-md);
+    z-index: 250;
   }
 
-  /* Overlay con blur suave */
+  /* Mobile abierto: slide in desde izquierda */
+  .app-sidebar-wrapper.mobile-open .app-sidebar {
+    transform: translateX(0);
+  }
+
+  /* Overlay con fade suave */
   .app-sidebar-overlay {
     display: block;
     position: fixed;
@@ -220,6 +287,20 @@
     background: rgba(15, 23, 42, 0.35);
     z-index: 240;
     backdrop-filter: blur(1px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .app-sidebar-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Ocultar controles desktop en mobile */
+  .app-sidebar-desktop-toggle,
+  .app-sidebar-reopen-btn {
+    display: none !important;
   }
 
   .app-main {
