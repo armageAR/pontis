@@ -16,6 +16,8 @@ import * as provinceApi from '@/api/provinces'
 import * as visibilityApi from '@/api/visibility'
 import type { VisibilityLevel, VisibilityBlock, VisibilityMap } from '@/api/visibility'
 import client from '@/api/client'
+import WorkshopPicker from '@/components/WorkshopPicker'
+import { type WorkshopSearchResult } from '@/api/workshops'
 import './ProfilePage.css'
 
 interface PositionCatalogItem { id: number; name: string }
@@ -53,6 +55,8 @@ export default function ProfilePage() {
 
   const [degreeForm, setDegreeForm] = useState({ degree: 'aprendiz', workshop_id: '', start_date: '', end_date: '', notes: '' })
   const [positionForm, setPositionForm] = useState({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' })
+  const [degreeWorkshop, setDegreeWorkshop] = useState<WorkshopSearchResult | null>(null)
+  const [positionWorkshop, setPositionWorkshop] = useState<WorkshopSearchResult | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -294,7 +298,7 @@ export default function ProfilePage() {
         <section className="profile-section">
           <div className="profile-section-header">
             <h2 className="profile-section-title">Grados masónicos</h2>
-            <Button onClick={() => { setEditingDegree(null); setDegreeForm({ degree: 'aprendiz', workshop_id: '', start_date: '', end_date: '', notes: '' }); setShowDegreeModal(true) }}>+ Agregar</Button>
+            <Button onClick={() => { setEditingDegree(null); setDegreeForm({ degree: 'aprendiz', workshop_id: '', start_date: '', end_date: '', notes: '' }); setDegreeWorkshop(null); setShowDegreeModal(true) }}>+ Agregar</Button>
           </div>
           {degrees.length === 0 ? <p className="profile-empty">Sin grados registrados.</p> : (
             <table className="profile-table">
@@ -307,7 +311,7 @@ export default function ProfilePage() {
                     <td>{d.start_date}</td>
                     <td>{d.end_date ?? '-'}</td>
                     <td className="profile-table-actions">
-                      <button className="profile-link-btn" onClick={() => { setEditingDegree(d); setDegreeForm({ degree: d.degree, workshop_id: d.workshop_id?.toString() ?? '', start_date: d.start_date, end_date: d.end_date ?? '', notes: d.notes ?? '' }); setShowDegreeModal(true) }}>Editar</button>
+                      <button className="profile-link-btn" onClick={() => { setEditingDegree(d); setDegreeForm({ degree: d.degree, workshop_id: d.workshop_id?.toString() ?? '', start_date: d.start_date, end_date: d.end_date ?? '', notes: d.notes ?? '' }); const dw = d.workshop_id ? (myWorkshops.find(w => w.id === d.workshop_id) ? { ...myWorkshops.find(w => w.id === d.workshop_id)!, zone_name: null, city: null } : { id: d.workshop_id, name: d.workshop?.name ?? String(d.workshop_id), number: d.workshop?.number ?? 0, zone_name: null, city: null }) : null; setDegreeWorkshop(dw); setShowDegreeModal(true) }}>Editar</button>
                       <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeleteDegree(d.id)}>Eliminar</button>
                     </td>
                   </tr>
@@ -321,7 +325,7 @@ export default function ProfilePage() {
         <section className="profile-section">
           <div className="profile-section-header">
             <h2 className="profile-section-title">Cargos en talleres</h2>
-            <Button onClick={() => { setEditingPosition(null); setPositionForm({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' }); setShowPositionModal(true) }}>+ Agregar</Button>
+            <Button onClick={() => { setEditingPosition(null); setPositionForm({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' }); setPositionWorkshop(null); setShowPositionModal(true) }}>+ Agregar</Button>
           </div>
           {positions.length === 0 ? <p className="profile-empty">Sin cargos registrados.</p> : (
             <table className="profile-table">
@@ -334,7 +338,7 @@ export default function ProfilePage() {
                     <td>{p.start_date}</td>
                     <td>{p.end_date ?? '-'}</td>
                     <td className="profile-table-actions">
-                      <button className="profile-link-btn" onClick={() => { setEditingPosition(p); setPositionForm({ position_id: p.position_id.toString(), workshop_id: p.workshop_id.toString(), start_date: p.start_date, end_date: p.end_date ?? '', notes: p.notes ?? '' }); setShowPositionModal(true) }}>Editar</button>
+                      <button className="profile-link-btn" onClick={() => { setEditingPosition(p); setPositionForm({ position_id: p.position_id.toString(), workshop_id: p.workshop_id.toString(), start_date: p.start_date, end_date: p.end_date ?? '', notes: p.notes ?? '' }); const pw = myWorkshops.find(w => w.id === p.workshop_id) ? { ...myWorkshops.find(w => w.id === p.workshop_id)!, zone_name: null, city: null } : { id: p.workshop_id, name: p.workshop?.name ?? String(p.workshop_id), number: p.workshop?.number ?? 0, zone_name: null, city: null }; setPositionWorkshop(pw); setShowPositionModal(true) }}>Editar</button>
                       <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeletePosition(p.id)}>Eliminar</button>
                     </td>
                   </tr>
@@ -355,10 +359,10 @@ export default function ProfilePage() {
             </select>
           </FormField>
           <FormField label="Taller">
-            <select className="profile-select" value={degreeForm.workshop_id} onChange={e => setDegreeForm(f => ({ ...f, workshop_id: e.target.value }))}>
-              <option value="">Sin taller</option>
-              {myWorkshops.map(w => <option key={w.id} value={w.id}>Nº{w.number} {w.name}</option>)}
-            </select>
+            <WorkshopPicker
+              value={degreeWorkshop}
+              onChange={w => { setDegreeWorkshop(w); setDegreeForm(f => ({ ...f, workshop_id: w ? String(w.id) : '' })) }}
+            />
           </FormField>
           <FormField label="Fecha de inicio *"><Input type="date" required value={degreeForm.start_date} onChange={e => setDegreeForm(f => ({ ...f, start_date: e.target.value }))} /></FormField>
           <FormField label="Fecha de fin"><Input type="date" value={degreeForm.end_date} onChange={e => setDegreeForm(f => ({ ...f, end_date: e.target.value }))} /></FormField>
@@ -379,10 +383,11 @@ export default function ProfilePage() {
             </select>
           </FormField>
           <FormField label="Taller *">
-            <select className="profile-select" required value={positionForm.workshop_id} onChange={e => setPositionForm(f => ({ ...f, workshop_id: e.target.value }))}>
-              <option value="">Seleccioná un taller</option>
-              {myWorkshops.map(w => <option key={w.id} value={w.id}>Nº{w.number} {w.name}</option>)}
-            </select>
+            <WorkshopPicker
+              value={positionWorkshop}
+              onChange={w => { setPositionWorkshop(w); setPositionForm(f => ({ ...f, workshop_id: w ? String(w.id) : '' })) }}
+              error={!positionWorkshop && positionForm.workshop_id === ''}
+            />
           </FormField>
           <FormField label="Fecha de inicio *"><Input type="date" required value={positionForm.start_date} onChange={e => setPositionForm(f => ({ ...f, start_date: e.target.value }))} /></FormField>
           <FormField label="Fecha de fin"><Input type="date" value={positionForm.end_date} onChange={e => setPositionForm(f => ({ ...f, end_date: e.target.value }))} /></FormField>

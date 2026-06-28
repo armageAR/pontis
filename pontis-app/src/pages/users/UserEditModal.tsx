@@ -4,9 +4,10 @@ import type { UserListItem, UserUpdatePayload, UserWorkshop, WorkshopOption } fr
 import Modal from '@/components/Modal'
 import FormField from '@/components/FormField'
 import Input from '@/components/Input'
-import Select from '@/components/Select'
 import Button from '@/components/Button'
 import Alert from '@/components/Alert'
+import WorkshopPicker from '@/components/WorkshopPicker'
+import type { WorkshopSearchResult } from '@/api/workshops'
 import type { AxiosError } from 'axios'
 import './UserEditModal.css'
 
@@ -28,7 +29,6 @@ export default function UserEditModal({
   open,
   onClose,
   onSave,
-  allWorkshops,
   onWorkshopAdd,
   onWorkshopRemove,
   onWorkshopRoleToggle,
@@ -41,6 +41,7 @@ export default function UserEditModal({
 
   const [localWorkshops, setLocalWorkshops] = useState<UserWorkshop[]>([])
   const [workshopToAdd, setWorkshopToAdd] = useState('')
+  const [pickerWorkshop, setPickerWorkshop] = useState<WorkshopSearchResult | null>(null)
   const [workshopLoading, setWorkshopLoading] = useState<string | null>(null)
   const [workshopError, setWorkshopError] = useState('')
 
@@ -52,6 +53,7 @@ export default function UserEditModal({
       setFieldErrors({})
       setLocalWorkshops(user.workshops ?? [])
       setWorkshopToAdd('')
+      setPickerWorkshop(null)
       setWorkshopError('')
     }
   }, [user])
@@ -128,6 +130,7 @@ export default function UserEditModal({
       const updated = await onWorkshopAdd(user.id, parseInt(workshopToAdd))
       setLocalWorkshops(updated.workshops ?? [])
       setWorkshopToAdd('')
+      setPickerWorkshop(null)
     } catch (err) {
       const msg = (err as AxiosError<{ message?: string }>)?.response?.data?.message ?? 'Error al agregar al taller.'
       setWorkshopError(msg)
@@ -137,9 +140,6 @@ export default function UserEditModal({
   }
 
   if (!user) return null
-
-  const assignedIds = new Set(localWorkshops.map((w) => w.id))
-  const availableToAdd = allWorkshops.filter((w) => !assignedIds.has(w.id))
 
   return (
     <Modal open={open} onClose={onClose} title="Editar usuario">
@@ -217,29 +217,24 @@ export default function UserEditModal({
           </ul>
         )}
 
-        {availableToAdd.length > 0 && (
-          <div className="user-workshops-add">
-            <Select
-              value={workshopToAdd}
-              onChange={(e) => setWorkshopToAdd(e.target.value)}
-              className="user-workshops-select"
-            >
-              <option value="">Seleccionar taller...</option>
-              {availableToAdd.map((w) => (
-                <option key={w.id} value={w.id}>#{w.number} · {w.name}</option>
-              ))}
-            </Select>
-            <Button
-              type="button"
-              variant="outline"
-              loading={workshopLoading === 'add'}
-              disabled={!workshopToAdd}
-              onClick={handleAddWorkshop}
-            >
-              Agregar
-            </Button>
-          </div>
-        )}
+        <div className="user-workshops-add">
+          <WorkshopPicker
+            value={pickerWorkshop}
+            onChange={(w) => {
+              setPickerWorkshop(w)
+              setWorkshopToAdd(w ? String(w.id) : '')
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            loading={workshopLoading === 'add'}
+            disabled={!workshopToAdd}
+            onClick={handleAddWorkshop}
+          >
+            Agregar
+          </Button>
+        </div>
       </div>
     </Modal>
   )

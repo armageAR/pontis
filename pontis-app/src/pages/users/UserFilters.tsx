@@ -1,7 +1,9 @@
-import { type ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import Input from '@/components/Input'
 import Select from '@/components/Select'
+import WorkshopPicker from '@/components/WorkshopPicker'
 import type { UserFilters as Filters, WorkshopOption } from '@/api/users'
+import { type WorkshopSearchResult } from '@/api/workshops'
 import './UserFilters.css'
 
 interface UserFiltersProps {
@@ -10,7 +12,9 @@ interface UserFiltersProps {
   workshops: WorkshopOption[]
 }
 
-export default function UserFilters({ filters, onChange, workshops }: UserFiltersProps) {
+export default function UserFilters({ filters, onChange }: UserFiltersProps) {
+  const [selectedWorkshop, setSelectedWorkshop] = useState<WorkshopSearchResult | null>(null)
+
   function set(key: keyof Filters, value: string) {
     onChange({ ...filters, [key]: value, page: 1 })
   }
@@ -23,17 +27,13 @@ export default function UserFilters({ filters, onChange, workshops }: UserFilter
         onChange={(e: ChangeEvent<HTMLInputElement>) => set('search', e.target.value)}
         className="user-filters-search"
       />
-      <Select
-        value={filters.workshop_id ?? ''}
-        onChange={(e) => set('workshop_id', e.target.value)}
-      >
-        <option value="">Taller</option>
-        {workshops.map((w) => (
-          <option key={w.id} value={w.id}>
-            {w.number} — {w.name}
-          </option>
-        ))}
-      </Select>
+      <WorkshopPicker
+        value={selectedWorkshop}
+        onChange={(w) => {
+          setSelectedWorkshop(w)
+          onChange({ ...filters, workshop_id: w ? String(w.id) : '', page: 1 })
+        }}
+      />
       <Select
         value={filters.workshop_role ?? ''}
         onChange={(e) => set('workshop_role', e.target.value)}
