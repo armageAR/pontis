@@ -8,23 +8,24 @@
 
 .workshop-picker-spinner {
   position: absolute;
-  right: 12px;
+  right: var(--space-3);
   top: 50%;
   transform: translateY(-50%);
 }
 
 .workshop-picker-clear {
   position: absolute;
-  right: 10px;
+  right: var(--space-2);
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
-  font-size: 20px;
-  color: var(--text);
+  font-size: 18px;
+  color: var(--text-muted);
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0 var(--space-1);
   line-height: 1;
+  transition: color 140ms ease;
 }
 
 .workshop-picker-clear:hover {
@@ -34,17 +35,17 @@
 .workshop-picker-selected {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 8px 12px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   background: var(--accent-bg);
   border: 1px solid var(--accent-border);
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
 }
 
 .workshop-picker-selected-number {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--accent);
   white-space: nowrap;
 }
@@ -55,8 +56,8 @@
 }
 
 .workshop-picker-selected-meta {
-  color: var(--text);
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
   margin-left: auto;
 }
 
@@ -66,12 +67,12 @@
   top: 100%;
   left: 0;
   right: 0;
-  margin: 4px 0 0;
-  padding: 4px 0;
-  background: var(--bg);
+  margin: var(--space-1) 0 0;
+  padding: var(--space-1) 0;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   list-style: none;
   max-height: 260px;
   overflow-y: auto;
@@ -80,10 +81,10 @@
 .workshop-picker-option {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 130ms ease;
 }
 
 .workshop-picker-option:hover {
@@ -91,8 +92,8 @@
 }
 
 .workshop-picker-option-number {
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 600;
+  font-size: var(--text-xs);
   color: var(--accent);
   white-space: nowrap;
   min-width: 52px;
@@ -100,7 +101,7 @@
 
 .workshop-picker-option-name {
   font-weight: 500;
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-h);
   white-space: nowrap;
   overflow: hidden;
@@ -108,8 +109,8 @@
 }
 
 .workshop-picker-option-meta {
-  font-size: 12px;
-  color: var(--text);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
   margin-left: auto;
   white-space: nowrap;
   overflow: hidden;
@@ -123,13 +124,13 @@
   top: 100%;
   left: 0;
   right: 0;
-  margin: 4px 0 0;
-  padding: 16px;
-  background: var(--bg);
+  margin: var(--space-1) 0 0;
+  padding: var(--space-4);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   text-align: center;
-  font-size: 14px;
-  color: var(--text);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }

@@ -1,7 +1,7 @@
 .action-menu {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .action-btn {
@@ -10,13 +10,13 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: none;
   background: transparent;
-  color: var(--text);
+  color: var(--text-muted);
   cursor: pointer;
-  font-size: 15px;
-  transition: background 0.15s, color 0.15s;
+  font-size: var(--text-base);
+  transition: background 140ms ease, color 140ms ease;
   position: relative;
 }
 

@@ -1,13 +1,13 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: var(--space-5);
   z-index: 100;
-  animation: modal-fade-in 0.15s ease;
+  animation: modal-fade-in 0.14s ease;
 }
 
 @keyframes modal-fade-in {
@@ -16,18 +16,19 @@
 }
 
 .modal-content {
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
-  animation: modal-slide-in 0.15s ease;
+  animation: modal-slide-in 0.14s ease;
 }
 
 @keyframes modal-slide-in {
-  from { transform: translateY(8px); opacity: 0; }
+  from { transform: translateY(6px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
@@ -35,11 +36,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 0;
+  padding: var(--space-5) var(--space-5) 0;
 }
 
 .modal-title {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text-h);
   margin: 0;
@@ -48,17 +49,20 @@
 .modal-close {
   background: none;
   border: none;
-  font-size: 24px;
-  color: var(--text);
+  font-size: 20px;
+  color: var(--text-muted);
   cursor: pointer;
-  padding: 0 4px;
+  padding: var(--space-1);
   line-height: 1;
+  border-radius: var(--radius-sm);
+  transition: color 140ms ease, background 140ms ease;
 }
 
 .modal-close:hover {
   color: var(--text-h);
+  background: var(--accent-bg);
 }
 
 .modal-body {
-  padding: 20px 24px 24px;
+  padding: var(--space-4) var(--space-5) var(--space-5);
 }

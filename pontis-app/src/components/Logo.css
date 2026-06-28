@@ -1,7 +1,7 @@
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   text-decoration: none;
   user-select: none;
 }
@@ -9,10 +9,10 @@
 .logo-text {
   font-weight: 700;
   letter-spacing: -0.5px;
-  color: var(--text-h);
+  color: var(--accent);
   line-height: 1;
 }
 
-.logo--sm .logo-text { font-size: 18px; }
-.logo--md .logo-text { font-size: 22px; }
-.logo--lg .logo-text { font-size: 28px; gap: 10px; }
+.logo--sm .logo-text { font-size: var(--text-lg); }
+.logo--md .logo-text { font-size: var(--text-xl); }
+.logo--lg .logo-text { font-size: 28px; }

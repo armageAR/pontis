@@ -1,31 +1,32 @@
 .empty-state {
   border: 1px dashed var(--border);
-  border-radius: 12px;
-  padding: 48px 24px;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-5);
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .empty-state-icon {
-  font-size: 36px;
-  color: var(--accent);
+  font-size: 32px;
+  color: var(--text-h);
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
+  opacity: 0.5;
 }
 
 .empty-state-title {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-h);
   margin: 0;
 }
 
 .empty-state-desc {
-  font-size: 14px;
-  color: var(--text);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
   margin: 0;
   max-width: 320px;
 }
