@@ -8,6 +8,7 @@ export interface Person {
   masonic_status: string | null
   province: string | null
   locality: string | null
+  country: string | null
   profession: string | null
   role: string
   status: string
@@ -18,6 +19,8 @@ export interface PeopleFilters {
   q?: string
   workshop_id?: number
   province?: string
+  locality?: string
+  country?: string
   masonic_status?: string
   page?: number
 }
