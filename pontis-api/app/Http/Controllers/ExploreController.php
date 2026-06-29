@@ -59,8 +59,8 @@ class ExploreController extends Controller {
         if ($request->filled('q')) {
             $q = mb_strtolower($request->q);
             $query->where(function ($qb) use ($q) {
-                $qb->whereRaw('LOWER(title) like ?', ["%{$q}%"])
-                   ->orWhereRaw('LOWER(description) like ?', ["%{$q}%"]);
+                $qb->whereRaw('unaccent(LOWER(title)) like unaccent(?)', ["%{$q}%"])
+                   ->orWhereRaw('unaccent(LOWER(description)) like unaccent(?)', ["%{$q}%"]);
             });
         }
 
@@ -73,7 +73,7 @@ class ExploreController extends Controller {
         }
 
         if ($request->filled('locality')) {
-            $query->whereHas('user', fn($q) => $q->whereRaw('LOWER(locality) like ?', ['%' . mb_strtolower($request->locality) . '%']));
+            $query->whereHas('user', fn($q) => $q->whereRaw('unaccent(LOWER(locality)) like unaccent(?)', ['%' . mb_strtolower($request->locality) . '%']));
         }
 
         $results = $query->orderByDesc('created_at')->paginate(20);
@@ -134,8 +134,8 @@ class ExploreController extends Controller {
         if ($request->filled('q')) {
             $q = mb_strtolower($request->q);
             $query->where(function ($qb) use ($q) {
-                $qb->whereRaw('LOWER(title) like ?', ["%{$q}%"])
-                   ->orWhereRaw('LOWER(description) like ?', ["%{$q}%"]);
+                $qb->whereRaw('unaccent(LOWER(title)) like unaccent(?)', ["%{$q}%"])
+                   ->orWhereRaw('unaccent(LOWER(description)) like unaccent(?)', ["%{$q}%"]);
             });
         }
 
@@ -148,7 +148,7 @@ class ExploreController extends Controller {
         }
 
         if ($request->filled('locality')) {
-            $query->whereHas('user', fn($q) => $q->whereRaw('LOWER(locality) like ?', ['%' . mb_strtolower($request->locality) . '%']));
+            $query->whereHas('user', fn($q) => $q->whereRaw('unaccent(LOWER(locality)) like unaccent(?)', ['%' . mb_strtolower($request->locality) . '%']));
         }
 
         $results = $query->orderByDesc('created_at')->paginate(20);

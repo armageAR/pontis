@@ -57,7 +57,7 @@ class AuthController extends Controller
         $workshops = Workshop::query()
             ->where('status', 'active')
             ->where(function ($query) use ($q) {
-                $query->whereRaw('LOWER(name) like ?', ["%{$q}%"])
+                $query->whereRaw('unaccent(LOWER(name)) like unaccent(?)', ["%{$q}%"])
                       ->orWhereRaw("CAST(number AS TEXT) like ?", ["%{$q}%"]);
             })
             ->orderBy('number')

@@ -18,9 +18,9 @@ class PeopleController extends Controller {
         if ($request->filled('q')) {
             $q = mb_strtolower($request->q);
             $query->where(function ($qb) use ($q) {
-                $qb->whereRaw('LOWER(name) like ?', ["%{$q}%"])
-                   ->orWhereRaw('LOWER(last_name) like ?', ["%{$q}%"])
-                   ->orWhereRaw('LOWER(email) like ?', ["%{$q}%"])
+                $qb->whereRaw('unaccent(LOWER(name)) like unaccent(?)', ["%{$q}%"])
+                   ->orWhereRaw('unaccent(LOWER(last_name)) like unaccent(?)', ["%{$q}%"])
+                   ->orWhereRaw('unaccent(LOWER(email)) like unaccent(?)', ["%{$q}%"])
                    ->orWhereRaw("CAST(masonic_id AS TEXT) like ?", ["%{$q}%"]);
             });
         }
@@ -32,7 +32,7 @@ class PeopleController extends Controller {
         }
         if ($request->filled('locality')) {
             $loc = mb_strtolower($request->locality);
-            $query->whereRaw('LOWER(locality) like ?', ["%{$loc}%"]);
+            $query->whereRaw('unaccent(LOWER(locality)) like unaccent(?)', ["%{$loc}%"]);
         }
         if ($request->filled('country')) {
             $query->where('country', $request->country);

@@ -44,10 +44,10 @@ class WorkshopController extends Controller
         if ($request->filled('search')) {
             $search = mb_strtolower($request->input('search'));
             $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(name) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(zone_name) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(address) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(city) like ?', ["%{$search}%"]);
+                $q->whereRaw('unaccent(LOWER(name)) like unaccent(?)', ["%{$search}%"])
+                  ->orWhereRaw('unaccent(LOWER(zone_name)) like unaccent(?)', ["%{$search}%"])
+                  ->orWhereRaw('unaccent(LOWER(address)) like unaccent(?)', ["%{$search}%"])
+                  ->orWhereRaw('unaccent(LOWER(city)) like unaccent(?)', ["%{$search}%"]);
             });
         }
 
@@ -304,8 +304,8 @@ class WorkshopController extends Controller
         if (request()->filled('search')) {
             $search = mb_strtolower(request()->input('search'));
             $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(users.name) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(users.email) like ?', ["%{$search}%"]);
+                $q->whereRaw('unaccent(LOWER(users.name)) like unaccent(?)', ["%{$search}%"])
+                  ->orWhereRaw('unaccent(LOWER(users.email)) like unaccent(?)', ["%{$search}%"]);
             });
         }
 

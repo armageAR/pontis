@@ -36,8 +36,8 @@ class UserController extends Controller
         if ($request->filled('search')) {
             $search = mb_strtolower($request->input('search'));
             $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(name) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(email) like ?', ["%{$search}%"]);
+                $q->whereRaw('unaccent(LOWER(name)) like unaccent(?)', ["%{$search}%"])
+                  ->orWhereRaw('unaccent(LOWER(email)) like unaccent(?)', ["%{$search}%"]);
             });
         }
 
