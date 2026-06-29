@@ -23,6 +23,7 @@ export interface PeopleFilters {
   country?: string
   masonic_status?: string
   page?: number
+  per_page?: number
 }
 
 export interface PaginatedPeople {

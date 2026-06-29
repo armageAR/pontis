@@ -12,6 +12,7 @@ import * as exploreApi from '@/api/explore'
 import type { ExploreService, ExploreNeed } from '@/api/explore'
 import { getCategories } from '@/api/services'
 import type { ServiceCategory } from '@/api/services'
+import { PROVINCIAS } from '@/constants/provincias'
 import './ExplorePage.css'
 
 const SCOPE_LABELS: Record<string, string> = {
@@ -19,33 +20,6 @@ const SCOPE_LABELS: Record<string, string> = {
   my_workshops: 'Mis talleres',
   all: 'Todo el sistema',
 }
-
-const PROVINCIAS = [
-  'Buenos Aires',
-  'Catamarca',
-  'Chaco',
-  'Chubut',
-  'Ciudad Autónoma de Buenos Aires',
-  'Córdoba',
-  'Corrientes',
-  'Entre Ríos',
-  'Formosa',
-  'Jujuy',
-  'La Pampa',
-  'La Rioja',
-  'Mendoza',
-  'Misiones',
-  'Neuquén',
-  'Río Negro',
-  'Salta',
-  'San Juan',
-  'San Luis',
-  'Santa Cruz',
-  'Santa Fe',
-  'Santiago del Estero',
-  'Tierra del Fuego',
-  'Tucumán',
-]
 
 const MODALITY_LABELS: Record<string, string> = { presencial: 'Presencial', remoto: 'Remoto', both: 'Ambas' }
 

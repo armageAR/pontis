@@ -9,6 +9,7 @@ import EmptyState from '@/components/EmptyState'
 import Pagination from '@/components/Pagination'
 import Alert from '@/components/Alert'
 import WorkshopPicker from '@/components/WorkshopPicker'
+import { PROVINCIAS } from '@/constants/provincias'
 import * as api from '@/api/people'
 import type { Person } from '@/api/people'
 import type { WorkshopSearchResult } from '@/api/workshops'
@@ -19,7 +20,7 @@ const MASONIC_STATUS_LABELS: Record<string, string> = {
   inactive:   'Inactivo',
   suspended:  'Suspendido',
   discharged: 'Dado de baja',
-  deceased:   '∴ Eterno',
+  deceased:   'O∴ Eterno',
 }
 const MASONIC_STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
   active:     'success',
@@ -37,15 +38,15 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
   const [lastPage, setLastPage]       = useState(1)
   const [total, setTotal]             = useState(0)
   const [searched, setSearched]       = useState(false)
+  const [perPage, setPerPage]         = useState(10)
 
   const [q, setQ]                       = useState('')
   const [workshop, setWorkshop]         = useState<WorkshopSearchResult | null>(null)
   const [locality, setLocality]         = useState('')
-  const [province, setProvince]       = useState('')
-  const [country, setCountry]         = useState('')
-  const [masonicStatus, setMasonicStatus] = useState('')
+  const [province, setProvince]         = useState('')
+  const [masonicStatus, setMasonicStatus] = useState('active')
 
-  async function load(p = page) {
+  async function load(p = page, pp = perPage) {
     setLoading(true); setError('')
     try {
       const r = await api.searchPeople({
@@ -53,9 +54,9 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
         workshop_id:    workshop?.id,
         locality:       locality || undefined,
         province:       province || undefined,
-        country:        country  || undefined,
         masonic_status: masonicStatus || undefined,
         page:           p,
+        per_page:       pp,
       })
       setPeople(r.data); setLastPage(r.last_page); setTotal(r.total); setSearched(true)
     } catch {
@@ -67,13 +68,17 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
 
   function handleSearch(e: FormEvent) { e.preventDefault(); setPage(1); load(1) }
   function handlePageChange(p: number) { setPage(p); load(p) }
+  function handlePerPageChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const pp = Number(e.target.value)
+    setPerPage(pp); setPage(1); load(1, pp)
+  }
 
   const content = (
     <>
       <h2 className="people-title">Buscar Hermanos</h2>
       <form onSubmit={handleSearch} className="people-search-form">
         <Input
-          className="people-search-input"
+          className="people-search-name"
           placeholder="Nombre, apellido, matrícula o email…"
           value={q}
           onChange={e => setQ(e.target.value)}
@@ -83,20 +88,19 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
           onChange={setWorkshop}
         />
         <Input
+          className="people-search-city"
           placeholder="Ciudad"
           value={locality}
           onChange={e => setLocality(e.target.value)}
         />
-        <Input
-          placeholder="Provincia"
+        <select
+          className="people-select"
           value={province}
           onChange={e => setProvince(e.target.value)}
-        />
-        <Input
-          placeholder="País"
-          value={country}
-          onChange={e => setCountry(e.target.value)}
-        />
+        >
+          <option value="">Todas las provincias</option>
+          {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
         <select
           className="people-select"
           value={masonicStatus}
@@ -118,7 +122,18 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
         <EmptyState title="Sin resultados" description="No se encontraron Hermanos con esos criterios." />
       ) : (
         <>
-          <p className="people-results-count">{total} resultado{total !== 1 ? 's' : ''}</p>
+          <div className="people-results-header">
+            <p className="people-results-count">{total} resultado{total !== 1 ? 's' : ''}</p>
+            <div className="people-per-page">
+              <label>Mostrar</label>
+              <select value={perPage} onChange={handlePerPageChange} className="people-select people-select-sm">
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={0}>Todos</option>
+              </select>
+            </div>
+          </div>
           <div className="people-list">
             {people.map(p => (
               <div key={p.id} className="person-card">
@@ -137,9 +152,9 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
                 </div>
                 <div className="person-meta">
                   {p.profession && <span className="person-meta-item">{p.profession}</span>}
-                  {(p.locality || p.province || p.country) && (
+                  {(p.locality || p.province) && (
                     <span className="person-meta-item">
-                      {[p.locality, p.province, p.country].filter(Boolean).join(', ')}
+                      {[p.locality, p.province].filter(Boolean).join(', ')}
                     </span>
                   )}
                 </div>

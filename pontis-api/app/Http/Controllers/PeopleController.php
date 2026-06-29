@@ -13,6 +13,7 @@ class PeopleController extends Controller {
             'country'        => 'nullable|string|max:100',
             'masonic_status' => 'nullable|string',
             'page'           => 'nullable|integer',
+            'per_page'       => 'nullable|integer|min:0|max:200',
         ]);
         $query = User::query()->with(['workshops:id,name,number']);
         if ($request->filled('q')) {
@@ -40,10 +41,13 @@ class PeopleController extends Controller {
         if ($request->filled('masonic_status')) {
             $query->where('masonic_status', $request->masonic_status);
         }
+        $perPage = (int) $request->input('per_page', 10);
+        if ($perPage <= 0) $perPage = $query->count() ?: 1;
+
         $people = $query->whereNotNull('email_verified_at')
             ->select(['id','name','last_name','masonic_id','masonic_status','province','locality','country','profession','role','status'])
             ->orderBy('last_name')->orderBy('name')
-            ->paginate(20);
+            ->paginate($perPage);
         return response()->json($people);
     }
 }
