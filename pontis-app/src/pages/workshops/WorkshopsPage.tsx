@@ -259,15 +259,17 @@ export default function WorkshopsPage() {
         {selected && (
           <>
             <WorkshopDetail workshop={selected} />
-            <div className="workshops-detail-actions">
-              <Button variant="outline" onClick={handleToggleStatus} loading={toggling}>
-                {selected.status === 'active' ? 'Deshabilitar' : 'Reactivar'}
-              </Button>
-              <Button variant="outline" onClick={() => setConfirmDelete(true)}>
-                Eliminar
-              </Button>
-              <Button onClick={openEdit}>Editar</Button>
-            </div>
+            {currentUser?.role === 'superadmin' && (
+              <div className="workshops-detail-actions">
+                <Button variant="outline" onClick={handleToggleStatus} loading={toggling}>
+                  {selected.status === 'active' ? 'Deshabilitar' : 'Reactivar'}
+                </Button>
+                <Button variant="outline" onClick={() => setConfirmDelete(true)}>
+                  Eliminar
+                </Button>
+                <Button onClick={openEdit}>Editar</Button>
+              </div>
+            )}
           </>
         )}
       </Modal>
