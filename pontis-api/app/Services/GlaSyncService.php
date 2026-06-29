@@ -196,6 +196,11 @@ class GlaSyncService
 
         [$address, $city, $province] = $this->parseAddress($address);
 
+        // If province is unknown but city matches a province name, infer it.
+        if ($province === null && $city !== null) {
+            $province = $this->inferProvinceFromCity($city);
+        }
+
         $day       = isset($m['day']) ? trim($m['day']) : null;
         $frequency = isset($m['frequency']) ? trim($m['frequency']) : null;
 
@@ -259,6 +264,53 @@ class GlaSyncService
 
         // No number found — the whole string is the city (e.g. "TIGRE", "Olivos")
         return [null, $raw, null];
+    }
+
+    private const PROVINCES = [
+        'Buenos Aires',
+        'Catamarca',
+        'Chaco',
+        'Chubut',
+        'Ciudad Autónoma de Buenos Aires',
+        'Córdoba',
+        'Corrientes',
+        'Entre Ríos',
+        'Formosa',
+        'Jujuy',
+        'La Pampa',
+        'La Rioja',
+        'Mendoza',
+        'Misiones',
+        'Neuquén',
+        'Río Negro',
+        'Salta',
+        'San Juan',
+        'San Luis',
+        'Santa Cruz',
+        'Santa Fe',
+        'Santiago del Estero',
+        'Tierra del Fuego',
+        'Tucumán',
+    ];
+
+    private function inferProvinceFromCity(string $city): ?string
+    {
+        $normalized = $this->normalizeAccents(mb_strtolower($city));
+        foreach (self::PROVINCES as $province) {
+            if ($normalized === $this->normalizeAccents(mb_strtolower($province))) {
+                return $province;
+            }
+        }
+        return null;
+    }
+
+    private function normalizeAccents(string $s): string
+    {
+        return str_replace(
+            ['á','é','í','ó','ú','ü','ñ'],
+            ['a','e','i','o','u','u','n'],
+            $s
+        );
     }
 
     private function normalizeDay(string $day): string
