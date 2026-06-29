@@ -5,6 +5,7 @@ import Button from '@/components/Button'
 import Alert from '@/components/Alert'
 import * as api from '@/api/notifications'
 import type { Notification } from '@/api/notifications'
+import { formatDate } from '@/utils/date'
 import './NotificationsList.css'
 
 export default function NotificationsList() {
@@ -80,7 +81,7 @@ export default function NotificationsList() {
               <div className="notif-item-header">
                 <span className="notif-title">{n.title}</span>
                 <span className="notif-date">
-                  {new Date(n.created_at).toLocaleDateString('es-AR')}
+                  {formatDate(n.created_at)}
                 </span>
               </div>
               {n.body && <p className="notif-body">{n.body}</p>}

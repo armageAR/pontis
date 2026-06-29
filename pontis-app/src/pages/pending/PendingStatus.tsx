@@ -6,17 +6,8 @@ import type { AccountStatus } from '@/api/auth'
 import Button from '@/components/Button'
 import Alert from '@/components/Alert'
 import Spinner from '@/components/Spinner'
+import { formatDate } from '@/utils/date'
 import './PendingStatus.css'
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 function hoursAgo(dateStr: string): number {
   return (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60)

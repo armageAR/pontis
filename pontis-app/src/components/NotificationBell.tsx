@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import * as api from '@/api/notifications'
 import type { Notification } from '@/api/notifications'
+import { formatDate } from '@/utils/date'
 import './NotificationBell.css'
 
 const TYPE_ICONS: Record<string, string> = {
@@ -68,7 +69,7 @@ export default function NotificationBell() {
                   <div>
                     <div className="notif-title">{n.title}</div>
                     {n.body && <div className="notif-body">{n.body}</div>}
-                    <div className="notif-time">{new Date(n.created_at).toLocaleDateString('es-AR')}</div>
+                    <div className="notif-time">{formatDate(n.created_at)}</div>
                   </div>
                 </div>
               ))}

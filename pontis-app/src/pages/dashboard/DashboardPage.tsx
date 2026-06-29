@@ -7,6 +7,7 @@ import type { PendingRequest, MembershipNotification } from '@/api/dashboard'
 import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import Modal from '@/components/Modal'
+import { formatDate } from '@/utils/date'
 import './DashboardPage.css'
 
 export default function DashboardPage() {
@@ -78,16 +79,6 @@ export default function DashboardPage() {
     } finally {
       setActionLoading(null)
     }
-  }
-
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
   }
 
   return (

@@ -13,6 +13,7 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import { useAuth } from '@/context/AuthContext'
 import * as api from '@/api/changeRequests'
 import type { ChangeRequest } from '@/api/changeRequests'
+import { formatDate } from '@/utils/date'
 import './ChangeRequestsPage.css'
 
 const FIELD_LABELS: Record<string, string> = { name: 'Nombre', last_name: 'Apellido', dni: 'DNI / Documento', masonic_id: 'Matrícula masónica' }
@@ -156,7 +157,7 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
                     {r.reviewer_notes}
                   </p>
                 )}
-                <div className="cr-meta">Solicitado: {new Date(r.created_at).toLocaleDateString('es-AR')}</div>
+                <div className="cr-meta">Solicitado: {formatDate(r.created_at)}</div>
                 <div className="cr-actions">
                   {isSuperAdmin && ['pending', 'requires_info'].includes(r.status) && (
                     <Button onClick={() => { setReviewModal(r); setReviewNotes('') }}>Revisar</Button>

@@ -2,6 +2,7 @@ import { ChevronUp, ChevronDown, Pencil, KeyRound, Crown } from 'lucide-react'
 import type { UserListItem, UserFilters } from '@/api/users'
 import ActionMenu from '@/components/ActionMenu'
 import UserStatusSelect from './UserStatusSelect'
+import { formatDate } from '@/utils/date'
 import './UserTable.css'
 
 interface UserTableProps {
@@ -38,14 +39,6 @@ function SortIcon({ col, sortBy, sortDirection }: { col: string; sortBy: string;
   return sortDirection === 'asc'
     ? <span className="sort-icon sort-icon-active"><ChevronUp size={12} /></span>
     : <span className="sort-icon sort-icon-active"><ChevronDown size={12} /></span>
-}
-
-function formatDate(d: string): string {
-  return new Date(d).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
 }
 
 export default function UserTable({

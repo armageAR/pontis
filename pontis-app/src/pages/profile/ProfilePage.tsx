@@ -18,6 +18,7 @@ import type { VisibilityLevel, VisibilityBlock, VisibilityMap } from '@/api/visi
 import client from '@/api/client'
 import WorkshopPicker from '@/components/WorkshopPicker'
 import { type WorkshopSearchResult } from '@/api/workshops'
+import { formatDate, toDateInputValue } from '@/utils/date'
 import './ProfilePage.css'
 
 interface PositionCatalogItem { id: number; name: string }
@@ -180,7 +181,7 @@ export default function ProfilePage() {
               <FormField label="Apellido"><Input value={profile?.last_name ?? ''} onChange={field('last_name')} disabled={!isSuperAdmin} /></FormField>
               <FormField label="DNI / Documento"><Input value={profile?.dni ?? ''} onChange={field('dni')} disabled={!isSuperAdmin} /></FormField>
               <FormField label="Email"><Input value={profile?.email ?? ''} disabled /></FormField>
-              <FormField label="Fecha de nacimiento"><Input type="date" value={profile?.birth_date ?? ''} onChange={field('birth_date')} /></FormField>
+              <FormField label="Fecha de nacimiento"><Input type="date" value={toDateInputValue(profile?.birth_date)} onChange={field('birth_date')} /></FormField>
               <FormField label="Foto de perfil (URL)"><Input type="url" placeholder="https://..." value={profile?.photo_url ?? ''} onChange={field('photo_url')} /></FormField>
             </div>
           </section>
@@ -194,7 +195,7 @@ export default function ProfilePage() {
                   {Object.entries(MASONIC_STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </FormField>
-              <FormField label="Fecha de iniciación"><Input type="date" value={profile?.initiation_date ?? ''} onChange={field('initiation_date')} /></FormField>
+              <FormField label="Fecha de iniciación"><Input type="date" value={toDateInputValue(profile?.initiation_date)} onChange={field('initiation_date')} /></FormField>
             </div>
           </section>
 
@@ -308,10 +309,10 @@ export default function ProfilePage() {
                   <tr key={d.id}>
                     <td><Badge variant="default">{DEGREE_LABELS[d.degree]}</Badge></td>
                     <td>{d.workshop?.name ?? '-'}</td>
-                    <td>{d.start_date}</td>
-                    <td>{d.end_date ?? '-'}</td>
+                    <td>{formatDate(d.start_date)}</td>
+                    <td>{formatDate(d.end_date)}</td>
                     <td className="profile-table-actions">
-                      <button className="profile-link-btn" onClick={() => { setEditingDegree(d); setDegreeForm({ degree: d.degree, workshop_id: d.workshop_id?.toString() ?? '', start_date: d.start_date, end_date: d.end_date ?? '', notes: d.notes ?? '' }); const dw = d.workshop_id ? (myWorkshops.find(w => w.id === d.workshop_id) ? { ...myWorkshops.find(w => w.id === d.workshop_id)!, zone_name: null, city: null } : { id: d.workshop_id, name: d.workshop?.name ?? String(d.workshop_id), number: d.workshop?.number ?? 0, zone_name: null, city: null }) : null; setDegreeWorkshop(dw); setShowDegreeModal(true) }}>Editar</button>
+                      <button className="profile-link-btn" onClick={() => { setEditingDegree(d); setDegreeForm({ degree: d.degree, workshop_id: d.workshop_id?.toString() ?? '', start_date: toDateInputValue(d.start_date), end_date: toDateInputValue(d.end_date), notes: d.notes ?? '' }); const dw = d.workshop_id ? (myWorkshops.find(w => w.id === d.workshop_id) ? { ...myWorkshops.find(w => w.id === d.workshop_id)!, zone_name: null, city: null } : { id: d.workshop_id, name: d.workshop?.name ?? String(d.workshop_id), number: d.workshop?.number ?? 0, zone_name: null, city: null }) : null; setDegreeWorkshop(dw); setShowDegreeModal(true) }}>Editar</button>
                       <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeleteDegree(d.id)}>Eliminar</button>
                     </td>
                   </tr>
@@ -335,10 +336,10 @@ export default function ProfilePage() {
                   <tr key={p.id}>
                     <td>{p.position?.name ?? '-'}</td>
                     <td>{p.workshop?.name ?? '-'}</td>
-                    <td>{p.start_date}</td>
-                    <td>{p.end_date ?? '-'}</td>
+                    <td>{formatDate(p.start_date)}</td>
+                    <td>{formatDate(p.end_date)}</td>
                     <td className="profile-table-actions">
-                      <button className="profile-link-btn" onClick={() => { setEditingPosition(p); setPositionForm({ position_id: p.position_id.toString(), workshop_id: p.workshop_id.toString(), start_date: p.start_date, end_date: p.end_date ?? '', notes: p.notes ?? '' }); const pw = myWorkshops.find(w => w.id === p.workshop_id) ? { ...myWorkshops.find(w => w.id === p.workshop_id)!, zone_name: null, city: null } : { id: p.workshop_id, name: p.workshop?.name ?? String(p.workshop_id), number: p.workshop?.number ?? 0, zone_name: null, city: null }; setPositionWorkshop(pw); setShowPositionModal(true) }}>Editar</button>
+                      <button className="profile-link-btn" onClick={() => { setEditingPosition(p); setPositionForm({ position_id: p.position_id.toString(), workshop_id: p.workshop_id.toString(), start_date: toDateInputValue(p.start_date), end_date: toDateInputValue(p.end_date), notes: p.notes ?? '' }); const pw = myWorkshops.find(w => w.id === p.workshop_id) ? { ...myWorkshops.find(w => w.id === p.workshop_id)!, zone_name: null, city: null } : { id: p.workshop_id, name: p.workshop?.name ?? String(p.workshop_id), number: p.workshop?.number ?? 0, zone_name: null, city: null }; setPositionWorkshop(pw); setShowPositionModal(true) }}>Editar</button>
                       <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeletePosition(p.id)}>Eliminar</button>
                     </td>
                   </tr>

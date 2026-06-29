@@ -10,6 +10,7 @@ import EmptyState from '@/components/EmptyState'
 import Pagination from '@/components/Pagination'
 import * as api from '@/api/contactRequests'
 import type { ContactRequest } from '@/api/contactRequests'
+import { formatDate } from '@/utils/date'
 import './ContactRequestsPage.css'
 
 const STATUS_LABELS: Record<string, string> = { pending: 'Pendiente', accepted: 'Aceptada', rejected: 'Rechazada', cancelled: 'Cancelada', expired: 'Expirada', closed: 'Cerrada' }
@@ -97,7 +98,7 @@ export default function ContactRequestsPage({ embedded = false }: { embedded?: b
                     <span className="cont-person">
                       {direction === 'received' ? `De: ${personName(cr.requester)}` : `Para: ${personName(cr.requestee)}`}
                     </span>
-                    <span className="cont-date">{new Date(cr.created_at).toLocaleDateString('es-AR')}</span>
+                    <span className="cont-date">{formatDate(cr.created_at)}</span>
                   </div>
                   <Badge variant={STATUS_VARIANTS[cr.status]}>{STATUS_LABELS[cr.status]}</Badge>
                 </div>

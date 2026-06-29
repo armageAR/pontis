@@ -10,6 +10,7 @@ import FormField from '@/components/FormField'
 import { useAuth } from '@/context/AuthContext'
 import client from '@/api/client'
 import * as contactApi from '@/api/contactRequests'
+import { formatDate } from '@/utils/date'
 import './PersonPage.css'
 
 const DEGREE_LABELS: Record<string, string> = { aprendiz: 'Aprendiz', companero: 'Compañero', maestro: 'Maestro' }
@@ -99,7 +100,7 @@ export default function PersonPage() {
         <section className="person-section">
           <h2 className="person-section-title">Información masónica</h2>
           <div className="person-info-grid">
-            {profile.initiation_date && <div><span className="person-label">Fecha de iniciación</span><span>{profile.initiation_date}</span></div>}
+            {profile.initiation_date && <div><span className="person-label">Fecha de iniciación</span><span>{formatDate(profile.initiation_date)}</span></div>}
             {(profile.province || profile.locality) && <div><span className="person-label">Ubicación</span><span>{[profile.locality, profile.province].filter(Boolean).join(', ')}</span></div>}
             {profile.profession && <div><span className="person-label">Profesión</span><span>{profile.profession}</span></div>}
             {profile.occupation && <div><span className="person-label">Ocupación</span><span>{profile.occupation}</span></div>}
@@ -123,7 +124,7 @@ export default function PersonPage() {
                 <div key={d.id} className="person-history-item">
                   <Badge variant="default">{DEGREE_LABELS[d.degree] ?? d.degree}</Badge>
                   <span className="person-history-detail">{d.workshop?.name ?? ''}</span>
-                  <span className="person-history-dates">{d.start_date}{d.end_date ? ` – ${d.end_date}` : ''}</span>
+                  <span className="person-history-dates">{formatDate(d.start_date)}{d.end_date ? ` – ${formatDate(d.end_date)}` : ''}</span>
                 </div>
               ))}
             </div>
@@ -138,7 +139,7 @@ export default function PersonPage() {
                 <div key={p.id} className="person-history-item">
                   <span className="person-history-cargo">{p.position?.name ?? '-'}</span>
                   <span className="person-history-detail">{p.workshop?.name ?? ''}</span>
-                  <span className="person-history-dates">{p.start_date}{p.end_date ? ` – ${p.end_date}` : ''}</span>
+                  <span className="person-history-dates">{formatDate(p.start_date)}{p.end_date ? ` – ${formatDate(p.end_date)}` : ''}</span>
                 </div>
               ))}
             </div>
