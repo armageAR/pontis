@@ -26,6 +26,7 @@ export interface Service {
 export interface ServiceFilters {
   status?: string
   page?: number
+  per_page?: number
 }
 
 export interface PaginatedServices {

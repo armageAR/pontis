@@ -19,6 +19,7 @@ export interface Need {
 export interface NeedFilters {
   status?: string
   page?: number
+  per_page?: number
 }
 
 export interface PaginatedNeeds {

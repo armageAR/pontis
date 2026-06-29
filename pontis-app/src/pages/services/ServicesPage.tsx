@@ -49,6 +49,7 @@ export default function ServicesPage({ embedded = false }: { embedded?: boolean 
   const [page, setPage] = useState(1)
   const [lastPage, setLastPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [perPage, setPerPage] = useState(10)
   const [statusFilter, setStatusFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
@@ -62,7 +63,7 @@ export default function ServicesPage({ embedded = false }: { embedded?: boolean 
     setLoading(true)
     try {
       const [r, cats] = await Promise.all([
-        api.getServices({ page, status: statusFilter || undefined }),
+        api.getServices({ page, per_page: perPage, status: statusFilter || undefined }),
         categories.length ? Promise.resolve(categories) : api.getCategories(),
       ])
       setServices(r.data); setLastPage(r.last_page); setTotal(r.total)
@@ -71,7 +72,7 @@ export default function ServicesPage({ embedded = false }: { embedded?: boolean 
     finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [page, statusFilter])
+  useEffect(() => { load() }, [page, perPage, statusFilter])
 
   function openCreate() { setEditing(null); setForm({ ...EMPTY_FORM }); setShowModal(true) }
   function openEdit(s: Service) {
@@ -122,6 +123,12 @@ export default function ServicesPage({ embedded = false }: { embedded?: boolean 
         <select className="services-select" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
           <option value="">Todos los estados</option>
           {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+        <select className="services-select" value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1) }}>
+          <option value={10}>10 por página</option>
+          <option value={25}>25 por página</option>
+          <option value={50}>50 por página</option>
+          <option value={0}>Todos</option>
         </select>
       </div>
       {error && <Alert>{error}</Alert>}

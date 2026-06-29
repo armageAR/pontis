@@ -20,7 +20,9 @@ class NeedController extends Controller {
             ? Need::with(['user:id,name,last_name', 'category:id,name'])
             : Need::where('user_id', $user->id)->with(['category:id,name']);
         if ($request->filled('status')) $query->where('status', $request->status);
-        return response()->json($query->orderByDesc('created_at')->paginate(20));
+        $perPage = (int) $request->input('per_page', 10);
+        if ($perPage <= 0) $perPage = $query->count() ?: 1;
+        return response()->json($query->orderByDesc('created_at')->paginate($perPage));
     }
 
     public function store(Request $request): JsonResponse {
