@@ -14,12 +14,38 @@ import { getCategories } from '@/api/services'
 import type { ServiceCategory } from '@/api/services'
 import './ExplorePage.css'
 
-const SCOPE_LABELS = {
+const SCOPE_LABELS: Record<string, string> = {
   my_workshop: 'Mi taller principal',
   my_workshops: 'Mis talleres',
-  registered: 'Masones registrados',
   all: 'Todo el sistema',
 }
+
+const PROVINCIAS = [
+  'Buenos Aires',
+  'Catamarca',
+  'Chaco',
+  'Chubut',
+  'Ciudad Autónoma de Buenos Aires',
+  'Córdoba',
+  'Corrientes',
+  'Entre Ríos',
+  'Formosa',
+  'Jujuy',
+  'La Pampa',
+  'La Rioja',
+  'Mendoza',
+  'Misiones',
+  'Neuquén',
+  'Río Negro',
+  'Salta',
+  'San Juan',
+  'San Luis',
+  'Santa Cruz',
+  'Santa Fe',
+  'Santiago del Estero',
+  'Tierra del Fuego',
+  'Tucumán',
+]
 
 const MODALITY_LABELS: Record<string, string> = { presencial: 'Presencial', remoto: 'Remoto', both: 'Ambas' }
 
@@ -29,8 +55,9 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
   const [tab, setTab] = useState<Tab>('services')
   const [q, setQ] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [scope, setScope] = useState<'my_workshop'|'my_workshops'|'registered'|'all'>('all')
+  const [scope, setScope] = useState<'my_workshop'|'my_workshops'|'all'>('all')
   const [province, setProvince] = useState('')
+  const [city, setCity] = useState('')
   const [categories, setCategories] = useState<ServiceCategory[]>([])
   const [services, setServices] = useState<ExploreService[]>([])
   const [needs, setNeeds] = useState<ExploreNeed[]>([])
@@ -55,6 +82,7 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
       category_id: categoryId ? Number(categoryId) : undefined,
       scope,
       province: province || undefined,
+      locality: city || undefined,
       page: 1,
     }
     try {
@@ -72,7 +100,7 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
 
   async function handlePageChange(p: number) {
     setPage(p); setLoading(true)
-    const filters = { q: q || undefined, category_id: categoryId ? Number(categoryId) : undefined, scope, province: province || undefined, page: p }
+    const filters = { q: q || undefined, category_id: categoryId ? Number(categoryId) : undefined, scope, province: province || undefined, locality: city || undefined, page: p }
     try {
       if (tab === 'services') {
         const r = await exploreApi.exploreServices(filters)
@@ -111,7 +139,11 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
           <select className="explore-select" value={scope} onChange={e => setScope(e.target.value as any)}>
             {Object.entries(SCOPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
-          <Input placeholder="Provincia" value={province} onChange={e => setProvince(e.target.value)} className="explore-province-input" />
+          <select className="explore-select" value={province} onChange={e => setProvince(e.target.value)}>
+            <option value="">Todas las provincias</option>
+            {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <Input placeholder="Ciudad" value={city} onChange={e => setCity(e.target.value)} className="explore-city-input" />
           <Button type="submit">Buscar</Button>
         </div>
       </form>

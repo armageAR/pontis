@@ -102,6 +102,8 @@ class ExploreController extends Controller {
             'q'           => 'nullable|string|min:2|max:100',
             'category_id' => 'nullable|integer|exists:service_categories,id',
             'scope'       => 'nullable|string|in:my_workshop,my_workshops,registered,all',
+            'province'    => 'nullable|string|max:100',
+            'locality'    => 'nullable|string|max:100',
             'page'        => 'nullable|integer',
         ]);
 
@@ -139,6 +141,14 @@ class ExploreController extends Controller {
 
         if ($request->filled('category_id')) {
             $query->where('service_category_id', $request->category_id);
+        }
+
+        if ($request->filled('province')) {
+            $query->whereHas('user', fn($q) => $q->where('province', $request->province));
+        }
+
+        if ($request->filled('locality')) {
+            $query->whereHas('user', fn($q) => $q->whereRaw('LOWER(locality) like ?', ['%' . mb_strtolower($request->locality) . '%']));
         }
 
         $results = $query->orderByDesc('created_at')->paginate(20);

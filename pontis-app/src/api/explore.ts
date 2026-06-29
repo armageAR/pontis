@@ -53,7 +53,7 @@ export interface ExploreNeed {
 export interface ExploreFilters {
   q?: string
   category_id?: number
-  scope?: 'my_workshop' | 'my_workshops' | 'registered' | 'all'
+  scope?: 'my_workshop' | 'my_workshops' | 'all'
   province?: string
   locality?: string
   page?: number
