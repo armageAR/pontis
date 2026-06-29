@@ -221,19 +221,44 @@ class GlaSyncService
         );
     }
 
-    private function parseAddress(string $address): array
+    private function parseAddress(string $raw): array
     {
-        $address = trim($address, " \t\n\r\0\x0B–-");
+        $raw = preg_replace('/^[\s\-–]+|[\s\-–]+$/u', '', $raw ?? '');
 
-        if (preg_match('/\s+CABA$/iu', $address)) {
-            return [
-                trim(preg_replace('/\s+CABA$/iu', '', $address)),
-                'CABA',
-                'Ciudad Autónoma de Buenos Aires',
-            ];
+        if ($raw === '' || $raw === null) {
+            return [null, null, null];
         }
 
-        return [$address, null, null];
+        // "CIUDAD AUTONOMA DE BUENOS AIRES" (full form)
+        if (preg_match('/CIUDAD\s+AUT[OÓ]NOMA\s+DE\s+BUENOS\s+AIRES/iu', $raw)) {
+            $street = trim(preg_replace('/CIUDAD\s+AUT[OÓ]NOMA\s+DE\s+BUENOS\s+AIRES/iu', '', $raw), " ,–-\t");
+            return [$street !== '' ? $street : null, 'CABA', 'Ciudad Autónoma de Buenos Aires'];
+        }
+
+        // "CABA" shorthand
+        if (preg_match('/\bCABA\b/iu', $raw)) {
+            $street = trim(preg_replace('/\bCABA\b/iu', '', $raw), " ,–-\t");
+            return [$street !== '' ? $street : null, 'CABA', 'Ciudad Autónoma de Buenos Aires'];
+        }
+
+        // Comma-separated: everything after the last comma is the city
+        // e.g. "JUNIN N° 2147 Villa Maipú, SAN MARTIN"
+        if (str_contains($raw, ',')) {
+            $parts  = array_map('trim', explode(',', $raw));
+            $city   = array_pop($parts);
+            $street = implode(', ', $parts);
+            return [trim($street) !== '' ? trim($street) : null, $city !== '' ? $city : null, null];
+        }
+
+        // General pattern: [STREET NAME] [NUMBER] [CITY]
+        // Greedy match finds the LAST number token — everything after it is the city.
+        // Handles N°622, Nº622, plain numbers, and suffixes like "50-".
+        if (preg_match('/^(.*\b\d+\S*)\s+(\pL.+)$/u', $raw, $m)) {
+            return [trim($m[1]) !== '' ? trim($m[1]) : null, trim($m[2]) !== '' ? trim($m[2]) : null, null];
+        }
+
+        // No number found — the whole string is the city (e.g. "TIGRE", "Olivos")
+        return [null, $raw, null];
     }
 
     private function normalizeDay(string $day): string
