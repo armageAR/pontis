@@ -17,19 +17,24 @@ use Illuminate\Support\Carbon;
 
 class DemoUsersSeeder extends Seeder
 {
-    private const WORKSHOP_NUMBERS = [469, 730, 1, 2, 387];
-    private const USERS_PER_WORKSHOP = 12;
+    private const PREFERRED_WORKSHOP_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100, 200, 300, 387, 469, 730];
+    private const MAX_WORKSHOPS = 12;
+    private const USERS_PER_WORKSHOP = 18;
 
     private const FIRST_NAMES = [
         'Juan', 'Carlos', 'Roberto', 'Miguel', 'Jorge', 'Luis', 'Eduardo', 'Fernando',
         'Ricardo', 'Alberto', 'Daniel', 'Sergio', 'Gustavo', 'Pablo', 'Andrés',
         'Martín', 'Diego', 'Hernán', 'Marcelo', 'Raúl', 'Guillermo', 'Tomás',
+        'Nicolás', 'Esteban', 'Federico', 'Claudio', 'Ignacio', 'Patricio',
+        'Alejandro', 'Damián', 'Leandro', 'Mauricio', 'Sebastián', 'Víctor',
     ];
 
     private const LAST_NAMES = [
         'González', 'Rodríguez', 'Fernández', 'López', 'Martínez', 'Pérez', 'García',
         'Sánchez', 'Romero', 'Sosa', 'Torres', 'Álvarez', 'Ruiz', 'Ramírez', 'Flores',
         'Acosta', 'Benítez', 'Medina', 'Herrera', 'Aguirre', 'Castro', 'Silva',
+        'Molina', 'Vega', 'Rojas', 'Méndez', 'Cabrera', 'Peralta', 'Navarro',
+        'Ibarra', 'Suárez', 'Domínguez', 'Campos', 'Figueroa',
     ];
 
     private const PROFESSIONS = [
@@ -37,6 +42,9 @@ class DemoUsersSeeder extends Seeder
         'Electricista matriculado', 'Carpintero', 'Docente universitario',
         'Comerciante', 'Programador', 'Plomero', 'Mecánico automotor',
         'Psicólogo', 'Diseñador gráfico', 'Martillero público',
+        'Kinesiólogo', 'Odontólogo', 'Analista de datos', 'Técnico en seguridad',
+        'Consultor de recursos humanos', 'Corredor inmobiliario', 'Chef',
+        'Traductor', 'Periodista', 'Veterinario', 'Agrimensor', 'Farmacéutico',
     ];
 
     private const LOCATIONS = [
@@ -56,6 +64,14 @@ class DemoUsersSeeder extends Seeder
         ['province' => 'Chubut', 'locality' => 'Puerto Madryn', 'neighborhood' => 'Sur'],
         ['province' => 'Misiones', 'locality' => 'Posadas', 'neighborhood' => 'Villa Sarita'],
         ['province' => 'San Juan', 'locality' => 'San Juan', 'neighborhood' => 'Concepción'],
+        ['province' => 'Corrientes', 'locality' => 'Corrientes', 'neighborhood' => 'Centro'],
+        ['province' => 'Jujuy', 'locality' => 'San Salvador de Jujuy', 'neighborhood' => 'Ciudad de Nieva'],
+        ['province' => 'La Pampa', 'locality' => 'Santa Rosa', 'neighborhood' => 'Villa Alonso'],
+        ['province' => 'San Luis', 'locality' => 'San Luis', 'neighborhood' => 'Centro'],
+        ['province' => 'Tierra del Fuego', 'locality' => 'Ushuaia', 'neighborhood' => 'Centro'],
+        ['province' => 'Santa Cruz', 'locality' => 'Río Gallegos', 'neighborhood' => 'Centro'],
+        ['province' => 'Chaco', 'locality' => 'Resistencia', 'neighborhood' => 'Villa San Martín'],
+        ['province' => 'Catamarca', 'locality' => 'San Fernando del Valle de Catamarca', 'neighborhood' => 'Centro'],
     ];
 
     private const ACCOUNT_STATUSES = [
@@ -104,28 +120,28 @@ class DemoUsersSeeder extends Seeder
             'contact' => 'my_workshops', 'location' => 'registered', 'profession' => 'registered',
             'bio' => 'my_workshops', 'degrees' => 'talleres_seleccionados', 'positions' => 'my_workshops',
         ],
+        'strict_private' => [
+            'identity' => 'private', 'masonic' => 'private', 'contact' => 'private',
+            'location' => 'private', 'profession' => 'workshop', 'bio' => 'private',
+            'degrees' => 'private', 'positions' => 'private',
+        ],
+        'professional_visible' => [
+            'identity' => 'my_workshops', 'masonic' => 'workshop', 'contact' => 'my_workshops',
+            'location' => 'registered', 'profession' => 'registered', 'bio' => 'registered',
+            'degrees' => 'workshop', 'positions' => 'registered',
+        ],
     ];
 
     public function run(): void
     {
-        $workshops = Workshop::whereIn('number', self::WORKSHOP_NUMBERS)
-            ->orderBy('number')
-            ->get()
-            ->keyBy('number');
-
-        $missing = collect(self::WORKSHOP_NUMBERS)->reject(fn ($number) => $workshops->has($number));
-        if ($missing->isNotEmpty()) {
-            $this->command->warn('Logias demo no encontradas con números: '.$missing->join(', '));
-        }
-
-        if ($workshops->isEmpty()) {
-            $workshops = Workshop::orderBy('number')->take(4)->get()->keyBy('number');
-        }
+        $workshops = $this->resolveDemoWorkshops();
 
         if ($workshops->isEmpty()) {
             $this->command->warn('No hay logias para asociar usuarios demo.');
             return;
         }
+
+        $this->command->info('Logias demo seleccionadas: '.$workshops->pluck('number')->join(', '));
 
         $categories = ServiceCategory::orderBy('name')->get()->values();
         $positions = Position::orderBy('name')->get()->values();
@@ -154,7 +170,7 @@ class DemoUsersSeeder extends Seeder
                 $user->save();
 
                 $this->resetDemoRelations($user);
-                $this->seedMemberships($user, $workshop, $workshops->values(), $scenario, $index);
+                $this->seedMemberships($user, $workshop, $workshops->values(), $scenario, $index, $seq);
                 $this->seedVisibility($user, $scenario['visibility_preset']);
                 $this->seedDegrees($user, $workshop, $scenario);
                 $this->seedPositions($user, $workshop, $positions, $scenario, $seq);
@@ -166,6 +182,31 @@ class DemoUsersSeeder extends Seeder
         }
 
         $this->command->info("Demo users seeded: {$seeded} usuarios con estados, perfiles, seguridad y publicaciones variadas.");
+    }
+
+    private function resolveDemoWorkshops()
+    {
+        $preferred = Workshop::whereIn('number', self::PREFERRED_WORKSHOP_NUMBERS)
+            ->orderByRaw('CASE number '.collect(self::PREFERRED_WORKSHOP_NUMBERS)->map(fn ($number, $index) => "WHEN {$number} THEN {$index}")->join(' ').' END')
+            ->get();
+
+        $selected = $preferred;
+
+        if ($selected->count() < self::MAX_WORKSHOPS) {
+            $extra = Workshop::whereNotIn('id', $selected->pluck('id'))
+                ->where('status', 'active')
+                ->orderBy('number')
+                ->take(self::MAX_WORKSHOPS - $selected->count())
+                ->get();
+
+            $selected = $selected->concat($extra);
+        }
+
+        if ($selected->isEmpty()) {
+            $selected = Workshop::orderBy('number')->take(self::MAX_WORKSHOPS)->get();
+        }
+
+        return $selected->take(self::MAX_WORKSHOPS)->values();
     }
 
     private function scenarioFor(int $seq, int $index): array
@@ -247,12 +288,16 @@ class DemoUsersSeeder extends Seeder
         Need::where('user_id', $user->id)->forceDelete();
     }
 
-    private function seedMemberships(User $user, Workshop $primary, $workshops, array $scenario, int $index): void
+    private function seedMemberships(User $user, Workshop $primary, $workshops, array $scenario, int $index, int $seq): void
     {
         $this->attachMembership($user, $primary, $scenario['role'], $scenario['membership_status'], $index);
 
         if ($scenario['second_workshop'] && $workshops->count() > 1) {
-            $secondary = $workshops->firstWhere('id', '!=', $primary->id);
+            $secondary = $workshops
+                ->reject(fn (Workshop $workshop) => $workshop->id === $primary->id)
+                ->values()
+                ->get($seq % ($workshops->count() - 1));
+
             if ($secondary) {
                 $this->attachMembership($user, $secondary, 'member', 'historical', $index);
             }
@@ -380,6 +425,7 @@ class DemoUsersSeeder extends Seeder
         return [
             $this->publicationPayload($catalog[$seq % count($catalog)], 'service', $seq),
             $this->publicationPayload($catalog[($seq + 3) % count($catalog)], 'service', $seq + 1),
+            $this->publicationPayload($catalog[($seq + 6) % count($catalog)], 'service', $seq + 2),
         ];
     }
 
@@ -402,6 +448,7 @@ class DemoUsersSeeder extends Seeder
         return [
             $this->publicationPayload($catalog[$seq % count($catalog)], 'need', $seq),
             $this->publicationPayload($catalog[($seq + 4) % count($catalog)], 'need', $seq + 1),
+            $this->publicationPayload($catalog[($seq + 8) % count($catalog)], 'need', $seq + 2),
         ];
     }
 
