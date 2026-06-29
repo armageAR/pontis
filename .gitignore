@@ -4,6 +4,9 @@ pontis-api/vendor/
 pontis-api/storage/logs/
 pontis-api/bootstrap/cache/
 
+# Local agent/session state
+.omc/
+
 # Node
 pontis-app/node_modules/
 pontis-app/dist/
