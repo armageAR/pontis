@@ -45,7 +45,6 @@ class WorkshopController extends Controller
             $search = mb_strtolower($request->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->whereRaw('unaccent(LOWER(name)) like unaccent(?)', ["%{$search}%"])
-                  ->orWhereRaw('unaccent(LOWER(zone_name)) like unaccent(?)', ["%{$search}%"])
                   ->orWhereRaw('unaccent(LOWER(address)) like unaccent(?)', ["%{$search}%"])
                   ->orWhereRaw('unaccent(LOWER(city)) like unaccent(?)', ["%{$search}%"]);
             });
