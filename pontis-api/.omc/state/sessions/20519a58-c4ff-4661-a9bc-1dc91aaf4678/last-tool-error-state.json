@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd /var/www/html/pontis/pontis-api\\nAPI=\\\"https://pontis-api-dev.up.railway.app\\\"\\nTS=$(date +%s)\\n( timeout 40 railway logs --environment dev --service pontis-api 2>&1 > /tmp/maillog_$TS....",
-  "error": "Exit code 143\nCommand timed out after 1m 0s\nRegistrando armage@gmail.com (dueño de cuenta Resend)...",
-  "timestamp": "2026-06-28T15:11:28.126Z",
-  "retry_count": 1
-}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { RefreshCw, RefreshCcw } from 'lucide-react'
+import { RefreshCcw } from 'lucide-react'
 import * as api from '@/api/workshops'
 import * as syncApi from '@/api/sync'
 import type { Workshop, WorkshopFilters as Filters, WorkshopFormData } from '@/api/workshops'
@@ -38,7 +38,6 @@ export default function WorkshopsPage() {
   const [toggling, setToggling] = useState(false)
   const [actionMsg, setActionMsg] = useState('')
 
-  const [refreshing, setRefreshing] = useState(false)
   const [syncing, setSyncing]       = useState(false)
   const [glaDiff, setGlaDiff]       = useState<GlaDiff | null>(null)
   const [workshopToLeave, setWorkshopToLeave] = useState<Workshop | null>(null)
@@ -65,12 +64,6 @@ export default function WorkshopsPage() {
 
   function updateFilters(partial: Partial<Filters>) {
     setFilters((prev) => ({ ...prev, ...partial }))
-  }
-
-  async function handleRefresh() {
-    setRefreshing(true)
-    await fetchWorkshops(filters)
-    setRefreshing(false)
   }
 
   async function handleGlaSync() {
@@ -199,17 +192,15 @@ export default function WorkshopsPage() {
       <div className="workshops-header">
         <h1 className="workshops-title">Talleres</h1>
         <div className="workshops-header-actions">
-          <Button variant="outline" onClick={handleRefresh} loading={refreshing} title="Actualizar lista">
-            <RefreshCw size={15} />
-            Actualizar
-          </Button>
           {currentUser?.role === 'superadmin' && (
-            <Button variant="outline" onClick={handleGlaSync} loading={syncing}>
-              <RefreshCcw size={15} />
-              Sincronizar con GLA
-            </Button>
+            <>
+              <Button variant="outline" onClick={handleGlaSync} loading={syncing}>
+                <RefreshCcw size={15} />
+                Sincronizar con GLA
+              </Button>
+              <Button onClick={openCreate}>Nuevo taller</Button>
+            </>
           )}
-          <Button onClick={openCreate}>Nuevo taller</Button>
         </div>
       </div>
 

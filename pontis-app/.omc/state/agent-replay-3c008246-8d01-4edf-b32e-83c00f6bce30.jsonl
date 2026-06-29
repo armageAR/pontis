@@ -1,5 +1,0 @@
-{"t":0,"agent":"system","event":"skill_invoked","skill_name":"oh-my-claudecode:cancel"}
-{"t":0,"agent":"aralph-","agent_type":"ralph-reviewer","event":"agent_stop","success":true,"duration_ms":0}
-{"t":0,"agent":"aralph-","agent_type":"ralph-reviewer","event":"agent_start","parent_mode":"none"}
-{"t":0,"agent":"aralph-","agent_type":"ralph-reviewer","event":"agent_stop","success":true,"duration_ms":35841}
-{"t":0,"agent":"a3f2680","agent_type":"unknown","event":"agent_stop","success":true,"duration_ms":0}

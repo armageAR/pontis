@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"grep -rn \\\"VITE_API_URL\\\" . --include=*.env* --include=.env* 2>/dev/null; echo \\\"=== env files ===\\\"; ls -la .env* 2>/dev/null; echo \\\"=== any .env content ===\\\"; for f in .env .env.local ...",
-  "error": "Exit code 1\n(eval):1: no matches found: --include=*.env*",
-  "timestamp": "2026-06-28T21:48:19.781Z",
-  "retry_count": 1
-}
