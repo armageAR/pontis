@@ -9,9 +9,10 @@ interface WorkshopPickerProps {
   value: WorkshopSearchResult | null
   onChange: (workshop: WorkshopSearchResult | null) => void
   error?: boolean
+  placeholder?: string
 }
 
-export default function WorkshopPicker({ value, onChange, error }: WorkshopPickerProps) {
+export default function WorkshopPicker({ value, onChange, error, placeholder = 'Escribí el nombre o número del taller...' }: WorkshopPickerProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<WorkshopSearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -78,7 +79,7 @@ export default function WorkshopPicker({ value, onChange, error }: WorkshopPicke
         <Input
           value={query}
           onChange={(e) => handleInput(e.target.value)}
-          placeholder="Escribí el nombre o número del taller..."
+          placeholder={placeholder}
           error={error}
           autoComplete="off"
         />

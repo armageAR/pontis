@@ -1,7 +1,9 @@
 .people-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0 0 var(--space-5); }
-.people-search-form { display: flex; gap: var(--space-3); margin-bottom: var(--space-5); flex-wrap: wrap; }
-.people-search-name { min-width: 160px; max-width: 220px; }
+.people-search-form { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-5); }
+.people-search-row { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+.people-search-name { flex: 1; min-width: 200px; }
 .people-search-city { min-width: 120px; max-width: 160px; }
+.people-search-submit { margin-left: auto; }
 .people-results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
 .people-per-page { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-muted); }
 .people-select-sm { padding: var(--space-1) var(--space-2); font-size: var(--text-sm); }
@@ -12,6 +14,7 @@
   background: var(--surface);
   color: var(--text);
   font-size: var(--text-sm);
+  font-family: inherit;
 }
 .people-loading { display: flex; justify-content: center; padding: var(--space-6) 0; }
 .people-results-count { font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-3); }

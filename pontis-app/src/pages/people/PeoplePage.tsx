@@ -77,41 +77,50 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
     <>
       <h2 className="people-title">Buscar Hermanos</h2>
       <form onSubmit={handleSearch} className="people-search-form">
-        <Input
-          className="people-search-name"
-          placeholder="Nombre, apellido, matrícula o email…"
-          value={q}
-          onChange={e => setQ(e.target.value)}
-        />
-        <WorkshopPicker
-          value={workshop}
-          onChange={setWorkshop}
-        />
-        <Input
-          className="people-search-city"
-          placeholder="Ciudad"
-          value={locality}
-          onChange={e => setLocality(e.target.value)}
-        />
-        <select
-          className="people-select"
-          value={province}
-          onChange={e => setProvince(e.target.value)}
-        >
-          <option value="">Todas las provincias</option>
-          {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
-        </select>
-        <select
-          className="people-select"
-          value={masonicStatus}
-          onChange={e => setMasonicStatus(e.target.value)}
-        >
-          <option value="">Todos los estados</option>
-          {Object.entries(MASONIC_STATUS_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>{l}</option>
-          ))}
-        </select>
-        <Button type="submit">Buscar</Button>
+        <div className="people-search-row">
+          <Input
+            className="people-search-name"
+            placeholder="Nombre, apellido, matrícula o email…"
+            value={q}
+            onChange={e => setQ(e.target.value)}
+          />
+        </div>
+        <div className="people-search-row">
+          <WorkshopPicker
+            value={workshop}
+            onChange={setWorkshop}
+            placeholder="Taller (nombre o número)"
+          />
+          <select
+            className="people-select"
+            value={masonicStatus}
+            onChange={e => setMasonicStatus(e.target.value)}
+          >
+            <option value="">Todos los estados</option>
+            {Object.entries(MASONIC_STATUS_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </select>
+        </div>
+        <div className="people-search-row">
+          <Input
+            className="people-search-city"
+            placeholder="Ciudad"
+            value={locality}
+            onChange={e => setLocality(e.target.value)}
+          />
+          <select
+            className="people-select"
+            value={province}
+            onChange={e => setProvince(e.target.value)}
+          >
+            <option value="">Todas las provincias</option>
+            {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <div className="people-search-submit">
+            <Button type="submit">Buscar</Button>
+          </div>
+        </div>
       </form>
 
       {error && <Alert variant="error">{error}</Alert>}
