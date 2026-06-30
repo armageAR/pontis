@@ -28,13 +28,9 @@ class WorkshopController extends Controller
         $currentUser = $request->user();
         $query = Workshop::query();
 
-        if (! $currentUser->isSuperAdmin()) {
-            // Non-superadmins only see workshops they actively belong to.
-            $query->whereHas('users', fn ($q) => $q
-                ->where('users.id', $currentUser->id)
-                ->where('user_workshop.status', 'active')
-            );
-        } elseif ($request->boolean('my_workshops_only')) {
+        // Los talleres son información pública: cualquier usuario los ve todos.
+        // El filtro "Mis talleres" (my_workshops_only) está disponible para todos.
+        if ($request->boolean('my_workshops_only')) {
             $query->whereHas('users', fn ($q) => $q
                 ->where('users.id', $currentUser->id)
                 ->where('user_workshop.status', 'active')
