@@ -123,10 +123,6 @@ export default function UsersPage({ embedded = false }: UsersPageProps) {
 
   const content = (
     <>
-      <div className="users-header">
-        <h1 className="users-title">Usuarios</h1>
-      </div>
-
       {successMsg && <Alert variant="success">{successMsg}</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
 

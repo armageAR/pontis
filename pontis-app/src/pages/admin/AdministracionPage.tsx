@@ -11,8 +11,6 @@ export default function AdministracionPage() {
 
   return (
     <AppLayout>
-      <h1 className="adm-title">Administración</h1>
-
       <div className="adm-tabs">
         <button
           className={`adm-tab ${tab === 'hermanos' ? 'adm-tab-active' : ''}`}
