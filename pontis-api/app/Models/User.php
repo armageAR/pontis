@@ -60,7 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function workshops(): BelongsToMany
     {
         return $this->belongsToMany(Workshop::class)
-            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at', 'correction_notes')
+            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at', 'correction_notes', 'is_principal')
             ->withTimestamps()
             ->wherePivot('status', 'active');
     }
@@ -68,8 +68,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function workshopMemberships(): BelongsToMany
     {
         return $this->belongsToMany(Workshop::class)
-            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at', 'correction_notes')
+            ->withPivot('role', 'status', 'requested_by_user', 'user_seen_at', 'correction_notes', 'is_principal')
             ->withTimestamps();
+    }
+
+    /** ID del taller principal (membresía activa marcada como principal), o null. */
+    public function principalWorkshopId(): ?int
+    {
+        return $this->workshops()->wherePivot('is_principal', true)->value('workshops.id');
     }
 
     public function isSuperAdmin(): bool

@@ -1067,6 +1067,45 @@ Debe priorizarse privacidad, mínima exposición y revisión humana.
 
 ---
 
+# 21b. Búsqueda de Hermanos regida por visibilidad
+
+La búsqueda de Hermanos ("Buscar hermanos") es independiente de la pertenencia
+de talleres del que busca. Se rige por la visibilidad que cada Hermano definió
+por sección de su perfil.
+
+Campos buscables y sección que los gobierna:
+
+* Nombre / apellido / matrícula / email → Identidad.
+* Ciudad / provincia / país → Ubicación.
+* Datos masónicos → Masónico.
+* Taller → pertenencia institucional (siempre buscable).
+
+Niveles de visibilidad respecto al que mira:
+
+* `private` (Solo yo): nadie, salvo uno mismo.
+* `workshop` (Mi taller principal): solo miembros del taller principal del dueño.
+* `my_workshops` (Mis talleres): quien comparta cualquier taller con el dueño.
+* `talleres_seleccionados`: por ahora se trata como `my_workshops`.
+* `registered` (Masones registrados): cualquier usuario validado.
+* `anonymous`: aparece en la búsqueda pero sin revelar identidad ("Un Hermano
+  Registrado"); no se lo puede buscar por nombre/matrícula/email.
+
+Default cuando no hay configuración: `workshop` (Mi taller principal).
+
+Reglas de inclusión:
+
+* Un criterio solo matchea si el que busca puede ver esa sección (Taller siempre).
+* Un Hermano aparece si coincidís por un campo visible y, o bien podés ver su
+  identidad (aparece con nombre), o marcó anónimo (aparece enmascarado).
+* Si limitó su identidad y no calificás para verla, y no marcó anónimo, no
+  aparece en los resultados.
+* El taller principal se determina por la marca `is_principal` de la membresía
+  (el taller de registro queda como principal por defecto).
+* El Superadmin usa esta pantalla como un miembro normal según sus talleres; el
+  acceso total es solo desde las pantallas de Administración.
+
+---
+
 # 22. Fuera de alcance de V1
 
 Pontis V1 no debe implementar:

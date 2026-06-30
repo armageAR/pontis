@@ -44,12 +44,13 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
   const [workshop, setWorkshop]         = useState<WorkshopSearchResult | null>(null)
   const [locality, setLocality]         = useState('')
   const [province, setProvince]         = useState('')
-  const [masonicStatus, setMasonicStatus] = useState('active')
+  const [masonicStatus, setMasonicStatus] = useState('')
 
   async function load(p = page, pp = perPage) {
     setLoading(true); setError('')
     try {
       const r = await api.searchPeople({
+        scope:          'search',
         q:              q        || undefined,
         workshop_id:    workshop?.id,
         locality:       locality || undefined,

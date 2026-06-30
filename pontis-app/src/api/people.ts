@@ -23,6 +23,7 @@ export interface PeopleFilters {
   locality?: string
   country?: string
   masonic_status?: string
+  scope?: 'roster' | 'search'
   page?: number
   per_page?: number
 }

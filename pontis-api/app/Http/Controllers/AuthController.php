@@ -34,6 +34,7 @@ class AuthController extends Controller
         $user->workshopMemberships()->attach($workshopId, [
             'status'            => 'pending',
             'requested_by_user' => true,
+            'is_principal'      => true,
         ]);
 
         $token = $user->createToken('api')->plainTextToken;
