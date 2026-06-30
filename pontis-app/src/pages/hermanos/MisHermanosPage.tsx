@@ -76,10 +76,11 @@ export default function MisHermanosPage() {
   async function doLoad(p: number) {
     setLoading(true); setError('')
     try {
+      // El backend restringe a hermanos activos de los talleres del usuario.
+      // No se envía workshop_id salvo que se elija un taller puntual del desplegable.
       const r = await api.searchPeople({
         q: q || undefined,
         workshop_id: workshopId ? Number(workshopId) : undefined,
-        masonic_status: 'active',
         page: p,
         per_page: 20,
       })

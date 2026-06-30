@@ -29,10 +29,12 @@ class PeopleController extends Controller {
         if ($request->filled('workshop_id')) {
             $query->whereHas('workshops', fn($q) => $q->where('workshops.id', $request->workshop_id));
         }
-        // Usuarios no-superadmin solo ven hermanos de sus propios talleres
+        // Usuarios no-superadmin solo ven hermanos activos de sus propios talleres
+        // (incluyéndose a sí mismos, ya que son miembros activos de su taller).
         if ($authUser->role !== 'superadmin') {
             $myIds = $authUser->workshops()->pluck('workshops.id');
-            $query->whereHas('workshops', fn($q) => $q->whereIn('workshops.id', $myIds));
+            $query->where('status', \App\Enums\UserStatus::ACTIVE->value)
+                  ->whereHas('workshops', fn($q) => $q->whereIn('workshops.id', $myIds));
         }
         if ($request->filled('province')) {
             $query->where('province', $request->province);
