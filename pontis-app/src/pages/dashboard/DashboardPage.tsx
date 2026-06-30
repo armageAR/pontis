@@ -173,12 +173,18 @@ export default function DashboardPage() {
         <Link to="/workshops" className="dashboard-card">
           <span className="dashboard-card-icon"><Building2 size={28} /></span>
           <h3>Talleres</h3>
-          <p>Gestionar talleres, zonas y asignaciones.</p>
+          <p>{user?.role === 'superadmin'
+            ? 'Gestionar talleres, zonas y asignaciones.'
+            : 'Ver los talleres de la comunidad.'
+          }</p>
         </Link>
         <Link to="/users" className="dashboard-card">
           <span className="dashboard-card-icon"><Users size={28} /></span>
-          <h3>Usuarios</h3>
-          <p>Ver miembros y gestionar permisos.</p>
+          <h3>Hermanos</h3>
+          <p>{user?.role === 'superadmin'
+            ? 'Ver miembros y gestionar permisos.'
+            : 'Buscar y ver el directorio de Hermanos.'
+          }</p>
         </Link>
       </div>
 
