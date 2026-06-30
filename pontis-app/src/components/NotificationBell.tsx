@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Bell } from 'lucide-react'
 import * as api from '@/api/notifications'
 import type { Notification } from '@/api/notifications'
@@ -16,6 +16,8 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unread, setUnread] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const [dropdownStyle, setDropdownStyle] = useState<CSSProperties>({})
 
   async function load() {
     try {
@@ -40,8 +42,16 @@ export default function NotificationBell() {
   }, [])
 
   async function handleOpen() {
-    setOpen(o => !o)
-    if (!open && unread > 0) {
+    const willOpen = !open
+    if (willOpen && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setDropdownStyle({
+        bottom: window.innerHeight - rect.top + 8,
+        left: rect.right + 8,
+      })
+    }
+    setOpen(willOpen)
+    if (willOpen && unread > 0) {
       await api.markAllRead()
       setUnread(0)
       setNotifications(ns => ns.map(n => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })))
@@ -50,12 +60,12 @@ export default function NotificationBell() {
 
   return (
     <div className="notif-bell" ref={ref}>
-      <button className="notif-bell-btn" onClick={handleOpen} aria-label="Notificaciones">
+      <button className="notif-bell-btn" ref={btnRef} onClick={handleOpen} aria-label="Notificaciones">
         <Bell size={18} />
         {unread > 0 && <span className="notif-badge">{unread > 9 ? '9+' : unread}</span>}
       </button>
       {open && (
-        <div className="notif-dropdown">
+        <div className="notif-dropdown" style={dropdownStyle}>
           <div className="notif-dropdown-header">
             <span>Notificaciones</span>
           </div>
