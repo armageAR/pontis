@@ -18,6 +18,7 @@ export interface Person {
 export interface PeopleFilters {
   q?: string
   workshop_id?: number
+  my_workshops?: boolean
   province?: string
   locality?: string
   country?: string

@@ -78,7 +78,9 @@ export default function MisHermanosPage() {
     try {
       const r = await api.searchPeople({
         q: q || undefined,
-        workshop_id: workshopId ? Number(workshopId) : undefined,
+        ...(workshopId
+          ? { workshop_id: Number(workshopId) }
+          : { my_workshops: true }),
         masonic_status: 'active',
         page: p,
         per_page: 20,
@@ -155,7 +157,7 @@ export default function MisHermanosPage() {
           value={workshopId}
           onChange={e => setWorkshopId(e.target.value)}
         >
-          <option value="">Taller</option>
+          <option value="">Todos tus talleres</option>
           {workshops.map(w => (
             <option key={w.id} value={String(w.id)}>Nº{w.number} {w.name}</option>
           ))}

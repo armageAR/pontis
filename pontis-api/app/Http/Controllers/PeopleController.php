@@ -8,6 +8,7 @@ class PeopleController extends Controller {
         $request->validate([
             'q'              => 'nullable|string|min:2|max:100',
             'workshop_id'    => 'nullable|integer',
+            'my_workshops'   => 'nullable|boolean',
             'province'       => 'nullable|string|max:100',
             'locality'       => 'nullable|string|max:100',
             'country'        => 'nullable|string|max:100',
@@ -27,6 +28,9 @@ class PeopleController extends Controller {
         }
         if ($request->filled('workshop_id')) {
             $query->whereHas('workshops', fn($q) => $q->where('workshops.id', $request->workshop_id));
+        } elseif ($request->boolean('my_workshops')) {
+            $ids = auth()->user()->workshops()->pluck('workshops.id');
+            $query->whereHas('workshops', fn($q) => $q->whereIn('workshops.id', $ids));
         }
         if ($request->filled('province')) {
             $query->where('province', $request->province);
