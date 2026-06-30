@@ -1,4 +1,4 @@
-.notif-bell { position: relative; }
+.notif-bell { position: relative; align-self: flex-end; }
 
 .notif-bell-btn {
   background: none;
@@ -34,8 +34,8 @@
 
 .notif-dropdown {
   position: absolute;
-  top: calc(100% + var(--space-2));
-  right: 0;
+  bottom: calc(100% + var(--space-2));
+  left: 0;
   width: 320px;
   background: var(--surface);
   border: 1px solid var(--border);
