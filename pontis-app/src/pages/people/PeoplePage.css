@@ -43,4 +43,6 @@
 }
 .person-name { color: var(--accent); text-decoration: none; font-weight: 600; }
 .person-name-anon { color: var(--text-muted); font-style: italic; font-weight: 500; }
+.person-name-btn { background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-align: left; }
+.person-name-btn:hover { text-decoration: underline; }
 .person-name:hover { text-decoration: underline; }

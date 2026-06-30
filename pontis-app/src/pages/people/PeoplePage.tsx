@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import AppLayout from '@/components/AppLayout'
+import PersonProfileModal from '@/components/PersonProfileModal'
 import Input from '@/components/Input'
 import Button from '@/components/Button'
 import Spinner from '@/components/Spinner'
@@ -39,6 +39,7 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
   const [total, setTotal]             = useState(0)
   const [searched, setSearched]       = useState(false)
   const [perPage, setPerPage]         = useState(10)
+  const [viewId, setViewId]           = useState<number | null>(null)
 
   const [q, setQ]                       = useState('')
   const [workshop, setWorkshop]         = useState<WorkshopSearchResult | null>(null)
@@ -149,16 +150,16 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
               <div key={p.id} className="person-card">
                 <div className="person-card-header">
                   <div>
-                    {p.anonymous ? (
-                      <span className="person-name person-name-anon">Hermano registrado · identidad no publicada</span>
-                    ) : (
-                      <>
-                        <Link to={`/people/${p.id}`} className="person-name">
-                          {p.last_name ? `${p.last_name}, ${p.name}` : p.name}
-                        </Link>
-                        {p.masonic_id && <span className="person-masonic-id">Mat. {p.masonic_id}</span>}
-                      </>
-                    )}
+                    <button
+                      type="button"
+                      className={`person-name person-name-btn${p.anonymous ? ' person-name-anon' : ''}`}
+                      onClick={() => setViewId(p.id)}
+                    >
+                      {p.anonymous
+                        ? 'Hermano registrado · identidad no publicada'
+                        : (p.last_name ? `${p.last_name}, ${p.name}` : p.name)}
+                    </button>
+                    {!p.anonymous && p.masonic_id && <span className="person-masonic-id">Mat. {p.masonic_id}</span>}
                   </div>
                   {p.masonic_status && (
                     <Badge variant={MASONIC_STATUS_VARIANTS[p.masonic_status] ?? 'default'}>
@@ -187,6 +188,8 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
           <Pagination currentPage={page} lastPage={lastPage} total={total} onPageChange={handlePageChange} />
         </>
       )}
+
+      <PersonProfileModal personId={viewId} open={viewId !== null} onClose={() => setViewId(null)} />
     </>
   )
 
