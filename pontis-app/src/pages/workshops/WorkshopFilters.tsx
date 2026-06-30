@@ -1,7 +1,6 @@
 import { type ChangeEvent } from 'react'
 import Input from '@/components/Input'
 import Select from '@/components/Select'
-import { useAuth } from '@/context/AuthContext'
 import type { WorkshopFilters as Filters } from '@/api/workshops'
 import './WorkshopFilters.css'
 
@@ -13,9 +12,6 @@ interface WorkshopFiltersProps {
 const WORK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
 export default function WorkshopFilters({ filters, onChange }: WorkshopFiltersProps) {
-  const { user } = useAuth()
-  const isSuperAdmin = user?.role === 'superadmin'
-
   function set(key: keyof Filters, value: string) {
     onChange({ ...filters, [key]: value, page: 1 })
   }
@@ -54,19 +50,17 @@ export default function WorkshopFilters({ filters, onChange }: WorkshopFiltersPr
         ))}
       </Select>
 
-      {isSuperAdmin && (
-        <button
-          type="button"
-          className={`workshop-filter-toggle ${filters.my_workshops_only ? 'workshop-filter-toggle--on' : ''}`}
-          onClick={toggleMyWorkshops}
-          aria-pressed={filters.my_workshops_only ?? false}
-        >
-          <span className="toggle-track">
-            <span className="toggle-thumb" />
-          </span>
-          Mis talleres
-        </button>
-      )}
+      <button
+        type="button"
+        className={`workshop-filter-toggle ${filters.my_workshops_only ? 'workshop-filter-toggle--on' : ''}`}
+        onClick={toggleMyWorkshops}
+        aria-pressed={filters.my_workshops_only ?? false}
+      >
+        <span className="toggle-track">
+          <span className="toggle-thumb" />
+        </span>
+        Mis talleres
+      </button>
     </div>
   )
 }

@@ -14,6 +14,7 @@ import SearchPage from '@/pages/search/SearchPage'
 import MisPublicacionesPage from '@/pages/publications/MisPublicacionesPage'
 import BandejaPage from '@/pages/inbox/BandejaPage'
 import AdministracionPage from '@/pages/admin/AdministracionPage'
+import MisHermanosPage from '@/pages/hermanos/MisHermanosPage'
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/mis-publicaciones" element={<MisPublicacionesPage />} />
             <Route path="/bandeja" element={<BandejaPage />} />
             <Route path="/administracion" element={<AdministracionPage />} />
+            <Route path="/mis-hermanos" element={<MisHermanosPage />} />
             {/* Redirects para no romper links viejos */}
             <Route path="/people" element={<Navigate to="/buscar" replace />} />
             <Route path="/explore" element={<Navigate to="/buscar" replace />} />

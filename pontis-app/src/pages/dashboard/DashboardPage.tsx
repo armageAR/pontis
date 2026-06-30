@@ -177,12 +177,15 @@ export default function DashboardPage() {
             <p>Gestionar talleres, zonas y asignaciones.</p>
           </Link>
         )}
-        <Link to="/users" className="dashboard-card">
+        <Link
+          to={user?.role === 'superadmin' ? '/users' : '/mis-hermanos'}
+          className="dashboard-card"
+        >
           <span className="dashboard-card-icon"><Users size={28} /></span>
-          <h3>Hermanos</h3>
+          <h3>{user?.role === 'superadmin' ? 'Hermanos' : 'Mis Hermanos'}</h3>
           <p>{user?.role === 'superadmin'
             ? 'Ver miembros y gestionar permisos.'
-            : 'Buscar y ver el directorio de Hermanos.'
+            : 'Directorio de Hermanos activos de la comunidad.'
           }</p>
         </Link>
       </div>
