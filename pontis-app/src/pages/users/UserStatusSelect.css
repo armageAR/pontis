@@ -25,6 +25,7 @@
   color: var(--success);
 }
 
+.user-status-select-verifying,
 .user-status-select-pending {
   background-color: var(--warning-bg);
   border-color: var(--warning-border);

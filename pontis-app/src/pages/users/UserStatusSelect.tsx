@@ -14,6 +14,7 @@ const STATUS_OPTIONS = [
 
 const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
   active: 'success',
+  verifying: 'warning',
   pending: 'warning',
   rejected: 'error',
   suspended: 'error',
@@ -22,6 +23,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'error' | 'default'
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Activo',
+  verifying: 'Verificando',
   pending: 'Pendiente',
   rejected: 'Rechazado',
   suspended: 'Suspendido',
@@ -37,16 +39,20 @@ interface UserStatusSelectProps {
 export default function UserStatusSelect({ user, editable, onStatusChange }: UserStatusSelectProps) {
   const [saving, setSaving] = useState(false)
 
+  // Si el email no está verificado, el estado mostrado es "Verificando"
+  // sin importar el status almacenado. Al activarlo, el backend sella la fecha.
+  const displayStatus = user.email_verified_at ? user.status : 'verifying'
+
   if (!editable) {
     return (
-      <Badge variant={STATUS_VARIANT[user.status] ?? 'default'}>
-        {STATUS_LABELS[user.status] ?? user.status}
+      <Badge variant={STATUS_VARIANT[displayStatus] ?? 'default'}>
+        {STATUS_LABELS[displayStatus] ?? displayStatus}
       </Badge>
     )
   }
 
   async function handleChange(newStatus: string) {
-    if (newStatus === user.status) return
+    if (newStatus === displayStatus) return
     setSaving(true)
     try {
       await onStatusChange(user.id, newStatus)
@@ -61,10 +67,13 @@ export default function UserStatusSelect({ user, editable, onStatusChange }: Use
 
   return (
     <select
-      className={`user-status-select user-status-select-${user.status}`}
-      value={user.status}
+      className={`user-status-select user-status-select-${displayStatus}`}
+      value={displayStatus}
       onChange={(e) => handleChange(e.target.value)}
     >
+      {displayStatus === 'verifying' && (
+        <option value="verifying">Verificando</option>
+      )}
       {STATUS_OPTIONS.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>
       ))}

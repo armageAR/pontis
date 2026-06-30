@@ -106,7 +106,16 @@ class UserController extends Controller
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
-        $user->update(['status' => $request->input('status')]);
+        $newStatus = $request->input('status');
+        $attrs = ['status' => $newStatus];
+
+        // Al activar manualmente un usuario que aún no verificó su email,
+        // se da por validado y se sella la fecha de verificación con hoy.
+        if ($newStatus === 'active' && is_null($user->email_verified_at)) {
+            $attrs['email_verified_at'] = now();
+        }
+
+        $user->update($attrs);
 
         return new UserResource($user->load('workshops'));
     }
