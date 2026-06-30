@@ -41,7 +41,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-  z-index: 100;
+  z-index: 9999;
   overflow: hidden;
 }
 
