@@ -5,6 +5,7 @@ export interface Profile {
   name: string
   last_name: string | null
   email: string
+  pending_email: string | null
   role: string
   status: string
   dni: string | null
@@ -68,6 +69,11 @@ export async function getProfile(): Promise<Profile> {
 
 export async function updateProfile(payload: Partial<Profile>): Promise<Profile> {
   const { data } = await client.patch<Profile>('/profile', payload)
+  return data
+}
+
+export async function requestEmailChange(email: string): Promise<{ message: string; pending_email: string }> {
+  const { data } = await client.post<{ message: string; pending_email: string }>('/profile/email', { email })
   return data
 }
 

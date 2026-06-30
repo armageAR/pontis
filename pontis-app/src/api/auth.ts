@@ -79,3 +79,10 @@ export async function verifyEmail(fullSignedUrl: string): Promise<{ message: str
   const { data } = await client.get<{ message: string }>(path)
   return data
 }
+
+export async function confirmEmailChange(fullSignedUrl: string): Promise<{ message: string }> {
+  const url = new URL(fullSignedUrl)
+  const path = url.pathname.replace(/^\/api/, '') + url.search
+  const { data } = await client.get<{ message: string }>(path)
+  return data
+}

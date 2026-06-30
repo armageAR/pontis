@@ -31,6 +31,9 @@ Route::get('/workshops/search', [AuthController::class, 'searchWorkshops']);
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->name('verification.verify');
 
+Route::get('/email/change/{id}/{hash}', [AuthController::class, 'confirmEmailChange'])
+    ->name('emailchange.confirm');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me',      [AuthController::class, 'me']);
@@ -52,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Perfil propio
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::patch('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/email', [ProfileController::class, 'requestEmailChange']);
 
     // Grados del usuario autenticado
     Route::get('/profile/degrees', [DegreeController::class, 'index']);

@@ -6,6 +6,7 @@ import LoginPage from '@/pages/login/LoginPage'
 import RegisterPage from '@/pages/register/RegisterPage'
 import PendingPage from '@/pages/pending/PendingPage'
 import VerifyEmailPage from '@/pages/verify-email/VerifyEmailPage'
+import ConfirmEmailChangePage from '@/pages/confirm-email/ConfirmEmailChangePage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import WorkshopsPage from '@/pages/workshops/WorkshopsPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/pending" element={<PendingPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/confirmar-email" element={<ConfirmEmailChangePage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/workshops" element={<WorkshopsPage />} />

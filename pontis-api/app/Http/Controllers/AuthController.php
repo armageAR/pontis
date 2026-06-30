@@ -198,6 +198,42 @@ class AuthController extends Controller
         return response()->json(['message' => 'Email verificado correctamente.']);
     }
 
+    public function confirmEmailChange(Request $request, int $id, string $hash): JsonResponse
+    {
+        if (! $request->hasValidSignature()) {
+            return response()->json(['message' => 'El link de confirmación expiró o es inválido.'], 403);
+        }
+
+        $user = User::findOrFail($id);
+
+        if (is_null($user->pending_email)) {
+            return response()->json(['message' => 'No hay un cambio de email pendiente.'], 400);
+        }
+
+        if (! hash_equals(sha1($user->pending_email), $hash)) {
+            return response()->json(['message' => 'Link de confirmación inválido.'], 403);
+        }
+
+        // Verificación de unicidad de último momento (otro usuario pudo tomar el email).
+        $taken = User::where('email', $user->pending_email)
+            ->where('id', '!=', $user->id)
+            ->exists();
+
+        if ($taken) {
+            $user->pending_email = null;
+            $user->save();
+            return response()->json(['message' => 'Ese email ya está en uso por otra cuenta.'], 409);
+        }
+
+        $user->email = $user->pending_email;
+        $user->pending_email = null;
+        // La dirección queda verificada porque el dueño confirmó desde su casilla.
+        $user->email_verified_at = $user->email_verified_at ?? now();
+        $user->save();
+
+        return response()->json(['message' => 'Tu nuevo email fue confirmado correctamente.']);
+    }
+
     private function userPayload(User $user): array
     {
         return [

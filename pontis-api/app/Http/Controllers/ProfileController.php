@@ -1,7 +1,10 @@
 <?php
 namespace App\Http\Controllers;
+use App\Notifications\VerifyEmailChangeNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rule;
 class ProfileController extends Controller {
     public function show(Request $request): JsonResponse {
         $user = $request->user()->load(['workshops','userDegrees.workshop','userPositions.position','userPositions.workshop']);
@@ -44,5 +47,35 @@ class ProfileController extends Controller {
         ]);
         $user->update($data);
         return response()->json($user->fresh());
+    }
+
+    // El usuario solicita cambiar su propio email. No se aplica de inmediato:
+    // se guarda como pending_email y se envía un correo de confirmación a la
+    // nueva dirección. El cambio recién se aplica al confirmar (confirmEmailChange).
+    public function requestEmailChange(Request $request): JsonResponse {
+        $user = $request->user();
+        $data = $request->validate([
+            'email' => [
+                'required', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+        ]);
+
+        $newEmail = mb_strtolower(trim($data['email']));
+
+        if ($newEmail === mb_strtolower($user->email)) {
+            return response()->json(['message' => 'El email nuevo es igual al actual.'], 422);
+        }
+
+        $user->pending_email = $newEmail;
+        $user->save();
+
+        Notification::route('mail', $newEmail)
+            ->notify(new VerifyEmailChangeNotification($user));
+
+        return response()->json([
+            'message'       => 'Te enviamos un correo a la nueva dirección. Confirmá desde ahí para aplicar el cambio.',
+            'pending_email' => $newEmail,
+        ]);
     }
 }

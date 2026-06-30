@@ -54,6 +54,12 @@ export default function ProfilePage() {
   const [confirmDeleteDegree, setConfirmDeleteDegree] = useState<number | null>(null)
   const [confirmDeletePosition, setConfirmDeletePosition] = useState<number | null>(null)
 
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [emailSubmitting, setEmailSubmitting] = useState(false)
+  const [emailModalError, setEmailModalError] = useState('')
+  const [emailModalSuccess, setEmailModalSuccess] = useState('')
+
   const [degreeForm, setDegreeForm] = useState({ degree: 'aprendiz', workshop_id: '', start_date: '', end_date: '', notes: '' })
   const [positionForm, setPositionForm] = useState({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' })
   const [degreeWorkshop, setDegreeWorkshop] = useState<WorkshopSearchResult | null>(null)
@@ -104,6 +110,29 @@ export default function ProfilePage() {
   function field(key: keyof Profile) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setProfile(p => p ? { ...p, [key]: e.target.value || null } : p)
+  }
+
+  function openEmailModal() {
+    setNewEmail('')
+    setEmailModalError('')
+    setEmailModalSuccess('')
+    setShowEmailModal(true)
+  }
+
+  async function handleRequestEmailChange(e: FormEvent) {
+    e.preventDefault()
+    setEmailSubmitting(true); setEmailModalError(''); setEmailModalSuccess('')
+    try {
+      const res = await profileApi.requestEmailChange(newEmail.trim())
+      setEmailModalSuccess(res.message)
+      setProfile(p => p ? { ...p, pending_email: res.pending_email } : p)
+    } catch (err) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'No se pudo solicitar el cambio de email.'
+      setEmailModalError(msg)
+    } finally {
+      setEmailSubmitting(false)
+    }
   }
 
   async function handleSaveVisibility(e: FormEvent) {
@@ -180,7 +209,17 @@ export default function ProfilePage() {
               <FormField label="Nombre"><Input value={profile?.name ?? ''} onChange={field('name')} disabled={!isSuperAdmin} /></FormField>
               <FormField label="Apellido"><Input value={profile?.last_name ?? ''} onChange={field('last_name')} disabled={!isSuperAdmin} /></FormField>
               <FormField label="DNI / Documento"><Input value={profile?.dni ?? ''} onChange={field('dni')} disabled={!isSuperAdmin} /></FormField>
-              <FormField label="Email"><Input value={profile?.email ?? ''} disabled /></FormField>
+              <FormField label="Email">
+                <div className="profile-email-field">
+                  <Input value={profile?.email ?? ''} disabled />
+                  <Button type="button" variant="outline" onClick={openEmailModal}>Cambiar</Button>
+                </div>
+                {profile?.pending_email && (
+                  <p className="profile-email-pending">
+                    Cambio pendiente: confirmá desde el correo que enviamos a <strong>{profile.pending_email}</strong>.
+                  </p>
+                )}
+              </FormField>
               <FormField label="Fecha de nacimiento"><Input type="date" value={toDateInputValue(profile?.birth_date)} onChange={field('birth_date')} /></FormField>
               <FormField label="Foto de perfil (URL)"><Input type="url" placeholder="https://..." value={profile?.photo_url ?? ''} onChange={field('photo_url')} /></FormField>
             </div>
@@ -414,6 +453,41 @@ export default function ProfilePage() {
         onConfirm={() => confirmDeletePosition !== null && handleDeletePosition(confirmDeletePosition)}
         onClose={() => setConfirmDeletePosition(null)}
       />
+
+      <Modal open={showEmailModal} onClose={() => setShowEmailModal(false)} title="Cambiar email">
+        {emailModalSuccess ? (
+          <div className="profile-email-modal">
+            <Alert variant="success">{emailModalSuccess}</Alert>
+            <p className="profile-email-modal-note">
+              Tu email actual seguirá vigente hasta que confirmes el nuevo desde el enlace que te enviamos.
+            </p>
+            <div className="profile-email-modal-actions">
+              <Button type="button" onClick={() => setShowEmailModal(false)}>Entendido</Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleRequestEmailChange} className="profile-email-modal">
+            <p className="profile-email-modal-note">
+              Por seguridad, el cambio no es inmediato. Enviaremos un correo a la nueva dirección
+              y el email recién se actualizará cuando confirmes desde ese enlace.
+            </p>
+            <FormField label="Nuevo email">
+              <Input
+                type="email"
+                required
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                placeholder="nuevo@email.com"
+              />
+            </FormField>
+            {emailModalError && <Alert variant="error">{emailModalError}</Alert>}
+            <div className="profile-email-modal-actions">
+              <Button type="button" variant="outline" onClick={() => setShowEmailModal(false)}>Cancelar</Button>
+              <Button type="submit" loading={emailSubmitting}>Enviar confirmación</Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </AppLayout>
   )
 }

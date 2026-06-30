@@ -1031,6 +1031,33 @@ Administrar estados restrictivos de usuarios sin perder trazabilidad.
 
 ---
 
+# 17b. Flujo de cambio de email propio con verificación
+
+## Objetivo
+
+Permitir que un Hermano cambie su propio email sin que el cambio sea inmediato, garantizando que la nueva dirección le pertenece.
+
+## Actores
+
+* Usuario / Hermano (dueño de la cuenta).
+
+## Flujo
+
+1. El usuario solicita cambiar su email desde su perfil e ingresa la nueva dirección.
+2. La nueva dirección se valida (formato y unicidad) y se guarda como `pending_email`. El email actual no cambia.
+3. Se envía un correo de confirmación a la nueva dirección con un enlace firmado y temporal (expira en 60 minutos).
+4. El email actual sigue vigente mientras el cambio esté pendiente.
+5. Al abrir el enlace y confirmar, se valida la firma y el hash de `pending_email`; recién entonces el email se reemplaza, se limpia `pending_email` y la dirección queda verificada.
+6. Si la dirección fue tomada por otra cuenta antes de confirmar, el cambio se cancela y se informa.
+
+## Reglas
+
+* El cambio nunca se aplica sin confirmación desde la nueva casilla.
+* El email es dato de contacto, no dato sensible: no requiere aprobación de Superadmin.
+* El enlace de confirmación es de un solo uso efectivo y expira.
+
+---
+
 # 18. Flujo de resolución de conflictos de permisos
 
 ## Objetivo
