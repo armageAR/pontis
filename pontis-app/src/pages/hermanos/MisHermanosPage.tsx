@@ -78,9 +78,7 @@ export default function MisHermanosPage() {
     try {
       const r = await api.searchPeople({
         q: q || undefined,
-        ...(workshopId
-          ? { workshop_id: Number(workshopId) }
-          : { my_workshops: true }),
+        workshop_id: workshopId ? Number(workshopId) : undefined,
         masonic_status: 'active',
         page: p,
         per_page: 20,

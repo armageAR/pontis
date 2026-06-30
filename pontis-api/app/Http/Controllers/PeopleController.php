@@ -8,7 +8,6 @@ class PeopleController extends Controller {
         $request->validate([
             'q'              => 'nullable|string|min:2|max:100',
             'workshop_id'    => 'nullable|integer',
-            'my_workshops'   => 'nullable|boolean',
             'province'       => 'nullable|string|max:100',
             'locality'       => 'nullable|string|max:100',
             'country'        => 'nullable|string|max:100',
@@ -16,6 +15,7 @@ class PeopleController extends Controller {
             'page'           => 'nullable|integer',
             'per_page'       => 'nullable|integer|min:0|max:200',
         ]);
+        $authUser = auth()->user();
         $query = User::query()->with(['workshops:id,name,number']);
         if ($request->filled('q')) {
             $q = mb_strtolower($request->q);
@@ -28,9 +28,11 @@ class PeopleController extends Controller {
         }
         if ($request->filled('workshop_id')) {
             $query->whereHas('workshops', fn($q) => $q->where('workshops.id', $request->workshop_id));
-        } elseif ($request->boolean('my_workshops')) {
-            $ids = auth()->user()->workshops()->pluck('workshops.id');
-            $query->whereHas('workshops', fn($q) => $q->whereIn('workshops.id', $ids));
+        }
+        // Usuarios no-superadmin solo ven hermanos de sus propios talleres
+        if ($authUser->role !== 'superadmin') {
+            $myIds = $authUser->workshops()->pluck('workshops.id');
+            $query->whereHas('workshops', fn($q) => $q->whereIn('workshops.id', $myIds));
         }
         if ($request->filled('province')) {
             $query->where('province', $request->province);
