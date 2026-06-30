@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { Bell } from 'lucide-react'
 import * as api from '@/api/notifications'
 import type { Notification } from '@/api/notifications'
@@ -15,7 +16,8 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unread, setUnread] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
   const [dropdownStyle, setDropdownStyle] = useState<CSSProperties>({})
 
@@ -29,13 +31,16 @@ export default function NotificationBell() {
 
   useEffect(() => {
     load()
-    const interval = setInterval(load, 60000) // poll every minute
+    const interval = setInterval(load, 60000)
     return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      const inContainer = containerRef.current?.contains(target) ?? false
+      const inDropdown = dropdownRef.current?.contains(target) ?? false
+      if (!inContainer && !inDropdown) setOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -59,13 +64,14 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="notif-bell" ref={ref}>
+    <div className="notif-bell" ref={containerRef}>
       <button className="notif-bell-btn" ref={btnRef} onClick={handleOpen} aria-label="Notificaciones">
         <Bell size={18} />
         {unread > 0 && <span className="notif-badge">{unread > 9 ? '9+' : unread}</span>}
       </button>
-      {open && (
-        <div className="notif-dropdown" style={dropdownStyle}>
+
+      {open && createPortal(
+        <div className="notif-dropdown" style={dropdownStyle} ref={dropdownRef}>
           <div className="notif-dropdown-header">
             <span>Notificaciones</span>
           </div>
@@ -85,7 +91,8 @@ export default function NotificationBell() {
               ))}
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
