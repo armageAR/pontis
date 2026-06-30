@@ -28,6 +28,9 @@ const DEGREE_LABELS: Record<string, string> = { aprendiz: 'Aprendiz', companero:
 const MASONIC_STATUS_LABELS: Record<string, string> = {
   active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'Fallecido'
 }
+// Opciones de privacidad por sección, excluyendo "Disponible en búsquedas sin revelar identidad" (anonymous).
+const PRIVACY_OPTIONS = (Object.entries(visibilityApi.VISIBILITY_LABELS) as [VisibilityLevel, string][])
+  .filter(([level]) => level !== 'anonymous')
 
 export default function ProfilePage() {
   const { user: authUser } = useAuth()
@@ -112,6 +115,24 @@ export default function ProfilePage() {
       setProfile(p => p ? { ...p, [key]: e.target.value || null } : p)
   }
 
+  function renderSectionPrivacy(block: VisibilityBlock) {
+    const current = visibility[block]?.visibility
+    const value: VisibilityLevel = current === 'anonymous' ? 'registered' : (current ?? 'workshop')
+    return (
+      <div className="profile-privacy-box">
+        <label className="profile-privacy-label">¿Quiénes pueden ver esta sección?</label>
+        <select
+          className="profile-select profile-select-sm"
+          value={value}
+          disabled={savingVisibility}
+          onChange={e => handleVisibilityChange(block, e.target.value as VisibilityLevel)}
+        >
+          {PRIVACY_OPTIONS.map(([level, label]) => <option key={level} value={level}>{label}</option>)}
+        </select>
+      </div>
+    )
+  }
+
   function openEmailModal() {
     setNewEmail('')
     setEmailModalError('')
@@ -135,15 +156,18 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleSaveVisibility(e: FormEvent) {
-    e.preventDefault(); setSavingVisibility(true)
-    const blocks: VisibilityBlock[] = ['identity','masonic','contact','location','profession','bio','degrees','positions']
-    const settings = blocks.map(b => ({ block: b, visibility: ((visibility[b]?.visibility) ?? 'workshop') as VisibilityLevel }))
+  async function handleVisibilityChange(block: VisibilityBlock, level: VisibilityLevel) {
+    const prev = visibility
+    setVisibility(v => ({ ...v, [block]: { ...(v[block] as object), block, visibility: level } }))
+    setSavingVisibility(true); setError(''); setSuccess('')
     try {
-      const updated = await visibilityApi.updateVisibility(settings)
+      const updated = await visibilityApi.updateVisibility([{ block, visibility: level }])
       setVisibility(updated)
-      setSuccess('Configuración de visibilidad guardada.')
-    } catch { setError('Error guardando visibilidad.') }
+      setSuccess('Privacidad actualizada.')
+    } catch {
+      setVisibility(prev)
+      setError('No se pudo actualizar la privacidad.')
+    }
     finally { setSavingVisibility(false) }
   }
 
@@ -223,6 +247,7 @@ export default function ProfilePage() {
               <FormField label="Fecha de nacimiento"><Input type="date" value={toDateInputValue(profile?.birth_date)} onChange={field('birth_date')} /></FormField>
               <FormField label="Foto de perfil (URL)"><Input type="url" placeholder="https://..." value={profile?.photo_url ?? ''} onChange={field('photo_url')} /></FormField>
             </div>
+            {renderSectionPrivacy('identity')}
           </section>
 
           <section className="profile-section">
@@ -236,6 +261,7 @@ export default function ProfilePage() {
               </FormField>
               <FormField label="Fecha de iniciación"><Input type="date" value={toDateInputValue(profile?.initiation_date)} onChange={field('initiation_date')} /></FormField>
             </div>
+            {renderSectionPrivacy('masonic')}
           </section>
 
           <section className="profile-section">
@@ -253,6 +279,7 @@ export default function ProfilePage() {
             <FormField label="Disponibilidad / notas de horario">
               <textarea className="profile-textarea" value={profile?.availability_notes ?? ''} onChange={field('availability_notes')} rows={2} placeholder="Ej: disponible de lunes a viernes por las tardes..." />
             </FormField>
+            {renderSectionPrivacy('contact')}
           </section>
 
           <section className="profile-section">
@@ -274,6 +301,7 @@ export default function ProfilePage() {
               <FormField label="Barrio"><Input value={profile?.neighborhood ?? ''} onChange={field('neighborhood')} /></FormField>
               <FormField label="Dirección"><Input value={profile?.address ?? ''} onChange={field('address')} /></FormField>
             </div>
+            {renderSectionPrivacy('location')}
           </section>
 
           <section className="profile-section">
@@ -295,6 +323,7 @@ export default function ProfilePage() {
             <FormField label="Matrículas / Habilitaciones">
               <textarea className="profile-textarea" value={profile?.certifications ?? ''} onChange={field('certifications')} rows={2} placeholder="Ej: Abogado matriculado (CABA), Contador habilitado..." />
             </FormField>
+            {renderSectionPrivacy('profession')}
           </section>
 
           <section className="profile-section">
@@ -302,36 +331,12 @@ export default function ProfilePage() {
             <FormField label="Bio">
               <textarea className="profile-textarea" value={profile?.bio ?? ''} onChange={field('bio')} rows={4} placeholder="Contá algo sobre vos..." />
             </FormField>
+            {renderSectionPrivacy('bio')}
           </section>
 
           <div className="profile-save-row">
             <Button type="submit" loading={saving}>Guardar cambios</Button>
           </div>
-        </form>
-
-        {/* Visibilidad */}
-        <form onSubmit={handleSaveVisibility}>
-          <section className="profile-section">
-            <h2 className="profile-section-title">Privacidad por sección</h2>
-            <p className="profile-sensitive-note">Controlá quién puede ver cada sección de tu perfil.</p>
-            <div className="profile-visibility-grid">
-              {([ ['identity','Identidad'], ['masonic','Información masónica'], ['contact','Contacto'], ['location','Ubicación'], ['profession','Profesión'], ['bio','Presentación'], ['degrees','Grados'], ['positions','Cargos'] ] as [VisibilityBlock, string][]).map(([block, label]) => (
-                <div key={block} className="profile-visibility-row">
-                  <span className="profile-visibility-label">{label}</span>
-                  <select className="profile-select profile-select-sm"
-                    value={visibility[block]?.visibility ?? 'workshop'}
-                    onChange={e => setVisibility(v => ({ ...v, [block]: { ...(v[block] as object), block, visibility: e.target.value as VisibilityLevel } }))}>
-                    {(Object.entries(visibilityApi.VISIBILITY_LABELS) as [VisibilityLevel, string][]).map(([k, lbl]) => (
-                      <option key={k} value={k}>{lbl}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-            <div className="profile-save-row">
-              <Button type="submit" loading={savingVisibility}>Guardar privacidad</Button>
-            </div>
-          </section>
         </form>
 
         {/* Grados */}
@@ -359,6 +364,7 @@ export default function ProfilePage() {
               </tbody>
             </table>
           )}
+          {renderSectionPrivacy('degrees')}
         </section>
 
         {/* Cargos */}
@@ -386,6 +392,7 @@ export default function ProfilePage() {
               </tbody>
             </table>
           )}
+          {renderSectionPrivacy('positions')}
         </section>
       </div>
 
