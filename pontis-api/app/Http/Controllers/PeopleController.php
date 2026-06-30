@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 use App\Models\User;
+use App\Models\UserVisibilitySetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 class PeopleController extends Controller {
@@ -59,14 +60,33 @@ class PeopleController extends Controller {
             ->orderBy('last_name')->orderBy('name')
             ->paginate($perPage);
 
-        // Aplanar el rol del pivote en cada taller para identificar admins.
-        $people->getCollection()->each(function ($u) {
+        // Hermanos cuya sección Identidad está en "anonymous": aparecen en la
+        // búsqueda pero sin revelar su identidad (nombre, apellido, matrícula).
+        $ids = $people->getCollection()->pluck('id');
+        $anonIds = UserVisibilitySetting::whereIn('user_id', $ids)
+            ->where('block', 'identity')
+            ->where('visibility', 'anonymous')
+            ->pluck('user_id')
+            ->flip();
+        $selfId = $authUser->id;
+
+        // Aplanar el rol del pivote en cada taller (para identificar admins)
+        // y enmascarar la identidad de los hermanos anónimos (excepto uno mismo).
+        $people->getCollection()->each(function ($u) use ($anonIds, $selfId) {
             $u->setRelation('workshops', $u->workshops->map(fn($w) => [
                 'id'            => $w->id,
                 'name'          => $w->name,
                 'number'        => $w->number,
                 'workshop_role' => $w->pivot->role ?? 'member',
             ]));
+
+            $isAnon = $anonIds->has($u->id) && $u->id !== $selfId;
+            if ($isAnon) {
+                $u->name       = 'Hermano registrado';
+                $u->last_name  = null;
+                $u->masonic_id = null;
+            }
+            $u->anonymous = $isAnon;
         });
 
         return response()->json($people);

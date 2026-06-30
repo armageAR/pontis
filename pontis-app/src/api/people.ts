@@ -12,6 +12,7 @@ export interface Person {
   profession: string | null
   role: string
   status: string
+  anonymous?: boolean
   workshops?: { id: number; name: string; number: number; workshop_role?: 'admin' | 'member' }[]
 }
 

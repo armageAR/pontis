@@ -148,10 +148,16 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
               <div key={p.id} className="person-card">
                 <div className="person-card-header">
                   <div>
-                    <Link to={`/people/${p.id}`} className="person-name">
-                      {p.last_name ? `${p.last_name}, ${p.name}` : p.name}
-                    </Link>
-                    {p.masonic_id && <span className="person-masonic-id">Mat. {p.masonic_id}</span>}
+                    {p.anonymous ? (
+                      <span className="person-name person-name-anon">Hermano registrado · identidad no publicada</span>
+                    ) : (
+                      <>
+                        <Link to={`/people/${p.id}`} className="person-name">
+                          {p.last_name ? `${p.last_name}, ${p.name}` : p.name}
+                        </Link>
+                        {p.masonic_id && <span className="person-masonic-id">Mat. {p.masonic_id}</span>}
+                      </>
+                    )}
                   </div>
                   {p.masonic_status && (
                     <Badge variant={MASONIC_STATUS_VARIANTS[p.masonic_status] ?? 'default'}>

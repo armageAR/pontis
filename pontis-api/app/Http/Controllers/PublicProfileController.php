@@ -21,7 +21,12 @@ class PublicProfileController extends Controller {
 
         $user->load(['workshops:id,name,number','userDegrees.workshop:id,name,number','userPositions.position:id,name','userPositions.workshop:id,name,number']);
 
-        $data = ['id' => $user->id, 'name' => $user->name, 'workshops' => $user->workshops];
+        // Identidad anónima: ni siquiera el nombre se revela (salvo a uno mismo o superadmin).
+        $identityAnon = ($settings['identity']->visibility ?? 'workshop') === 'anonymous';
+        $privileged = $viewer->id === $user->id || $viewer->isSuperAdmin();
+        $displayName = ($identityAnon && ! $privileged) ? 'Hermano registrado' : $user->name;
+
+        $data = ['id' => $user->id, 'name' => $displayName, 'anonymous' => $identityAnon && ! $privileged, 'workshops' => $user->workshops];
 
         if ($can('identity'))    { $data['last_name'] = $user->last_name; $data['masonic_id'] = $user->masonic_id; }
         if ($can('masonic'))     { $data['masonic_status'] = $user->masonic_status; $data['initiation_date'] = $user->initiation_date; }

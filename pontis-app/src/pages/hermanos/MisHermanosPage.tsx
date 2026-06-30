@@ -192,7 +192,11 @@ export default function MisHermanosPage() {
                   const fullName = p.last_name ? `${p.last_name}, ${p.name}` : p.name
                   return (
                     <tr key={p.id} className={isOwn ? 'mh-row-own' : ''}>
-                      <td className="mh-cell-name">{fullName}</td>
+                      <td className="mh-cell-name">
+                        {p.anonymous
+                          ? <span className="mh-anon">Hermano registrado · identidad no publicada</span>
+                          : fullName}
+                      </td>
                       <td className="mh-cell-workshop">
                         {p.workshops && p.workshops.length > 0 ? (
                           <div className="mh-workshop-tags">
@@ -209,9 +213,11 @@ export default function MisHermanosPage() {
                       </td>
                       <td>
                         <div className="mh-cell-actions">
-                          <button className="mh-action-btn" title="Ver perfil" onClick={() => handleView(p.id)}>
-                            <Eye size={15} />
-                          </button>
+                          {!p.anonymous && (
+                            <button className="mh-action-btn" title="Ver perfil" onClick={() => handleView(p.id)}>
+                              <Eye size={15} />
+                            </button>
+                          )}
                           {isOwn && (
                             <>
                               <button className="mh-action-btn" title="Editar mi perfil" onClick={() => navigate('/profile')}>

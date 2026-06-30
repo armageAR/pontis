@@ -42,4 +42,5 @@
   padding: 2px var(--space-2);
 }
 .person-name { color: var(--accent); text-decoration: none; font-weight: 600; }
+.person-name-anon { color: var(--text-muted); font-style: italic; font-weight: 500; }
 .person-name:hover { text-decoration: underline; }

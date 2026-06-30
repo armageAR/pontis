@@ -133,6 +133,41 @@ export default function ProfilePage() {
     )
   }
 
+  function renderIdentityPrivacy() {
+    const current = visibility.identity?.visibility
+    const isAnonymous = current === 'anonymous'
+    const value: VisibilityLevel = isAnonymous ? 'registered' : (current ?? 'workshop')
+    return (
+      <div className="profile-privacy-box profile-privacy-box-col">
+        <div className="profile-privacy-row">
+          <label className="profile-privacy-label">¿Quiénes pueden ver esta sección?</label>
+          <select
+            className="profile-select profile-select-sm"
+            value={value}
+            disabled={savingVisibility || isAnonymous}
+            onChange={e => handleVisibilityChange('identity', e.target.value as VisibilityLevel)}
+          >
+            {PRIVACY_OPTIONS.map(([level, label]) => <option key={level} value={level}>{label}</option>)}
+          </select>
+        </div>
+        <label className="profile-anon-check">
+          <input
+            type="checkbox"
+            checked={isAnonymous}
+            disabled={savingVisibility}
+            onChange={e => handleVisibilityChange('identity', e.target.checked ? 'anonymous' : 'workshop')}
+          />
+          <span>Aparecer en las búsquedas sin revelar mi identidad</span>
+        </label>
+        {isAnonymous && (
+          <p className="profile-anon-note">
+            Vas a figurar en los resultados de búsqueda como Hermano registrado, sin mostrar tu nombre ni tus datos de identidad.
+          </p>
+        )}
+      </div>
+    )
+  }
+
   function openEmailModal() {
     setNewEmail('')
     setEmailModalError('')
@@ -247,7 +282,7 @@ export default function ProfilePage() {
               <FormField label="Fecha de nacimiento"><Input type="date" value={toDateInputValue(profile?.birth_date)} onChange={field('birth_date')} /></FormField>
               <FormField label="Foto de perfil (URL)"><Input type="url" placeholder="https://..." value={profile?.photo_url ?? ''} onChange={field('photo_url')} /></FormField>
             </div>
-            {renderSectionPrivacy('identity')}
+            {renderIdentityPrivacy()}
           </section>
 
           <section className="profile-section">
