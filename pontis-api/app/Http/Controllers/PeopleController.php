@@ -30,11 +30,15 @@ class PeopleController extends Controller {
             $query->whereHas('workshops', fn($q) => $q->where('workshops.id', $request->workshop_id));
         }
         // Usuarios no-superadmin solo ven hermanos activos de sus propios talleres
-        // (incluyéndose a sí mismos, ya que son miembros activos de su taller).
+        // (incluyéndose a sí mismos). El estado de cuenta active es la garantía
+        // de hermano validado; no se exige email_verified_at, que es un detalle
+        // del flujo de registro y puede faltar en cuentas ya activas.
         if ($authUser->role !== 'superadmin') {
             $myIds = $authUser->workshops()->pluck('workshops.id');
             $query->where('status', \App\Enums\UserStatus::ACTIVE->value)
                   ->whereHas('workshops', fn($q) => $q->whereIn('workshops.id', $myIds));
+        } else {
+            $query->whereNotNull('email_verified_at');
         }
         if ($request->filled('province')) {
             $query->where('province', $request->province);
@@ -52,7 +56,7 @@ class PeopleController extends Controller {
         $perPage = (int) $request->input('per_page', 10);
         if ($perPage <= 0) $perPage = $query->count() ?: 1;
 
-        $people = $query->whereNotNull('email_verified_at')
+        $people = $query
             ->select(['id','name','last_name','masonic_id','masonic_status','province','locality','country','profession','role','status'])
             ->orderBy('last_name')->orderBy('name')
             ->paginate($perPage);
