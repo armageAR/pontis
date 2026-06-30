@@ -107,15 +107,16 @@ class UserController extends Controller
         }
 
         $newStatus = $request->input('status');
-        $attrs = ['status' => $newStatus];
+        $user->status = $newStatus;
 
         // Al activar manualmente un usuario que aún no verificó su email,
         // se da por validado y se sella la fecha de verificación con hoy.
+        // Se asigna directamente porque email_verified_at no es mass-assignable.
         if ($newStatus === 'active' && is_null($user->email_verified_at)) {
-            $attrs['email_verified_at'] = now();
+            $user->email_verified_at = now();
         }
 
-        $user->update($attrs);
+        $user->save();
 
         return new UserResource($user->load('workshops'));
     }
