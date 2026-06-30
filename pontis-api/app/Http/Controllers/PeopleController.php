@@ -16,7 +16,9 @@ class PeopleController extends Controller {
             'per_page'       => 'nullable|integer|min:0|max:200',
         ]);
         $authUser = auth()->user();
-        $query = User::query()->with(['workshops:id,name,number']);
+        $query = User::query()->with([
+            'workshops' => fn($q) => $q->select('workshops.id', 'workshops.name', 'workshops.number'),
+        ]);
         if ($request->filled('q')) {
             $q = mb_strtolower($request->q);
             $query->where(function ($qb) use ($q) {
@@ -56,6 +58,17 @@ class PeopleController extends Controller {
             ->select(['id','name','last_name','masonic_id','masonic_status','province','locality','country','profession','role','status'])
             ->orderBy('last_name')->orderBy('name')
             ->paginate($perPage);
+
+        // Aplanar el rol del pivote en cada taller para identificar admins.
+        $people->getCollection()->each(function ($u) {
+            $u->setRelation('workshops', $u->workshops->map(fn($w) => [
+                'id'            => $w->id,
+                'name'          => $w->name,
+                'number'        => $w->number,
+                'workshop_role' => $w->pivot->role ?? 'member',
+            ]));
+        });
+
         return response()->json($people);
     }
 }

@@ -57,6 +57,18 @@
 
 .mh-cell-name { font-weight: 500; color: var(--text-h); }
 .mh-cell-workshop { color: var(--text-muted); }
+.mh-workshop-tags { display: flex; flex-direction: column; gap: 2px; }
+.mh-workshop-tag { display: inline-flex; align-items: center; gap: var(--space-2); }
+.mh-admin-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-2);
+}
 .mh-cell-actions { display: flex; gap: var(--space-1); align-items: center; }
 .mh-row-own td { background: var(--accent-bg) !important; }
 

@@ -12,7 +12,7 @@ export interface Person {
   profession: string | null
   role: string
   status: string
-  workshops?: { id: number; name: string; number: number }[]
+  workshops?: { id: number; name: string; number: number; workshop_role?: 'admin' | 'member' }[]
 }
 
 export interface PeopleFilters {

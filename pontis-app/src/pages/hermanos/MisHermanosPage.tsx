@@ -190,11 +190,23 @@ export default function MisHermanosPage() {
                 {getSorted().map(p => {
                   const isOwn = p.id === currentUser?.id
                   const fullName = p.last_name ? `${p.last_name}, ${p.name}` : p.name
-                  const workshopLabel = p.workshops?.map(w => `Nº${w.number} ${w.name}`).join(', ') ?? '—'
                   return (
                     <tr key={p.id} className={isOwn ? 'mh-row-own' : ''}>
                       <td className="mh-cell-name">{fullName}</td>
-                      <td className="mh-cell-workshop">{workshopLabel}</td>
+                      <td className="mh-cell-workshop">
+                        {p.workshops && p.workshops.length > 0 ? (
+                          <div className="mh-workshop-tags">
+                            {p.workshops.map(w => (
+                              <span key={w.id} className="mh-workshop-tag">
+                                Nº{w.number} {w.name}
+                                {w.workshop_role === 'admin' && (
+                                  <span className="mh-admin-badge" title="Admin del taller">Admin</span>
+                                )}
+                              </span>
+                            ))}
+                          </div>
+                        ) : '—'}
+                      </td>
                       <td>
                         <div className="mh-cell-actions">
                           <button className="mh-action-btn" title="Ver perfil" onClick={() => handleView(p.id)}>
