@@ -132,6 +132,18 @@ class WorkshopController extends Controller
         Gate::authorize('leave', $workshop);
 
         $user = $request->user();
+
+        $membership = $user->workshopMemberships()->where('workshop_id', $workshop->id)->first();
+
+        // No se puede salir del Taller principal: primero hay que elegir otro.
+        if ($membership && (bool) $membership->pivot->is_principal) {
+            return response()->json([
+                'message' => 'No podés salir de tu taller principal. Primero elegí otro taller principal.',
+            ], 422);
+        }
+
+        // Al salir, se eliminan los cargos del usuario asociados a ese Taller.
+        $user->userPositions()->where('workshop_id', $workshop->id)->delete();
         $user->workshopMemberships()->detach($workshop->id);
 
         $workshop->is_member  = false;

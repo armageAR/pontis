@@ -17,7 +17,9 @@ import * as visibilityApi from '@/api/visibility'
 import type { VisibilityLevel, VisibilityBlock, VisibilityMap, VisibilitySetting } from '@/api/visibility'
 import client from '@/api/client'
 import WorkshopPicker from '@/components/WorkshopPicker'
-import { type WorkshopSearchResult } from '@/api/workshops'
+import * as workshopsApi from '@/api/workshops'
+import { type WorkshopSearchResult, type ProfileWorkshop } from '@/api/workshops'
+import { Star, LogOut, Plus } from 'lucide-react'
 import { formatDate, toDateInputValue } from '@/utils/date'
 import './ProfilePage.css'
 
@@ -25,11 +27,26 @@ interface PositionCatalogItem { id: number; name: string }
 interface WorkshopItem { id: number; name: string; number: number }
 
 const DEGREE_LABELS: Record<string, string> = { aprendiz: 'Aprendiz', companero: 'Compañero', maestro: 'Maestro' }
+const DEGREE_ORDER = ['aprendiz', 'companero', 'maestro']
+// Próximo grado válido según el historial (aprendiz -> companero -> maestro), o null si ya es Maestro.
+function nextValidDegree(list: { degree: string }[]): string | null {
+  const maxRank = list.reduce((m, d) => Math.max(m, DEGREE_ORDER.indexOf(d.degree)), -1)
+  return DEGREE_ORDER[maxRank + 1] ?? null
+}
 const MASONIC_STATUS_LABELS: Record<string, string> = {
   active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'Fallecido'
 }
 // Opciones de audiencia por sección (quiénes pueden verla).
 const PRIVACY_OPTIONS = Object.entries(visibilityApi.VISIBILITY_LABELS) as [VisibilityLevel, string][]
+
+const WORKSHOP_STATUS_LABELS: Record<string, string> = {
+  active: 'Activo',
+  pending: 'Pendiente de aprobación',
+}
+
+function apiError(err: unknown, fallback: string): string {
+  return (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? fallback
+}
 
 export default function ProfilePage() {
   const { user: authUser } = useAuth()
@@ -62,10 +79,18 @@ export default function ProfilePage() {
   const [emailModalError, setEmailModalError] = useState('')
   const [emailModalSuccess, setEmailModalSuccess] = useState('')
 
-  const [degreeForm, setDegreeForm] = useState({ degree: 'aprendiz', workshop_id: '', start_date: '', end_date: '', notes: '' })
+  const [degreeForm, setDegreeForm] = useState({ degree: 'aprendiz', workshop_id: '', start_date: '', notes: '' })
   const [positionForm, setPositionForm] = useState({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' })
-  const [degreeWorkshop, setDegreeWorkshop] = useState<WorkshopSearchResult | null>(null)
-  const [positionWorkshop, setPositionWorkshop] = useState<WorkshopSearchResult | null>(null)
+  const [degreeModalError, setDegreeModalError] = useState('')
+  const [positionModalError, setPositionModalError] = useState('')
+
+  // Mis Talleres (sección del perfil)
+  const [profileWorkshops, setProfileWorkshops] = useState<ProfileWorkshop[]>([])
+  const [showAddWorkshopModal, setShowAddWorkshopModal] = useState(false)
+  const [addWorkshopSel, setAddWorkshopSel] = useState<WorkshopSearchResult | null>(null)
+  const [joiningWorkshop, setJoiningWorkshop] = useState(false)
+  const [confirmLeaveWs, setConfirmLeaveWs] = useState<ProfileWorkshop | null>(null)
+  const [confirmPrincipalWs, setConfirmPrincipalWs] = useState<ProfileWorkshop | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -76,7 +101,8 @@ export default function ProfilePage() {
       client.get('/my-workshops').then(r => r.data),
       provinceApi.getProvinces(),
       visibilityApi.getVisibility(),
-    ]).then(([p, d, pos, catalog, ws, prov, vis]) => {
+      workshopsApi.getProfileWorkshops(),
+    ]).then(([p, d, pos, catalog, ws, prov, vis, pws]) => {
       setProfile(p)
       setDegrees(d)
       setPositions(pos)
@@ -85,6 +111,7 @@ export default function ProfilePage() {
       setMyWorkshops(wsArr)
       setProvinces(prov)
       setVisibility(vis)
+      setProfileWorkshops(pws)
     }).catch(() => setError('Error cargando el perfil.')).finally(() => setLoading(false))
   }, [])
 
@@ -230,27 +257,35 @@ export default function ProfilePage() {
 
   async function handleSaveDegree(e: FormEvent) {
     e.preventDefault()
+    setDegreeModalError('')
     try {
-      const payload = { ...degreeForm, degree: degreeForm.degree as 'aprendiz'|'companero'|'maestro', workshop_id: degreeForm.workshop_id ? Number(degreeForm.workshop_id) : null, end_date: degreeForm.end_date || null, notes: degreeForm.notes || null }
-      if (editingDegree) {
-        const updated = await profileApi.updateDegree(editingDegree.id, payload)
-        setDegrees(ds => ds.map(d => d.id === updated.id ? updated : d))
-      } else {
-        const created = await profileApi.addDegree(payload as any)
-        setDegrees(ds => [created, ...ds])
+      // El grado no lleva fecha de fin manual: el período se deriva del siguiente grado.
+      const payload = {
+        degree: degreeForm.degree as 'aprendiz'|'companero'|'maestro',
+        workshop_id: degreeForm.workshop_id ? Number(degreeForm.workshop_id) : null,
+        start_date: degreeForm.start_date,
+        notes: degreeForm.notes || null,
       }
+      if (editingDegree) {
+        await profileApi.updateDegree(editingDegree.id, payload)
+      } else {
+        await profileApi.addDegree(payload)
+      }
+      // Recargar para reflejar los fines de período derivados del historial.
+      setDegrees(await profileApi.getDegrees())
       setShowDegreeModal(false)
-    } catch { alert('Error al guardar el grado.') }
+    } catch (err) { setDegreeModalError(apiError(err, 'Error al guardar el grado.')) }
   }
 
   async function handleDeleteDegree(id: number) {
     await profileApi.deleteDegree(id)
-    setDegrees(ds => ds.filter(d => d.id !== id))
+    setDegrees(await profileApi.getDegrees())
     setConfirmDeleteDegree(null)
   }
 
   async function handleSavePosition(e: FormEvent) {
     e.preventDefault()
+    setPositionModalError('')
     try {
       const payload = { ...positionForm, position_id: Number(positionForm.position_id), workshop_id: Number(positionForm.workshop_id), end_date: positionForm.end_date || null, notes: positionForm.notes || null }
       if (editingPosition) {
@@ -261,13 +296,59 @@ export default function ProfilePage() {
         setPositions(ps => [created, ...ps])
       }
       setShowPositionModal(false)
-    } catch { alert('Error al guardar el cargo.') }
+    } catch (err) { setPositionModalError(apiError(err, 'Error al guardar el cargo.')) }
   }
 
   async function handleDeletePosition(id: number) {
     await profileApi.deletePosition(id)
     setPositions(ps => ps.filter(p => p.id !== id))
     setConfirmDeletePosition(null)
+  }
+
+  // ── Mis Talleres ──────────────────────────────────────────────────────────
+  async function reloadProfileWorkshops() {
+    const [pws, ws] = await Promise.all([
+      workshopsApi.getProfileWorkshops(),
+      client.get('/my-workshops').then(r => r.data),
+    ])
+    setProfileWorkshops(pws)
+    setMyWorkshops(Array.isArray(ws) ? ws : (ws.data ?? []))
+  }
+
+  async function handleJoinWorkshop() {
+    if (!addWorkshopSel) return
+    setJoiningWorkshop(true); setError(''); setSuccess('')
+    try {
+      await workshopsApi.joinWorkshop(addWorkshopSel.id)
+      await reloadProfileWorkshops()
+      setSuccess('Solicitud enviada. Queda pendiente de aprobación.')
+      setShowAddWorkshopModal(false)
+      setAddWorkshopSel(null)
+    } catch (err) {
+      setError(apiError(err, 'No se pudo enviar la solicitud de ingreso.'))
+    } finally { setJoiningWorkshop(false) }
+  }
+
+  async function handleLeaveWorkshop(ws: ProfileWorkshop) {
+    setError(''); setSuccess('')
+    try {
+      await workshopsApi.leaveWorkshop(ws.id)
+      await reloadProfileWorkshops()
+      setSuccess(`Saliste del taller ${ws.name}.`)
+    } catch (err) {
+      setError(apiError(err, 'No se pudo salir del taller.'))
+    } finally { setConfirmLeaveWs(null) }
+  }
+
+  async function handleSetPrincipal(ws: ProfileWorkshop) {
+    setError(''); setSuccess('')
+    try {
+      await workshopsApi.setPrincipalWorkshop(ws.id)
+      await reloadProfileWorkshops()
+      setSuccess(`${ws.name} es ahora tu taller principal.`)
+    } catch (err) {
+      setError(apiError(err, 'No se pudo cambiar el taller principal.'))
+    } finally { setConfirmPrincipalWs(null) }
   }
 
   if (loading) return <AppLayout><div className="profile-loading"><Spinner /></div></AppLayout>
@@ -397,7 +478,11 @@ export default function ProfilePage() {
         <section className="profile-section">
           <div className="profile-section-header">
             <h2 className="profile-section-title">Grados masónicos</h2>
-            <Button onClick={() => { setEditingDegree(null); setDegreeForm({ degree: 'aprendiz', workshop_id: '', start_date: '', end_date: '', notes: '' }); setDegreeWorkshop(null); setShowDegreeModal(true) }}>+ Agregar</Button>
+            <Button
+              disabled={nextValidDegree(degrees) === null}
+              title={nextValidDegree(degrees) === null ? 'Ya alcanzaste el grado de Maestro.' : undefined}
+              onClick={() => { setEditingDegree(null); setDegreeModalError(''); setDegreeForm({ degree: nextValidDegree(degrees) ?? 'aprendiz', workshop_id: '', start_date: '', notes: '' }); setShowDegreeModal(true) }}
+            >+ Agregar</Button>
           </div>
           {degrees.length === 0 ? <p className="profile-empty">Sin grados registrados.</p> : (
             <table className="profile-table">
@@ -410,7 +495,7 @@ export default function ProfilePage() {
                     <td>{formatDate(d.start_date)}</td>
                     <td>{formatDate(d.end_date)}</td>
                     <td className="profile-table-actions">
-                      <button className="profile-link-btn" onClick={() => { setEditingDegree(d); setDegreeForm({ degree: d.degree, workshop_id: d.workshop_id?.toString() ?? '', start_date: toDateInputValue(d.start_date), end_date: toDateInputValue(d.end_date), notes: d.notes ?? '' }); const dw = d.workshop_id ? (myWorkshops.find(w => w.id === d.workshop_id) ? { ...myWorkshops.find(w => w.id === d.workshop_id)!, zone_name: null, city: null } : { id: d.workshop_id, name: d.workshop?.name ?? String(d.workshop_id), number: d.workshop?.number ?? 0, zone_name: null, city: null }) : null; setDegreeWorkshop(dw); setShowDegreeModal(true) }}>Editar</button>
+                      <button className="profile-link-btn" onClick={() => { setEditingDegree(d); setDegreeModalError(''); setDegreeForm({ degree: d.degree, workshop_id: d.workshop_id?.toString() ?? '', start_date: toDateInputValue(d.start_date), notes: d.notes ?? '' }); setShowDegreeModal(true) }}>Editar</button>
                       <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeleteDegree(d.id)}>Eliminar</button>
                     </td>
                   </tr>
@@ -425,7 +510,7 @@ export default function ProfilePage() {
         <section className="profile-section">
           <div className="profile-section-header">
             <h2 className="profile-section-title">Cargos en talleres</h2>
-            <Button onClick={() => { setEditingPosition(null); setPositionForm({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' }); setPositionWorkshop(null); setShowPositionModal(true) }}>+ Agregar</Button>
+            <Button onClick={() => { setEditingPosition(null); setPositionModalError(''); setPositionForm({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' }); setShowPositionModal(true) }}>+ Agregar</Button>
           </div>
           {positions.length === 0 ? <p className="profile-empty">Sin cargos registrados.</p> : (
             <table className="profile-table">
@@ -438,7 +523,7 @@ export default function ProfilePage() {
                     <td>{formatDate(p.start_date)}</td>
                     <td>{formatDate(p.end_date)}</td>
                     <td className="profile-table-actions">
-                      <button className="profile-link-btn" onClick={() => { setEditingPosition(p); setPositionForm({ position_id: p.position_id.toString(), workshop_id: p.workshop_id.toString(), start_date: toDateInputValue(p.start_date), end_date: toDateInputValue(p.end_date), notes: p.notes ?? '' }); const pw = myWorkshops.find(w => w.id === p.workshop_id) ? { ...myWorkshops.find(w => w.id === p.workshop_id)!, zone_name: null, city: null } : { id: p.workshop_id, name: p.workshop?.name ?? String(p.workshop_id), number: p.workshop?.number ?? 0, zone_name: null, city: null }; setPositionWorkshop(pw); setShowPositionModal(true) }}>Editar</button>
+                      <button className="profile-link-btn" onClick={() => { setEditingPosition(p); setPositionModalError(''); setPositionForm({ position_id: p.position_id.toString(), workshop_id: p.workshop_id.toString(), start_date: toDateInputValue(p.start_date), end_date: toDateInputValue(p.end_date), notes: p.notes ?? '' }); setShowPositionModal(true) }}>Editar</button>
                       <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeletePosition(p.id)}>Eliminar</button>
                     </td>
                   </tr>
@@ -449,6 +534,73 @@ export default function ProfilePage() {
           {renderSectionPrivacy('positions')}
         </section>
 
+        {/* Mis Talleres */}
+        <section className="profile-section">
+          <div className="profile-section-header">
+            <h2 className="profile-section-title">Mis Talleres</h2>
+            <Button onClick={() => { setAddWorkshopSel(null); setShowAddWorkshopModal(true) }}>
+              <Plus size={16} /> Agregar Taller
+            </Button>
+          </div>
+          <p className="profile-section-desc">
+            Talleres a los que pertenecés y solicitudes de ingreso pendientes. Elegí tu Taller principal o salí de un Taller.
+          </p>
+          {profileWorkshops.length === 0 ? (
+            <p className="profile-empty">No perteneces a ningún Taller ni tenés solicitudes pendientes.</p>
+          ) : (
+            <table className="profile-table">
+              <thead><tr><th>Taller</th><th>Estado</th><th>Principal</th><th></th></tr></thead>
+              <tbody>
+                {profileWorkshops.map(w => (
+                  <tr key={w.id}>
+                    <td>
+                      {w.name} <span className="profile-ws-number">N° {w.number}</span>
+                      {w.my_role === 'admin' && <Badge variant="default">Admin</Badge>}
+                    </td>
+                    <td>
+                      <Badge variant={w.status === 'active' ? 'success' : 'warning'}>
+                        {WORKSHOP_STATUS_LABELS[w.status] ?? w.status}
+                      </Badge>
+                    </td>
+                    <td>{w.is_principal ? <Badge variant="success">Principal</Badge> : <span className="profile-muted">—</span>}</td>
+                    <td className="profile-table-actions">
+                      {w.status === 'active' && !w.is_principal && (
+                        <button
+                          className="profile-icon-btn"
+                          title="Marcar como principal"
+                          aria-label="Marcar como principal"
+                          onClick={() => setConfirmPrincipalWs(w)}
+                        >
+                          <Star size={16} />
+                        </button>
+                      )}
+                      {w.is_principal ? (
+                        <button
+                          className="profile-icon-btn profile-icon-btn-disabled"
+                          title="No podés salir de tu Taller principal"
+                          aria-label="No podés salir de tu Taller principal"
+                          disabled
+                        >
+                          <LogOut size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          className="profile-icon-btn profile-icon-danger"
+                          title="Salir del Taller"
+                          aria-label="Salir del Taller"
+                          onClick={() => setConfirmLeaveWs(w)}
+                        >
+                          <LogOut size={16} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+
         <div className="profile-save-footer">
           <Button type="submit" form="profile-form" loading={saving}>Guardar cambios</Button>
         </div>
@@ -456,21 +608,24 @@ export default function ProfilePage() {
 
       <Modal open={showDegreeModal} onClose={() => setShowDegreeModal(false)} title={editingDegree ? 'Editar grado' : 'Agregar grado'}>
         <form onSubmit={handleSaveDegree} className="profile-modal-form">
+          {degreeModalError && <Alert variant="error">{degreeModalError}</Alert>}
           <FormField label="Grado">
             <select className="profile-select" value={degreeForm.degree} onChange={e => setDegreeForm(f => ({ ...f, degree: e.target.value }))}>
-              <option value="aprendiz">Aprendiz</option>
-              <option value="companero">Compañero</option>
-              <option value="maestro">Maestro</option>
+              {editingDegree
+                ? DEGREE_ORDER.map(dg => <option key={dg} value={dg}>{DEGREE_LABELS[dg]}</option>)
+                : (() => { const nx = nextValidDegree(degrees); return nx ? <option value={nx}>{DEGREE_LABELS[nx]}</option> : null })()}
             </select>
+            {!editingDegree && (
+              <p className="profile-modal-note">Los grados progresan en orden: Aprendiz → Compañero → Maestro. Cada grado termina cuando comienza el siguiente.</p>
+            )}
           </FormField>
           <FormField label="Taller">
-            <WorkshopPicker
-              value={degreeWorkshop}
-              onChange={w => { setDegreeWorkshop(w); setDegreeForm(f => ({ ...f, workshop_id: w ? String(w.id) : '' })) }}
-            />
+            <select className="profile-select" value={degreeForm.workshop_id} onChange={e => setDegreeForm(f => ({ ...f, workshop_id: e.target.value }))}>
+              <option value="">— Sin taller —</option>
+              {myWorkshops.map(w => <option key={w.id} value={w.id}>{w.name} (N° {w.number})</option>)}
+            </select>
           </FormField>
           <FormField label="Fecha de inicio *"><Input type="date" required value={degreeForm.start_date} onChange={e => setDegreeForm(f => ({ ...f, start_date: e.target.value }))} /></FormField>
-          <FormField label="Fecha de fin"><Input type="date" value={degreeForm.end_date} onChange={e => setDegreeForm(f => ({ ...f, end_date: e.target.value }))} /></FormField>
           <FormField label="Notas"><Input value={degreeForm.notes} onChange={e => setDegreeForm(f => ({ ...f, notes: e.target.value }))} /></FormField>
           <div className="profile-modal-actions">
             <Button type="button" variant="outline" onClick={() => setShowDegreeModal(false)}>Cancelar</Button>
@@ -481,6 +636,7 @@ export default function ProfilePage() {
 
       <Modal open={showPositionModal} onClose={() => setShowPositionModal(false)} title={editingPosition ? 'Editar cargo' : 'Agregar cargo'}>
         <form onSubmit={handleSavePosition} className="profile-modal-form">
+          {positionModalError && <Alert variant="error">{positionModalError}</Alert>}
           <FormField label="Cargo *">
             <select className="profile-select" required value={positionForm.position_id} onChange={e => setPositionForm(f => ({ ...f, position_id: e.target.value }))}>
               <option value="">Seleccioná un cargo</option>
@@ -488,11 +644,10 @@ export default function ProfilePage() {
             </select>
           </FormField>
           <FormField label="Taller *">
-            <WorkshopPicker
-              value={positionWorkshop}
-              onChange={w => { setPositionWorkshop(w); setPositionForm(f => ({ ...f, workshop_id: w ? String(w.id) : '' })) }}
-              error={!positionWorkshop && positionForm.workshop_id === ''}
-            />
+            <select className="profile-select" required value={positionForm.workshop_id} onChange={e => setPositionForm(f => ({ ...f, workshop_id: e.target.value }))}>
+              <option value="">Seleccioná un taller</option>
+              {myWorkshops.map(w => <option key={w.id} value={w.id}>{w.name} (N° {w.number})</option>)}
+            </select>
           </FormField>
           <FormField label="Fecha de inicio *"><Input type="date" required value={positionForm.start_date} onChange={e => setPositionForm(f => ({ ...f, start_date: e.target.value }))} /></FormField>
           <FormField label="Fecha de fin"><Input type="date" value={positionForm.end_date} onChange={e => setPositionForm(f => ({ ...f, end_date: e.target.value }))} /></FormField>
@@ -517,6 +672,50 @@ export default function ProfilePage() {
         message="¿Eliminar este registro de cargo?"
         onConfirm={() => confirmDeletePosition !== null && handleDeletePosition(confirmDeletePosition)}
         onClose={() => setConfirmDeletePosition(null)}
+      />
+
+      <Modal open={showAddWorkshopModal} onClose={() => setShowAddWorkshopModal(false)} title="Agregar Taller">
+        <div className="profile-modal-form">
+          <p className="profile-modal-note">
+            Buscá el Taller por nombre o número y solicitá tu ingreso. La solicitud queda pendiente hasta que un administrador del Taller la apruebe.
+          </p>
+          <FormField label="Taller">
+            <WorkshopPicker
+              value={addWorkshopSel}
+              onChange={setAddWorkshopSel}
+            />
+          </FormField>
+          <div className="profile-modal-actions">
+            <Button type="button" variant="outline" onClick={() => setShowAddWorkshopModal(false)}>Cancelar</Button>
+            {addWorkshopSel && (
+              <Button type="button" loading={joiningWorkshop} onClick={handleJoinWorkshop}>Solicitar unirse</Button>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={confirmLeaveWs !== null}
+        title="Salir del Taller"
+        message={confirmLeaveWs ? `¿Salir del taller ${confirmLeaveWs.name} (N° ${confirmLeaveWs.number})? También se eliminarán tus cargos asociados a este Taller.` : ''}
+        confirmLabel="Salir"
+        onConfirm={() => confirmLeaveWs && handleLeaveWorkshop(confirmLeaveWs)}
+        onClose={() => setConfirmLeaveWs(null)}
+      />
+
+      <ConfirmDialog
+        open={confirmPrincipalWs !== null}
+        title="Cambiar Taller principal"
+        message={(() => {
+          if (!confirmPrincipalWs) return ''
+          const current = profileWorkshops.find(w => w.is_principal)
+          return current
+            ? `${current.name} dejará de ser tu Taller principal y ${confirmPrincipalWs.name} pasará a ser tu Taller principal.`
+            : `${confirmPrincipalWs.name} pasará a ser tu Taller principal.`
+        })()}
+        confirmLabel="Confirmar"
+        onConfirm={() => confirmPrincipalWs && handleSetPrincipal(confirmPrincipalWs)}
+        onClose={() => setConfirmPrincipalWs(null)}
       />
 
       <Modal open={showEmailModal} onClose={() => setShowEmailModal(false)} title="Cambiar email">

@@ -290,7 +290,7 @@ class UserListTest extends TestCase
              ->assertForbidden();
     }
 
-    public function test_can_activate_user_without_verified_email(): void
+    public function test_activating_user_without_verified_email_seals_verification(): void
     {
         $sa = $this->superAdmin();
         $user = User::factory()->pending()->unverified()->create();
@@ -300,7 +300,9 @@ class UserListTest extends TestCase
              ->assertOk()
              ->assertJsonPath('data.status', 'active');
 
-        $this->assertNull($user->fresh()->email_verified_at);
+        // Al activar manualmente un usuario que aún no verificó su email,
+        // se lo da por validado y se sella la fecha de verificación.
+        $this->assertNotNull($user->fresh()->email_verified_at);
     }
 
     public function test_superadmin_can_set_all_statuses(): void

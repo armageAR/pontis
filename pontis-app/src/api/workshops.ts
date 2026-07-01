@@ -121,3 +121,25 @@ export async function leaveWorkshop(id: number): Promise<Workshop> {
   const { data } = await client.delete<{ data: Workshop }>(`/admin/workshops/${id}/leave`)
   return data.data
 }
+
+// "Mis Talleres" del perfil: membresías activas y solicitudes pendientes.
+export interface ProfileWorkshop {
+  id: number
+  name: string
+  number: number
+  zone_name: string | null
+  city: string | null
+  status: 'active' | 'pending'
+  my_role: 'admin' | 'member' | null
+  is_principal: boolean
+  requested_by_user: boolean
+}
+
+export async function getProfileWorkshops(): Promise<ProfileWorkshop[]> {
+  const { data } = await client.get<ProfileWorkshop[]>('/profile/workshops')
+  return data
+}
+
+export async function setPrincipalWorkshop(id: number): Promise<void> {
+  await client.post(`/profile/workshops/${id}/principal`)
+}

@@ -82,12 +82,15 @@ export async function getDegrees(): Promise<UserDegree[]> {
   return data
 }
 
-export async function addDegree(payload: Omit<UserDegree, 'id' | 'user_id' | 'workshop'>): Promise<UserDegree> {
+// El grado no lleva fecha de fin manual: el período se deriva del siguiente grado.
+export type DegreeInput = Omit<UserDegree, 'id' | 'user_id' | 'workshop' | 'end_date'>
+
+export async function addDegree(payload: DegreeInput): Promise<UserDegree> {
   const { data } = await client.post<UserDegree>('/profile/degrees', payload)
   return data
 }
 
-export async function updateDegree(id: number, payload: Partial<UserDegree>): Promise<UserDegree> {
+export async function updateDegree(id: number, payload: Partial<DegreeInput>): Promise<UserDegree> {
   const { data } = await client.patch<UserDegree>(`/profile/degrees/${id}`, payload)
   return data
 }

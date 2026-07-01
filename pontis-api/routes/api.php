@@ -12,6 +12,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PeopleController;
 use App\Http\Controllers\PositionCatalogController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileWorkshopController;
 use App\Http\Controllers\LocalityController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\PublicProfileController;
@@ -56,6 +57,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/email', [ProfileController::class, 'requestEmailChange']);
+
+    // Mis Talleres (membresías activas y pendientes) desde el perfil
+    Route::get('/profile/workshops', [ProfileWorkshopController::class, 'index']);
+    Route::post('/profile/workshops/{workshop}/principal', [ProfileWorkshopController::class, 'setPrincipal']);
 
     // Grados del usuario autenticado
     Route::get('/profile/degrees', [DegreeController::class, 'index']);

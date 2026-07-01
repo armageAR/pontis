@@ -69,40 +69,60 @@ class WorkshopTest extends TestCase
             ->assertJsonCount(3, 'data');
     }
 
-    public function test_user_sees_only_own_workshops(): void
+    public function test_user_sees_all_workshops_and_can_filter_own(): void
     {
         $workshop = Workshop::factory()->create();
-        $other = Workshop::factory()->create();
+        Workshop::factory()->create();
         $user = $this->workshopMember($workshop);
 
+        // Los talleres son información pública: cualquier usuario los ve todos.
         $this->actingAs($user, 'sanctum')
             ->getJson('/api/admin/workshops')
             ->assertOk()
+            ->assertJsonCount(2, 'data');
+
+        // Con el filtro "mis talleres" solo ve el propio.
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/admin/workshops?my_workshops_only=1')
+            ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $workshop->id);
-
-        unset($other);
     }
 
-    public function test_user_with_no_workshops_sees_empty_list(): void
+    public function test_user_with_no_workshops_sees_all_but_filters_to_empty(): void
     {
         Workshop::factory()->count(2)->create();
+        $user = $this->user();
 
-        $this->actingAs($this->user(), 'sanctum')
+        // Sin talleres propios, igual ve todos los talleres públicos.
+        $this->actingAs($user, 'sanctum')
             ->getJson('/api/admin/workshops')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+
+        // El filtro "mis talleres" devuelve una lista vacía.
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/admin/workshops?my_workshops_only=1')
             ->assertOk()
             ->assertJsonCount(0, 'data');
     }
 
-    public function test_workshop_admin_sees_only_own_workshops(): void
+    public function test_workshop_admin_sees_all_and_can_filter_own(): void
     {
         $workshop = Workshop::factory()->create();
         Workshop::factory()->create();
 
         $admin = $this->workshopAdmin($workshop);
 
+        // El admin de taller también ve todos los talleres.
         $this->actingAs($admin, 'sanctum')
             ->getJson('/api/admin/workshops')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+
+        // Con el filtro "mis talleres" solo ve el que administra.
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/workshops?my_workshops_only=1')
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $workshop->id);
