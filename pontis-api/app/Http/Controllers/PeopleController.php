@@ -71,19 +71,27 @@ class PeopleController extends Controller {
             ->orderBy('last_name')->orderBy('name')
             ->paginate($perPage);
 
-        // Hermanos cuya sección Identidad está en "anonymous": aparecen en la
-        // búsqueda pero sin revelar su identidad (nombre, apellido, matrícula).
+        // Identidad enmascarada: si el viewer no califica para la audiencia de
+        // Identidad y el Hermano marcó "aparecer sin revelar identidad", figura
+        // como "Hermano registrado" (nombre, apellido y matrícula ocultos).
         $ids = $people->getCollection()->pluck('id');
-        $anonIds = UserVisibilitySetting::whereIn('user_id', $ids)
+        $identitySettings = UserVisibilitySetting::whereIn('user_id', $ids)
             ->where('block', 'identity')
-            ->where('visibility', 'anonymous')
-            ->pluck('user_id')
-            ->flip();
+            ->get()->keyBy('user_id');
+        $vis = new ProfileVisibility($authUser);
         $selfId = $authUser->id;
 
         // Aplanar el rol del pivote en cada taller (para identificar admins)
         // y enmascarar la identidad de los hermanos anónimos (excepto uno mismo).
-        $people->getCollection()->each(function ($u) use ($anonIds, $selfId) {
+        $people->getCollection()->each(function ($u) use ($identitySettings, $vis, $selfId) {
+            $workshopIds = $u->workshops->pluck('id')->all();
+            $principalId = optional($u->workshops->first(fn($w) => (bool) ($w->pivot->is_principal ?? false)))->id;
+            $idSetting = $identitySettings->get($u->id);
+            $idLevel = $idSetting->visibility ?? 'workshop';
+            $anonSearch = (bool) ($idSetting->anonymous_search ?? false);
+            $identityVisible = $u->id === $selfId
+                || $vis->canSee($idLevel, $u->id, $workshopIds, $principalId);
+
             $u->setRelation('workshops', $u->workshops->map(fn($w) => [
                 'id'            => $w->id,
                 'name'          => $w->name,
@@ -91,7 +99,7 @@ class PeopleController extends Controller {
                 'workshop_role' => $w->pivot->role ?? 'member',
             ]));
 
-            $isAnon = $anonIds->has($u->id) && $u->id !== $selfId;
+            $isAnon = ! $identityVisible && $anonSearch;
             if ($isAnon) {
                 $u->name       = 'Hermano registrado';
                 $u->last_name  = null;
@@ -170,10 +178,14 @@ class PeopleController extends Controller {
             $workshopIds = $u->workshops->pluck('id')->all();
             $principalId = $principalOf($u);
 
-            $idLevel = $level($settings, 'identity');
-            $identityVisible = $idLevel !== 'anonymous'
-                && $vis->canSee($idLevel, $u->id, $workshopIds, $principalId);
-            $isAnon = $idLevel === 'anonymous';
+            // La identidad se evalúa en dos pasos: primero la audiencia
+            // configurada; el flag de aparición anónima solo habilita un
+            // resultado enmascarado para quienes no califican para la audiencia.
+            $idSetting = $settings->firstWhere('block', 'identity');
+            $idLevel = $idSetting->visibility ?? 'workshop';
+            $anonSearch = (bool) ($idSetting->anonymous_search ?? false);
+            $identityVisible = $vis->canSee($idLevel, $u->id, $workshopIds, $principalId);
+            $isAnon = ! $identityVisible && $anonSearch;
             $locationVisible   = $vis->canSee($level($settings, 'location'), $u->id, $workshopIds, $principalId);
             $professionVisible = $vis->canSee($level($settings, 'profession'), $u->id, $workshopIds, $principalId);
             $masonicVisible    = $vis->canSee($level($settings, 'masonic'), $u->id, $workshopIds, $principalId);

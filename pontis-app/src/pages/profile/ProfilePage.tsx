@@ -28,9 +28,8 @@ const DEGREE_LABELS: Record<string, string> = { aprendiz: 'Aprendiz', companero:
 const MASONIC_STATUS_LABELS: Record<string, string> = {
   active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'Fallecido'
 }
-// Opciones de privacidad por sección, excluyendo "Disponible en búsquedas sin revelar identidad" (anonymous).
-const PRIVACY_OPTIONS = (Object.entries(visibilityApi.VISIBILITY_LABELS) as [VisibilityLevel, string][])
-  .filter(([level]) => level !== 'anonymous')
+// Opciones de audiencia por sección (quiénes pueden verla).
+const PRIVACY_OPTIONS = Object.entries(visibilityApi.VISIBILITY_LABELS) as [VisibilityLevel, string][]
 
 export default function ProfilePage() {
   const { user: authUser } = useAuth()
@@ -116,8 +115,7 @@ export default function ProfilePage() {
   }
 
   function renderSectionPrivacy(block: VisibilityBlock) {
-    const current = visibility[block]?.visibility
-    const value: VisibilityLevel = current === 'anonymous' ? 'registered' : (current ?? 'workshop')
+    const value: VisibilityLevel = visibility[block]?.visibility ?? 'workshop'
     return (
       <div className="profile-privacy-box">
         <label className="profile-privacy-label">¿Quiénes pueden ver esta sección?</label>
@@ -134,18 +132,19 @@ export default function ProfilePage() {
   }
 
   function renderIdentityPrivacy() {
-    const current = visibility.identity?.visibility
-    const isAnonymous = current === 'anonymous'
-    const value: VisibilityLevel = isAnonymous ? 'registered' : (current ?? 'workshop')
+    // Dos decisiones independientes: la audiencia de Identidad y si aparecés en
+    // búsquedas sin revelar identidad para quienes no forman parte de esa audiencia.
+    const audience: VisibilityLevel = visibility.identity?.visibility ?? 'workshop'
+    const anonSearch = visibility.identity?.anonymous_search ?? false
     return (
       <div className="profile-privacy-box profile-privacy-box-col">
         <div className="profile-privacy-row">
-          <label className="profile-privacy-label">¿Quiénes pueden ver esta sección?</label>
+          <label className="profile-privacy-label">¿Quiénes pueden ver mi identidad?</label>
           <select
             className="profile-select profile-select-sm"
-            value={value}
-            disabled={savingVisibility || isAnonymous}
-            onChange={e => handleVisibilityChange('identity', e.target.value as VisibilityLevel)}
+            value={audience}
+            disabled={savingVisibility}
+            onChange={e => handleIdentityChange({ visibility: e.target.value as VisibilityLevel })}
           >
             {PRIVACY_OPTIONS.map(([level, label]) => <option key={level} value={level}>{label}</option>)}
           </select>
@@ -153,17 +152,18 @@ export default function ProfilePage() {
         <label className="profile-anon-check">
           <input
             type="checkbox"
-            checked={isAnonymous}
+            checked={anonSearch}
             disabled={savingVisibility}
-            onChange={e => handleVisibilityChange('identity', e.target.checked ? 'anonymous' : 'workshop')}
+            onChange={e => handleIdentityChange({ anonymous_search: e.target.checked })}
           />
           <span>Aparecer en las búsquedas sin revelar mi identidad</span>
         </label>
-        {isAnonymous && (
-          <p className="profile-anon-note">
-            Vas a figurar en los resultados de búsqueda como Hermano registrado, sin mostrar tu nombre ni tus datos de identidad.
-          </p>
-        )}
+        <p className="profile-anon-note">
+          Quienes formen parte de la audiencia elegida ven tu identidad. Si activás esta opción,
+          el resto de los Hermanos habilitados pueden encontrarte como <strong>Hermano registrado</strong>,
+          sin ver tu nombre ni tus datos de identidad. Ambas opciones se combinan: cambiar la audiencia
+          no desactiva la aparición anónima.
+        </p>
       </div>
     )
   }
@@ -197,6 +197,28 @@ export default function ProfilePage() {
     setSavingVisibility(true); setError(''); setSuccess('')
     try {
       const updated = await visibilityApi.updateVisibility([{ block, visibility: level }])
+      setVisibility(updated)
+      setSuccess('Privacidad actualizada.')
+    } catch {
+      setVisibility(prev)
+      setError('No se pudo actualizar la privacidad.')
+    }
+    finally { setSavingVisibility(false) }
+  }
+
+  // Identidad: guarda audiencia y aparición anónima como decisiones independientes.
+  // Se envían ambos valores (el cambiado y el actual) para preservar el que no se toca.
+  async function handleIdentityChange(patch: { visibility?: VisibilityLevel; anonymous_search?: boolean }) {
+    const prev = visibility
+    const next = {
+      block: 'identity' as const,
+      visibility: patch.visibility ?? visibility.identity?.visibility ?? 'workshop',
+      anonymous_search: patch.anonymous_search ?? visibility.identity?.anonymous_search ?? false,
+    }
+    setVisibility(v => ({ ...v, identity: { ...(v.identity as object), ...next } }))
+    setSavingVisibility(true); setError(''); setSuccess('')
+    try {
+      const updated = await visibilityApi.updateVisibility([next])
       setVisibility(updated)
       setSuccess('Privacidad actualizada.')
     } catch {
@@ -258,7 +280,7 @@ export default function ProfilePage() {
         {error && <Alert>{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
 
-        <form onSubmit={handleSave}>
+        <form id="profile-form" onSubmit={handleSave}>
           <section className="profile-section">
             <h2 className="profile-section-title">Identidad</h2>
             {!isSuperAdmin && (
@@ -369,9 +391,6 @@ export default function ProfilePage() {
             {renderSectionPrivacy('bio')}
           </section>
 
-          <div className="profile-save-row">
-            <Button type="submit" loading={saving}>Guardar cambios</Button>
-          </div>
         </form>
 
         {/* Grados */}
@@ -429,6 +448,10 @@ export default function ProfilePage() {
           )}
           {renderSectionPrivacy('positions')}
         </section>
+
+        <div className="profile-save-footer">
+          <Button type="submit" form="profile-form" loading={saving}>Guardar cambios</Button>
+        </div>
       </div>
 
       <Modal open={showDegreeModal} onClose={() => setShowDegreeModal(false)} title={editingDegree ? 'Editar grado' : 'Agregar grado'}>

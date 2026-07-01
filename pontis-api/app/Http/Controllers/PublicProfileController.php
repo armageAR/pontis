@@ -27,9 +27,10 @@ class PublicProfileController extends Controller {
         $can   = fn(string $block) => $vis->canSee($level($block), $user->id, $workshopIds, $principalId);
 
         $isSelf = $viewer->id === $user->id;
-        $idLevel = $level('identity');
-        // Identidad anónima: el nombre no se revela (salvo a uno mismo).
-        $identityVisible = $isSelf || ($idLevel !== 'anonymous' && $can('identity'));
+        // La identidad se revela solo si el viewer califica para la audiencia
+        // configurada (o es uno mismo). El flag de aparición anónima no revela
+        // identidad; solo habilita el resultado enmascarado en la búsqueda.
+        $identityVisible = $isSelf || $can('identity');
 
         $data = [
             'id'        => $user->id,
