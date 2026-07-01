@@ -284,7 +284,6 @@ Audiencias posibles en V1:
 * Privado.
 * Taller principal.
 * Mis Talleres.
-* Talleres seleccionados.
 * Usuarios activos/validados.
 * Disponible en búsquedas sin revelar identidad.
 

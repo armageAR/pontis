@@ -9,7 +9,7 @@ export interface Need {
   description: string | null
   location: string | null
   urgency: 'low' | 'medium' | 'high' | null
-  visibility: 'private' | 'workshop' | 'my_workshops' | 'talleres_seleccionados' | 'registered' | 'anonymous'
+  visibility: 'private' | 'workshop' | 'my_workshops' | 'registered' | 'anonymous'
   status: 'draft' | 'open' | 'searching' | 'with_matches' | 'contact_requested' | 'linked' | 'closed' | 'cancelled' | 'pending_authorization' | 'requires_correction' | 'rejected'
   authorization_notes: string | null
   category?: ServiceCategory

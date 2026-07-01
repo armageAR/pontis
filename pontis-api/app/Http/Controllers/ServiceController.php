@@ -34,7 +34,7 @@ class ServiceController extends Controller {
             'location'            => 'nullable|string|max:255',
             'availability'        => 'nullable|string',
             'conditions'          => 'nullable|string',
-            'visibility'          => 'nullable|string|in:private,workshop,my_workshops,talleres_seleccionados,registered,anonymous',
+            'visibility'          => 'nullable|string|in:private,workshop,my_workshops,registered,anonymous',
             'status'              => 'nullable|string|in:draft,active,paused,hidden,disabled,pending_authorization,requires_correction,rejected,closed,cancelled',
         ]);
         $user = $request->user();
@@ -67,7 +67,7 @@ class ServiceController extends Controller {
             'location'            => 'nullable|string|max:255',
             'availability'        => 'nullable|string',
             'conditions'          => 'nullable|string',
-            'visibility'          => 'nullable|string|in:private,workshop,my_workshops,talleres_seleccionados,registered,anonymous',
+            'visibility'          => 'nullable|string|in:private,workshop,my_workshops,registered,anonymous',
             'status'              => 'nullable|string|in:draft,active,paused,hidden,disabled,pending_authorization,requires_correction,rejected,closed,cancelled',
         ]);
         // If owner (not superadmin) changes requires_correction → active, apply approval logic

@@ -115,10 +115,10 @@ class DemoUsersSeeder extends Seeder
             'location' => 'registered', 'profession' => 'anonymous', 'bio' => 'anonymous',
             'degrees' => 'private', 'positions' => 'private',
         ],
-        'selected_workshops' => [
-            'identity' => 'talleres_seleccionados', 'masonic' => 'talleres_seleccionados',
+        'all_my_workshops' => [
+            'identity' => 'my_workshops', 'masonic' => 'my_workshops',
             'contact' => 'my_workshops', 'location' => 'registered', 'profession' => 'registered',
-            'bio' => 'my_workshops', 'degrees' => 'talleres_seleccionados', 'positions' => 'my_workshops',
+            'bio' => 'my_workshops', 'degrees' => 'my_workshops', 'positions' => 'my_workshops',
         ],
         'strict_private' => [
             'identity' => 'private', 'masonic' => 'private', 'contact' => 'private',
@@ -415,7 +415,7 @@ class DemoUsersSeeder extends Seeder
             ['status' => 'requires_correction', 'visibility' => 'my_workshops', 'modality' => 'both', 'title' => 'Servicio requiere corrección'],
             ['status' => 'rejected', 'visibility' => 'workshop', 'modality' => 'presencial', 'title' => 'Servicio rechazado de prueba'],
             ['status' => 'draft', 'visibility' => 'private', 'modality' => 'both', 'title' => 'Borrador de servicio privado'],
-            ['status' => 'paused', 'visibility' => 'talleres_seleccionados', 'modality' => 'remoto', 'title' => 'Servicio pausado temporalmente'],
+            ['status' => 'paused', 'visibility' => 'my_workshops', 'modality' => 'remoto', 'title' => 'Servicio pausado temporalmente'],
             ['status' => 'hidden', 'visibility' => 'registered', 'modality' => 'both', 'title' => 'Servicio oculto'],
             ['status' => 'disabled', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio deshabilitado'],
             ['status' => 'closed', 'visibility' => 'my_workshops', 'modality' => 'both', 'title' => 'Servicio cerrado'],

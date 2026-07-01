@@ -33,8 +33,7 @@ const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
 }
 const MODALITY_LABELS: Record<string, string> = { presencial: 'Presencial', remoto: 'Remoto', both: 'Ambas' }
 const VISIBILITY_LABELS: Record<string, string> = {
-  private: 'Privado', workshop: 'Mi taller', my_workshops: 'Mis talleres',
-  talleres_seleccionados: 'Talleres seleccionados', registered: 'Masones registrados', anonymous: 'Búsqueda anónima',
+  private: 'Privado', workshop: 'Mi taller principal', my_workshops: 'Mis talleres', registered: 'Masones registrados', anonymous: 'Búsqueda anónima',
 }
 const EMPTY_FORM = { title: '', description: '', service_category_id: '', modality: 'both', location: '', availability: '', conditions: '', visibility: 'private', status: 'draft' }
 

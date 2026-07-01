@@ -32,7 +32,7 @@ class NeedController extends Controller {
             'service_category_id' => 'nullable|integer|exists:service_categories,id',
             'location'            => 'nullable|string|max:255',
             'urgency'             => 'nullable|string|in:low,medium,high',
-            'visibility'          => 'nullable|string|in:private,workshop,my_workshops,talleres_seleccionados,registered,anonymous',
+            'visibility'          => 'nullable|string|in:private,workshop,my_workshops,registered,anonymous',
             'status'              => 'nullable|string|in:draft,open,searching,with_matches,contact_requested,linked,closed,cancelled,pending_authorization,requires_correction,rejected',
         ]);
         $user = $request->user();
@@ -62,7 +62,7 @@ class NeedController extends Controller {
             'service_category_id' => 'nullable|integer|exists:service_categories,id',
             'location'            => 'nullable|string|max:255',
             'urgency'             => 'nullable|string|in:low,medium,high',
-            'visibility'          => 'nullable|string|in:private,workshop,my_workshops,talleres_seleccionados,registered,anonymous',
+            'visibility'          => 'nullable|string|in:private,workshop,my_workshops,registered,anonymous',
             'status'              => 'nullable|string|in:draft,open,searching,with_matches,contact_requested,linked,closed,cancelled,pending_authorization,requires_correction,rejected',
         ]);
         if (!$request->user()->isSuperAdmin() && isset($data['status']) && in_array($data['status'], ['open', 'searching'])

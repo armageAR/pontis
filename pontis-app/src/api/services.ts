@@ -16,7 +16,7 @@ export interface Service {
   location: string | null
   availability: string | null
   conditions: string | null
-  visibility: 'private' | 'workshop' | 'my_workshops' | 'talleres_seleccionados' | 'registered' | 'anonymous'
+  visibility: 'private' | 'workshop' | 'my_workshops' | 'registered' | 'anonymous'
   status: 'draft' | 'active' | 'paused' | 'hidden' | 'disabled' | 'pending_authorization' | 'requires_correction' | 'rejected' | 'closed' | 'cancelled'
   authorization_notes: string | null
   category?: ServiceCategory

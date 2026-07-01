@@ -301,10 +301,6 @@ Visible para miembros activos y validados del Taller principal del Hermano, seg�
 
 Visible para miembros activos y validados de todos los Talleres a los que pertenece el Hermano, según configuración.
 
-### Talleres seleccionados
-
-Visible solo para miembros activos y validados de Talleres seleccionados explícitamente.
-
 ### Usuarios activos / validados
 
 Visible para usuarios registrados, aprobados y activos en Pontis.
@@ -1085,7 +1081,6 @@ Niveles de visibilidad respecto al que mira:
 * `private` (Solo yo): nadie, salvo uno mismo.
 * `workshop` (Mi taller principal): solo miembros del taller principal del dueño.
 * `my_workshops` (Mis talleres): quien comparta cualquier taller con el dueño.
-* `talleres_seleccionados`: por ahora se trata como `my_workshops`.
 * `registered` (Masones registrados): cualquier usuario validado.
 * `anonymous`: aparece en la búsqueda pero sin revelar identidad ("Un Hermano
   Registrado"); no se lo puede buscar por nombre/matrícula/email.

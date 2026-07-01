@@ -624,7 +624,6 @@ Representa las reglas que determinan qué información puede ver cada audiencia.
 * Privado.
 * Taller principal.
 * Mis Talleres.
-* Talleres seleccionados.
 * Usuarios activos / validados.
 * Disponible en búsquedas sin revelar identidad.
 

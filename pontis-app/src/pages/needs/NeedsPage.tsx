@@ -30,8 +30,7 @@ const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
 const URGENCY_LABELS: Record<string, string> = { low: 'Urgencia baja', medium: 'Urgencia media', high: 'Urgencia alta' }
 const URGENCY_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { low: 'success', medium: 'warning', high: 'error' }
 const VISIBILITY_LABELS: Record<string, string> = {
-  private: 'Privado', workshop: 'Mi taller', my_workshops: 'Mis talleres',
-  talleres_seleccionados: 'Talleres seleccionados', registered: 'Masones registrados', anonymous: 'Búsqueda anónima',
+  private: 'Privado', workshop: 'Mi taller principal', my_workshops: 'Mis talleres', registered: 'Masones registrados', anonymous: 'Búsqueda anónima',
 }
 const EMPTY_FORM = { title: '', description: '', service_category_id: '', location: '', urgency: '', visibility: 'private', status: 'draft' }
 

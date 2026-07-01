@@ -31,13 +31,25 @@ class ExploreController extends Controller {
 
             // Include workshop-level services if viewer shares any workshop with the service owner
             if ($viewerWorkshopIds->isNotEmpty()) {
+                $ownerIdsInPrincipalWorkshops = User::whereHas('workshops', function ($wq) use ($viewerWorkshopIds) {
+                    $wq->whereIn('workshops.id', $viewerWorkshopIds)
+                        ->where('user_workshop.is_principal', true);
+                })->pluck('id');
+
                 $ownerIdsInSameWorkshops = User::whereHas('workshops', function ($wq) use ($viewerWorkshopIds) {
                     $wq->whereIn('workshops.id', $viewerWorkshopIds);
                 })->pluck('id');
 
+                if ($ownerIdsInPrincipalWorkshops->isNotEmpty()) {
+                    $q->orWhere(function ($sub) use ($ownerIdsInPrincipalWorkshops) {
+                        $sub->where('visibility', 'workshop')
+                            ->whereIn('user_id', $ownerIdsInPrincipalWorkshops);
+                    });
+                }
+
                 if ($ownerIdsInSameWorkshops->isNotEmpty()) {
                     $q->orWhere(function ($sub) use ($ownerIdsInSameWorkshops) {
-                        $sub->whereIn('visibility', ['workshop', 'my_workshops', 'talleres_seleccionados'])
+                        $sub->where('visibility', 'my_workshops')
                             ->whereIn('user_id', $ownerIdsInSameWorkshops);
                     });
                 }
@@ -118,13 +130,25 @@ class ExploreController extends Controller {
             $q->whereIn('visibility', ['registered', 'anonymous']);
 
             if ($viewerWorkshopIds->isNotEmpty()) {
+                $ownerIdsInPrincipalWorkshops = User::whereHas('workshops', function ($wq) use ($viewerWorkshopIds) {
+                    $wq->whereIn('workshops.id', $viewerWorkshopIds)
+                        ->where('user_workshop.is_principal', true);
+                })->pluck('id');
+
                 $ownerIdsInSameWorkshops = User::whereHas('workshops', function ($wq) use ($viewerWorkshopIds) {
                     $wq->whereIn('workshops.id', $viewerWorkshopIds);
                 })->pluck('id');
 
+                if ($ownerIdsInPrincipalWorkshops->isNotEmpty()) {
+                    $q->orWhere(function ($sub) use ($ownerIdsInPrincipalWorkshops) {
+                        $sub->where('visibility', 'workshop')
+                            ->whereIn('user_id', $ownerIdsInPrincipalWorkshops);
+                    });
+                }
+
                 if ($ownerIdsInSameWorkshops->isNotEmpty()) {
                     $q->orWhere(function ($sub) use ($ownerIdsInSameWorkshops) {
-                        $sub->whereIn('visibility', ['workshop', 'my_workshops', 'talleres_seleccionados'])
+                        $sub->where('visibility', 'my_workshops')
                             ->whereIn('user_id', $ownerIdsInSameWorkshops);
                     });
                 }

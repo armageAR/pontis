@@ -34,7 +34,7 @@ class ProfileVisibility
         return match ($level) {
             'private'                                => false,
             'registered'                             => true,
-            'my_workshops', 'talleres_seleccionados' => $this->sharesWorkshop($subjectWorkshopIds),
+            'my_workshops' => $this->sharesWorkshop($subjectWorkshopIds),
             'workshop'                               => $this->inPrincipal($subjectPrincipalId),
             'anonymous'                              => false, // la identidad no se revela por nombre
             default                                  => $this->inPrincipal($subjectPrincipalId), // default = mi taller principal
