@@ -14,7 +14,7 @@ import * as profileApi from '@/api/profile'
 import type { Profile, UserDegree, UserPosition } from '@/api/profile'
 import * as provinceApi from '@/api/provinces'
 import * as visibilityApi from '@/api/visibility'
-import type { VisibilityLevel, VisibilityBlock, VisibilityMap } from '@/api/visibility'
+import type { VisibilityLevel, VisibilityBlock, VisibilityMap, VisibilitySetting } from '@/api/visibility'
 import client from '@/api/client'
 import WorkshopPicker from '@/components/WorkshopPicker'
 import { type WorkshopSearchResult } from '@/api/workshops'
@@ -215,7 +215,7 @@ export default function ProfilePage() {
       visibility: patch.visibility ?? visibility.identity?.visibility ?? 'workshop',
       anonymous_search: patch.anonymous_search ?? visibility.identity?.anonymous_search ?? false,
     }
-    setVisibility(v => ({ ...v, identity: { ...(v.identity as object), ...next } }))
+    setVisibility(v => ({ ...v, identity: { ...(v.identity as VisibilitySetting), ...next } }))
     setSavingVisibility(true); setError(''); setSuccess('')
     try {
       const updated = await visibilityApi.updateVisibility([next])
