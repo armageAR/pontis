@@ -8,6 +8,8 @@
 - Usar nombres claros, descriptivos y consistentes con el dominio del proyecto.
 - Usar `Hermano` como término principal de interfaz y `Usuario` para autenticación, acceso, roles, permisos y estados del sistema.
 - No crear un módulo funcional separado llamado `Personas`.
+- Terminadas las modificacion correr los test y validaciones de codigo, si hay errores corregir
+- verificado el codigo hacer comit y push
 
 ## Principios funcionales
 - Todo dato debe ser privado por defecto.
