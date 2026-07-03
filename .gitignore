@@ -11,3 +11,5 @@ pontis-api/bootstrap/cache/
 pontis-app/node_modules/
 pontis-app/dist/
 pontis-app/.env
+.servers.pid
+vite-dev.log
