@@ -37,7 +37,7 @@ export default function BandejaPage() {
       </div>
       <div className="bdj-content">
         {activeTab === 'contactos' && <ContactRequestsPage embedded />}
-        {activeTab === 'tramites' && <ChangeRequestsPage embedded />}
+        {activeTab === 'tramites' && <ChangeRequestsPage embedded mode="self" />}
         {activeTab === 'notificaciones' && <NotificationsList />}
       </div>
     </AppLayout>

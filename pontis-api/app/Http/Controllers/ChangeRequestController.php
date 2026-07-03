@@ -13,7 +13,12 @@ class ChangeRequestController extends Controller {
     public function index(Request $request): JsonResponse {
         $user = $request->user();
 
-        if ($user->isSuperAdmin()) {
+        // `mine` fuerza la vista de autoservicio del Hermano (Bandeja → Trámites):
+        // siempre solo las solicitudes propias, sin importar el rol. Sin `mine` se
+        // devuelve la lista de revisión con alcance (Administración → Validaciones).
+        if ($request->boolean('mine')) {
+            $query = ChangeRequest::where('user_id', $user->id)->latest();
+        } elseif ($user->isSuperAdmin()) {
             $query = ChangeRequest::with('user:id,name,last_name,email')->latest();
         } else {
             $adminWorkshopIds = $this->adminWorkshopIds($user);

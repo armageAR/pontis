@@ -69,15 +69,25 @@ The system SHALL notify authorized reviewers when a sensitive identity change re
 - **AND** no Admin de Taller is authorized through the Hermano's Talleres
 - **THEN** the system MUST notify Superadmins
 
-### Requirement: Change request reviewer UI supports Admin de Taller
-The change request page SHALL expose reviewer controls to Admin de Taller users for scoped sensitive identity change requests.
+### Requirement: Review and self-service surfaces are separated
+Reviewing sensitive identity change requests SHALL happen in the administration Validaciones surface, together with grade and cargo validations, while the Hermano self-service surface (Bandeja → Trámites) SHALL only expose that Hermano's own requests.
 
-#### Scenario: Admin de Taller opens change requests page
-- **WHEN** an Admin de Taller opens the change requests page
-- **THEN** the page MUST show scoped requests returned by the backend
-- **AND** pending or requires-info requests MUST show review actions
+#### Scenario: Reviewer opens the Validaciones surface
+- **WHEN** a Superadmin or Admin de Taller opens Administración → Validaciones
+- **THEN** the surface MUST show the sensitive identity change requests within their review scope, alongside grade and cargo validations
+- **AND** pending or requires-info requests MUST show review actions (approve, reject, request more information)
 
-#### Scenario: Regular Hermano opens change requests page
-- **WHEN** a regular Hermano opens the change requests page
-- **THEN** the page MUST NOT show reviewer actions
-- **AND** the page MUST continue to allow cancellation of that Hermano's own pending or requires-info requests
+#### Scenario: Reviewer opens Trámites self-service
+- **WHEN** a Superadmin or Admin de Taller opens Bandeja → Trámites
+- **THEN** the surface MUST show only that user's own requests
+- **AND** it MUST NOT show reviewer actions for other Hermanos' requests
+
+#### Scenario: Hermano uses the self-service surface
+- **WHEN** a Hermano opens Bandeja → Trámites
+- **THEN** the surface MUST show only that Hermano's own requests
+- **AND** it MUST allow creating a new request and cancelling their own pending or requires-info requests
+- **AND** it MUST NOT show reviewer actions
+
+#### Scenario: Pending requests are surfaced in the reviewer's pending count
+- **WHEN** the pending validation count is computed for a reviewer
+- **THEN** it MUST include pending sensitive identity change requests within that reviewer's scope, together with pending grade and cargo validations

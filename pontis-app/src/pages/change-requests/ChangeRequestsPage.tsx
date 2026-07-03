@@ -32,10 +32,13 @@ const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
   cancelled_by_user: 'default',
 }
 
-export default function ChangeRequestsPage({ embedded = false }: { embedded?: boolean }) {
+export default function ChangeRequestsPage({ embedded = false, mode = 'self' }: { embedded?: boolean; mode?: 'self' | 'review' }) {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superadmin'
-  const canReview = isSuperAdmin || (user?.admin_workshops?.length ?? 0) > 0
+  // La revisión (aprobar/rechazar/pedir info) vive en Administración → Validaciones
+  // (mode="review"). En Bandeja → Trámites (mode="self") el Hermano solo ve y
+  // gestiona sus propias solicitudes.
+  const isReview = mode === 'review'
 
   const [requests, setRequests] = useState<ChangeRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,7 +58,7 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
   async function load() {
     setLoading(true)
     try {
-      const r = await api.getChangeRequests({ status: statusFilter || undefined })
+      const r = await api.getChangeRequests({ status: statusFilter || undefined, mine: isReview ? undefined : true })
       setRequests(r.data); setLastPage(r.last_page); setTotal(r.total)
     } catch { setError('Error cargando solicitudes.') }
     finally { setLoading(false) }
@@ -109,13 +112,13 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
   }
 
   const canCancel = (r: ChangeRequest) =>
-    !isSuperAdmin && r.user_id === user?.id && ['pending', 'requires_info'].includes(r.status)
+    !isReview && r.user_id === user?.id && ['pending', 'requires_info'].includes(r.status)
 
   const inner = (
     <>
       <div className="cr-header">
         <h1 className="cr-title">Cambios de datos sensibles</h1>
-        {!isSuperAdmin && <Button onClick={() => { setForm({ field: 'name', new_value: '', reason: '' }); setShowModal(true) }}>+ Solicitar cambio</Button>}
+        {!isReview && !isSuperAdmin && <Button onClick={() => { setForm({ field: 'name', new_value: '', reason: '' }); setShowModal(true) }}>+ Solicitar cambio</Button>}
       </div>
 
       {actionMsg && <Alert variant="success">{actionMsg}</Alert>}
@@ -133,7 +136,7 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
       </div>
 
       {loading ? <div className="cr-loading"><Spinner /></div> : requests.length === 0 ? (
-        <EmptyState title="Sin solicitudes" description={canReview ? 'No hay solicitudes de cambio para este filtro.' : 'No enviaste ninguna solicitud de cambio aún.'} />
+        <EmptyState title="Sin solicitudes" description={isReview ? 'No hay solicitudes de cambio para este filtro.' : 'No enviaste ninguna solicitud de cambio aún.'} />
       ) : (
         <>
           <div className="cr-list">
@@ -141,7 +144,7 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
               <div key={r.id} className="cr-card">
                 <div className="cr-card-header">
                   <div>
-                    {canReview && r.user && <span className="cr-user">{r.user.name} {r.user.last_name} · {r.user.email}</span>}
+                    {isReview && r.user && <span className="cr-user">{r.user.name} {r.user.last_name} · {r.user.email}</span>}
                     <span className="cr-field">{FIELD_LABELS[r.field]}</span>
                   </div>
                   <Badge variant={STATUS_VARIANTS[r.status]}>{STATUS_LABELS[r.status]}</Badge>
@@ -160,7 +163,7 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
                 )}
                 <div className="cr-meta">Solicitado: {formatDate(r.created_at)}</div>
                 <div className="cr-actions">
-                  {canReview && ['pending', 'requires_info'].includes(r.status) && (
+                  {isReview && ['pending', 'requires_info'].includes(r.status) && (
                     <Button onClick={() => { setReviewModal(r); setReviewNotes('') }}>Revisar</Button>
                   )}
                   {canCancel(r) && (

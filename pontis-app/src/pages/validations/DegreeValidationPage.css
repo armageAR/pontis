@@ -1,6 +1,8 @@
 .validation-page { display: flex; flex-direction: column; gap: var(--space-5); }
 .validation-loading { display: flex; justify-content: center; padding: var(--space-6); }
 .validation-title { margin: 0 0 var(--space-3); color: var(--text-h); font-size: var(--text-lg); }
+.validation-section-title { margin: 0; color: var(--text-h); font-size: var(--text-md); font-weight: 600; }
+.validation-change-requests { border-top: 1px solid var(--border); padding-top: var(--space-5); }
 
 .validation-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
 .validation-table { width: 100%; border-collapse: collapse; }

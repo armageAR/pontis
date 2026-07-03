@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChangeRequest;
 use App\Models\UserDegree;
 use App\Models\UserPosition;
 use Illuminate\Http\JsonResponse;
@@ -26,15 +27,17 @@ class DashboardController extends Controller
     }
 
     /**
-     * Cantidad de grados y cargos declarados pendientes de validación que el
-     * actor puede resolver: alcance global para Superadmin, y solo los Talleres
+     * Cantidad de grados y cargos declarados y cambios de datos sensibles
+     * pendientes de revisión que el actor puede resolver desde Administración →
+     * Validaciones: alcance global para Superadmin, y solo los Talleres
      * administrados para un Admin de Taller (mismo alcance que las listas de
-     * validaciones pendientes).
+     * validaciones y trámites pendientes).
      */
     private function getPendingValidationCount($user): int
     {
         $degreeQuery = UserDegree::where('validation_status', 'declared');
         $positionQuery = UserPosition::where('validation_status', 'declared');
+        $changeRequestQuery = ChangeRequest::where('status', 'pending');
 
         if (! $user->isSuperAdmin()) {
             $adminWorkshopIds = $user->workshops()
@@ -47,9 +50,10 @@ class DashboardController extends Controller
 
             $degreeQuery->whereIn('workshop_id', $adminWorkshopIds);
             $positionQuery->whereIn('workshop_id', $adminWorkshopIds);
+            $changeRequestQuery->whereHas('user.workshops', fn ($q) => $q->whereIn('workshops.id', $adminWorkshopIds));
         }
 
-        return $degreeQuery->count() + $positionQuery->count();
+        return $degreeQuery->count() + $positionQuery->count() + $changeRequestQuery->count();
     }
 
     private function getPendingRequests($user): array

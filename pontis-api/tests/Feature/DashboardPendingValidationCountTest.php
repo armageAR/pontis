@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ChangeRequest;
 use App\Models\Position;
 use App\Models\User;
 use App\Models\UserDegree;
@@ -79,6 +80,50 @@ class DashboardPendingValidationCountTest extends TestCase
             ->getJson('/api/dashboard')
             ->assertOk()
             ->assertJsonPath('pending_validation_count', 3);
+    }
+
+    private function pendingChangeRequest(User $owner): ChangeRequest
+    {
+        return ChangeRequest::create([
+            'user_id'       => $owner->id,
+            'field'         => 'dni',
+            'current_value' => $owner->dni,
+            'new_value'     => '99999999',
+            'status'        => 'pending',
+        ]);
+    }
+
+    public function test_count_includes_pending_change_requests_scoped_for_admin(): void
+    {
+        $adminWorkshop = Workshop::factory()->create();
+        $otherWorkshop = Workshop::factory()->create();
+        $admin = $this->member($adminWorkshop, 'admin');
+        $memberHere = $this->member($adminWorkshop);
+        $memberThere = $this->member($otherWorkshop);
+
+        $this->declaredDegree($memberHere, $adminWorkshop);      // 1 grado
+        $this->pendingChangeRequest($memberHere);                // 1 trámite en el Taller administrado
+        $this->pendingChangeRequest($memberThere);               // trámite ajeno: no cuenta
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('pending_validation_count', 2);
+    }
+
+    public function test_count_includes_pending_change_requests_globally_for_superadmin(): void
+    {
+        $workshop = Workshop::factory()->create();
+        $superadmin = User::factory()->create(['role' => 'superadmin', 'status' => 'active']);
+        $member = $this->member($workshop);
+
+        $this->declaredDegree($member, $workshop);   // 1 grado
+        $this->pendingChangeRequest($member);        // 1 trámite
+
+        $this->actingAs($superadmin, 'sanctum')
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('pending_validation_count', 2);
     }
 
     public function test_regular_member_is_not_workshop_admin_and_has_zero_count(): void

@@ -21,7 +21,7 @@ export interface PaginatedChangeRequests {
   total: number
 }
 
-export async function getChangeRequests(params?: { status?: string }): Promise<PaginatedChangeRequests> {
+export async function getChangeRequests(params?: { status?: string; mine?: boolean }): Promise<PaginatedChangeRequests> {
   const { data } = await client.get<PaginatedChangeRequests>('/change-requests', { params })
   return data
 }

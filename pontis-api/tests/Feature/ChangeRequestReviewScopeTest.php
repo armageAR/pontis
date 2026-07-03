@@ -51,6 +51,26 @@ class ChangeRequestReviewScopeTest extends TestCase
         $this->assertNotContains($unrelated->id, $ids);
     }
 
+    public function test_mine_param_returns_only_own_requests_for_admin(): void
+    {
+        // En Bandeja → Trámites el Admin de Taller usa mine=1 y solo ve lo suyo,
+        // aunque como revisor tenga alcance sobre otros Hermanos del Taller.
+        $workshop = Workshop::factory()->create();
+        $admin = $this->member($workshop, 'admin');
+        $owner = $this->member($workshop);
+
+        $mine = $this->requestFor($admin);
+        $scopedButNotMine = $this->requestFor($owner);
+
+        $ids = collect($this->actingAs($admin, 'sanctum')
+            ->getJson('/api/change-requests?mine=1')
+            ->assertOk()
+            ->json('data'))->pluck('id');
+
+        $this->assertContains($mine->id, $ids);
+        $this->assertNotContains($scopedButNotMine->id, $ids);
+    }
+
     public function test_superadmin_lists_all_requests(): void
     {
         $workshop = Workshop::factory()->create();

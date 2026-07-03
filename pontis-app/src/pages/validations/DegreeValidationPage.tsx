@@ -4,12 +4,16 @@ import Button from '@/components/Button'
 import EmptyState from '@/components/EmptyState'
 import Spinner from '@/components/Spinner'
 import ValidationDetailModal from '@/components/ValidationDetailModal'
+import ChangeRequestsPage from '@/pages/change-requests/ChangeRequestsPage'
 import * as profileApi from '@/api/profile'
+import { useAuth } from '@/context/AuthContext'
 import { formatDate } from '@/utils/date'
 import { degreeToRow, positionToRow, type ValidationRow } from './validationRow'
 import './DegreeValidationPage.css'
 
 export default function DegreeValidationPage() {
+  const { user } = useAuth()
+  const canReviewChangeRequests = user?.role === 'superadmin' || (user?.admin_workshops?.length ?? 0) > 0
   const [rows, setRows] = useState<ValidationRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -66,6 +70,7 @@ export default function DegreeValidationPage() {
   return (
     <div className="validation-page">
       {error && <Alert>{error}</Alert>}
+      <h2 className="validation-section-title">Grados y cargos</h2>
       {rows.length === 0 ? (
         <EmptyState
           title="Sin validaciones pendientes"
@@ -105,6 +110,12 @@ export default function DegreeValidationPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {canReviewChangeRequests && (
+        <section className="validation-change-requests">
+          <ChangeRequestsPage embedded mode="review" />
+        </section>
       )}
 
       <ValidationDetailModal

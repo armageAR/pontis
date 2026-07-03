@@ -6,12 +6,14 @@ import ChangeRequestsPage from './ChangeRequestsPage'
 const h = vi.hoisted(() => ({
   user: { id: 1, role: 'user', name: 'Test', admin_workshops: [] as { id: number }[] } as any,
   requests: [] as ChangeRequest[],
+  getChangeRequests: vi.fn((_params?: { status?: string; mine?: boolean }) =>
+    Promise.resolve({ data: h.requests, current_page: 1, last_page: 1, total: h.requests.length })),
 }))
 
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: h.user }) }))
 
 vi.mock('@/api/changeRequests', () => ({
-  getChangeRequests: () => Promise.resolve({ data: h.requests, current_page: 1, last_page: 1, total: h.requests.length }),
+  getChangeRequests: (p?: { status?: string; mine?: boolean }) => h.getChangeRequests(p),
   createChangeRequest: vi.fn(() => Promise.resolve({} as ChangeRequest)),
   approveChangeRequest: vi.fn(() => Promise.resolve({} as ChangeRequest)),
   rejectChangeRequest: vi.fn(() => Promise.resolve({} as ChangeRequest)),
@@ -36,31 +38,31 @@ function request(overrides: Partial<ChangeRequest> = {}): ChangeRequest {
   }
 }
 
-describe('ChangeRequestsPage reviewer controls', () => {
+describe('ChangeRequestsPage', () => {
   beforeEach(() => {
     h.requests = [request()]
     h.user = { id: 1, role: 'user', name: 'Test', admin_workshops: [] }
+    h.getChangeRequests.mockClear()
   })
 
-  it('shows review action to an Admin de Taller', async () => {
-    h.user = { id: 1, role: 'user', name: 'Admin', admin_workshops: [{ id: 5 }] }
-    render(<ChangeRequestsPage embedded />)
+  it('review mode shows reviewer controls and requester identity', async () => {
+    render(<ChangeRequestsPage embedded mode="review" />)
     expect(await screen.findByRole('button', { name: 'Revisar' })).toBeInTheDocument()
     expect(screen.getByText(/owner@example.com/)).toBeInTheDocument()
+    // review mode never scopes to the caller's own requests
+    expect(h.getChangeRequests).toHaveBeenCalledWith(expect.objectContaining({ mine: undefined }))
+    expect(screen.queryByRole('button', { name: '+ Solicitar cambio' })).not.toBeInTheDocument()
   })
 
-  it('shows review action to a Superadmin', async () => {
-    h.user = { id: 1, role: 'superadmin', name: 'Super', admin_workshops: [] }
-    render(<ChangeRequestsPage embedded />)
-    expect(await screen.findByRole('button', { name: 'Revisar' })).toBeInTheDocument()
-  })
-
-  it('hides review action from a regular Hermano and keeps cancel on own request', async () => {
-    h.user = { id: 99, role: 'user', name: 'Owner', admin_workshops: [] }
-    h.requests = [request({ user_id: 99 })]
-    render(<ChangeRequestsPage embedded />)
+  it('self mode hides reviewer controls and requests only own trámites', async () => {
+    h.requests = [request({ user_id: 1 })]
+    render(<ChangeRequestsPage embedded mode="self" />)
     await waitFor(() => expect(screen.getByText('DNI / Documento')).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'Revisar' })).not.toBeInTheDocument()
     expect(screen.getByText('Cancelar solicitud')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '+ Solicitar cambio' })).toBeInTheDocument()
+    expect(h.getChangeRequests).toHaveBeenCalledWith(expect.objectContaining({ mine: true }))
+    // the requester identity line is not shown in self mode
+    expect(screen.queryByText(/owner@example.com/)).not.toBeInTheDocument()
   })
 })

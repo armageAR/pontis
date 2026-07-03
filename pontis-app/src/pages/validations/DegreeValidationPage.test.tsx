@@ -7,11 +7,14 @@ import DegreeValidationPage from './DegreeValidationPage'
 const h = vi.hoisted(() => ({
   degrees: [] as UserDegree[],
   positions: [] as UserPosition[],
+  user: { id: 1, role: 'user', name: 'Test', admin_workshops: [] as { id: number }[] } as any,
   validateDegree: vi.fn(() => Promise.resolve({} as UserDegree)),
   rejectDegree: vi.fn(() => Promise.resolve({} as UserDegree)),
   validatePosition: vi.fn(() => Promise.resolve({} as UserPosition)),
   rejectPosition: vi.fn(() => Promise.resolve({} as UserPosition)),
 }))
+
+vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: h.user }) }))
 
 vi.mock('@/api/profile', () => ({
   getPendingDegreeValidations: () => Promise.resolve({ data: h.degrees }),
@@ -20,6 +23,15 @@ vi.mock('@/api/profile', () => ({
   rejectDegree: h.rejectDegree,
   validatePosition: h.validatePosition,
   rejectPosition: h.rejectPosition,
+}))
+
+vi.mock('@/api/changeRequests', () => ({
+  getChangeRequests: () => Promise.resolve({ data: [], current_page: 1, last_page: 1, total: 0 }),
+  createChangeRequest: vi.fn(),
+  approveChangeRequest: vi.fn(),
+  rejectChangeRequest: vi.fn(),
+  requireInfoChangeRequest: vi.fn(),
+  cancelChangeRequest: vi.fn(),
 }))
 
 function degree(overrides: Partial<UserDegree> = {}): UserDegree {
@@ -45,6 +57,7 @@ describe('DegreeValidationPage', () => {
   beforeEach(() => {
     h.degrees = []
     h.positions = []
+    h.user = { id: 1, role: 'user', name: 'Test', admin_workshops: [] }
     h.validateDegree.mockClear()
     h.rejectDegree.mockClear()
   })
@@ -52,6 +65,18 @@ describe('DegreeValidationPage', () => {
   it('shows an empty state when there are no pending validations', async () => {
     render(<DegreeValidationPage />)
     expect(await screen.findByText('Sin validaciones pendientes')).toBeInTheDocument()
+  })
+
+  it('does not show the sensitive-changes review section to a non-reviewer', async () => {
+    render(<DegreeValidationPage />)
+    await screen.findByText('Sin validaciones pendientes')
+    expect(screen.queryByText('Cambios de datos sensibles')).not.toBeInTheDocument()
+  })
+
+  it('shows the sensitive-changes review section to a reviewer', async () => {
+    h.user = { id: 1, role: 'superadmin', name: 'Super', admin_workshops: [] }
+    render(<DegreeValidationPage />)
+    expect(await screen.findByText('Cambios de datos sensibles')).toBeInTheDocument()
   })
 
   it('renders a table row per pending record with the actions', async () => {

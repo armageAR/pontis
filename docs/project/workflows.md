@@ -245,6 +245,7 @@ Permitir cambios en datos restringidos mediante solicitud, revisión y aprobaci�
 
 * Hermano solicitante.
 * Superadmin.
+* Admin de Taller (para Hermanos de un Taller que administra).
 
 ## Flujo principal
 
@@ -256,9 +257,9 @@ Permitir cambios en datos restringidos mediante solicitud, revisión y aprobaci�
    * Valor actual.
    * Nuevo valor propuesto.
    * Motivo u observación, si corresponde.
-4. El sistema crea una solicitud en estado `Pendiente`.
+4. El sistema crea una solicitud en estado `Pendiente`. El Hermano ve y gestiona sus propias solicitudes en Bandeja → Trámites (crear, ver estado, cancelar).
 5. El sistema notifica a los Superadmin y a los Admin de Taller de los Talleres del solicitante (sin duplicar destinatarios).
-6. Un revisor autorizado (Superadmin, o Admin de Taller de un Taller del solicitante) revisa la solicitud.
+6. Un revisor autorizado (Superadmin, o Admin de Taller de un Taller del solicitante) revisa la solicitud desde Administración → Validaciones, junto con las validaciones de grados y cargos.
 7. El revisor puede:
 
    * Aprobar.
@@ -291,6 +292,8 @@ Permitir cambios en datos restringidos mediante solicitud, revisión y aprobaci�
 
 * El Superadmin puede aprobar cualquier cambio sensible.
 * El Admin de Taller puede aprobar cambios de nombre, apellido, DNI y matrícula masónica solo para Hermanos de un Taller que administra; no puede ver ni resolver solicitudes de Hermanos fuera de sus Talleres.
+* La revisión (aprobar/rechazar/pedir info) se realiza en Administración → Validaciones. Bandeja → Trámites es la vista de autoservicio del Hermano sobre sus propias solicitudes y no expone acciones de revisión.
+* Los trámites pendientes cuentan en el indicador de "validaciones pendientes" del revisor, junto con grados y cargos.
 * Toda resolución debe quedar auditada, registrando al revisor real.
 * Si el usuario cancela la solicitud, el dato original se conserva.
 
