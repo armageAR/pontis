@@ -35,10 +35,20 @@ class DegreeController extends Controller {
         }
 
         $data['user_id'] = $user->id;
-        $data['validation_status'] = 'declared';
+        // Si el actor ya está autorizado a validar para el Taller declarado
+        // (Superadmin, o Admin del Taller indicado), el registro autopropio se
+        // guarda validado y no genera pendientes ni notificaciones de revisión.
+        $autoValidated = $this->canValidateForWorkshop($user, $data['workshop_id'] ?? null);
+        $data['validation_status'] = $autoValidated ? 'validated' : 'declared';
+        if ($autoValidated) {
+            $data['validator_id'] = $user->id;
+            $data['validated_at'] = now();
+        }
         $degree = UserDegree::create($data);
-        AuditLogger::log($request, 'degree.created', $degree, 'created', ['degree' => $degree->degree, 'workshop_id' => $degree->workshop_id]);
-        $this->notifyValidators($degree, 'degree_validation_pending', 'Grado pendiente de validación');
+        AuditLogger::log($request, $autoValidated ? 'degree.self_validated' : 'degree.created', $degree, $autoValidated ? 'validated' : 'created', ['degree' => $degree->degree, 'workshop_id' => $degree->workshop_id]);
+        if (! $autoValidated) {
+            $this->notifyValidators($degree, 'degree_validation_pending', 'Grado pendiente de validación');
+        }
         $degree->load('workshop:id,name,number');
         return response()->json($degree, 201);
     }

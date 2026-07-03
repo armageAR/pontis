@@ -27,10 +27,20 @@ class UserPositionController extends Controller {
         }
 
         $data['user_id'] = $user->id;
-        $data['validation_status'] = 'declared';
+        // Si el actor ya está autorizado a validar para el Taller declarado
+        // (Superadmin, o Admin del Taller indicado), el cargo autopropio se
+        // guarda validado y no genera pendientes ni notificaciones de revisión.
+        $autoValidated = $this->canValidateForWorkshop($user, $data['workshop_id']);
+        $data['validation_status'] = $autoValidated ? 'validated' : 'declared';
+        if ($autoValidated) {
+            $data['validator_id'] = $user->id;
+            $data['validated_at'] = now();
+        }
         $up = UserPosition::create($data);
-        AuditLogger::log($request, 'position.created', $up, 'created', ['position_id' => $up->position_id, 'workshop_id' => $up->workshop_id]);
-        $this->notifyValidators($up, 'position_validation_pending', 'Cargo pendiente de validación');
+        AuditLogger::log($request, $autoValidated ? 'position.self_validated' : 'position.created', $up, $autoValidated ? 'validated' : 'created', ['position_id' => $up->position_id, 'workshop_id' => $up->workshop_id]);
+        if (! $autoValidated) {
+            $this->notifyValidators($up, 'position_validation_pending', 'Cargo pendiente de validación');
+        }
         $up->load(['position:id,name','workshop:id,name,number']);
         return response()->json($up, 201);
     }
