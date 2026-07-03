@@ -101,8 +101,7 @@ Rules:
 * Grade history must be preserved.
 * Maestro is the highest grade in V1.
 * Being Maestro does not grant general administrative permissions.
-* Maestro may publish without prior authorization.
-* Aprendiz and Compañero publications require approval.
+* Publishing does not depend on grade: any registered, validated user may publish without prior authorization (see decisions.md Decision 16). Being Maestro grants no extra publishing privilege.
 
 ### Cargos
 
@@ -207,8 +206,9 @@ Services, needs, and publications exist to help Hermanos find help and initiate 
 * Publications require a visibility/audience selection.
 * Publications must show a preview of visible data before publishing.
 * Publications do not change the general visibility of the user profile.
-* Aprendiz and Compañero publications require approval.
-* Maestro publications can be active without prior approval.
+* Publishing is free for any registered, validated user: no prior administrative approval, regardless of grade (see decisions.md Decision 16).
+* A new publication is available immediately in the author's own status choice; there is no `pending_authorization` state and no "Pedir corrección" action in the publication lifecycle.
+* Admin intervention on publications (takedown/suspension) is an exceptional, audited, after-the-fact action, not a prerequisite to publish.
 * Being Maestro does not grant admin permissions.
 
 ### Crawler
