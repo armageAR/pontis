@@ -1,9 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import Button from './Button'
 import Logo from './Logo'
-import NotificationBell from './NotificationBell'
+import SidebarUserSummary from './SidebarUserSummary'
 import {
   LayoutDashboard,
   Search,
@@ -13,7 +12,6 @@ import {
   Shield,
   Menu,
   X,
-  LogOut,
   PanelLeftClose,
 } from 'lucide-react'
 import './AppLayout.css'
@@ -123,14 +121,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
           {/* User footer */}
           <div className="app-sidebar-footer">
-            <NotificationBell />
-            <Link to="/profile" className="app-sidebar-user" onClick={closeMobileSidebar}>
-              {user?.name}
-            </Link>
-            <Button variant="outline" onClick={handleLogout} loading={loggingOut}>
-              <LogOut size={14} style={{ marginRight: 4 }} />
-              Salir
-            </Button>
+            {user && (
+              <SidebarUserSummary
+                user={user}
+                loggingOut={loggingOut}
+                onLogout={handleLogout}
+                onNavigate={closeMobileSidebar}
+              />
+            )}
           </div>
         </aside>
       </div>

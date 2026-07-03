@@ -276,6 +276,44 @@ class SanctumAuthTest extends TestCase
         $this->getJson('/api/me')->assertStatus(401);
     }
 
+    public function test_me_payload_includes_sidebar_summary_fields(): void
+    {
+        $principal = Workshop::factory()->create(['number' => 12, 'name' => 'La Fraternidad']);
+        $adminWorkshop = Workshop::factory()->create(['number' => 7, 'name' => 'La Tolerancia']);
+
+        $user = User::factory()->create([
+            'last_name'  => 'Pérez',
+            'masonic_id' => 'MAT-999',
+            'status'     => 'active',
+        ]);
+        $user->workshopMemberships()->attach($principal->id, ['role' => 'member', 'status' => 'active', 'is_principal' => true]);
+        $user->workshopMemberships()->attach($adminWorkshop->id, ['role' => 'admin', 'status' => 'active', 'is_principal' => false]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/me')
+            ->assertOk()
+            ->assertJsonPath('last_name', 'Pérez')
+            ->assertJsonPath('masonic_id', 'MAT-999')
+            ->assertJsonPath('principal_workshop.id', $principal->id)
+            ->assertJsonPath('principal_workshop.number', 12)
+            ->assertJsonPath('principal_workshop.name', 'La Fraternidad')
+            ->assertJsonCount(1, 'admin_workshops')
+            ->assertJsonPath('admin_workshops.0.number', 7)
+            ->assertJsonPath('admin_workshops.0.name', 'La Tolerancia');
+    }
+
+    public function test_me_payload_has_null_principal_and_empty_admins_when_absent(): void
+    {
+        $user = User::factory()->create(['status' => 'active', 'masonic_id' => null, 'last_name' => null]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/me')
+            ->assertOk()
+            ->assertJsonPath('principal_workshop', null)
+            ->assertJsonPath('masonic_id', null)
+            ->assertJsonPath('admin_workshops', []);
+    }
+
     // ── account status ───────────────────────────────────────────────────────
 
     public function test_account_status_returns_pending_info(): void

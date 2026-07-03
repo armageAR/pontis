@@ -286,13 +286,33 @@ class AuthController extends Controller
 
     private function userPayload(User $user): array
     {
+        $principal = $user->workshops()
+            ->wherePivot('is_principal', true)
+            ->first(['workshops.id', 'workshops.number', 'workshops.name']);
+
+        $adminWorkshops = $user->workshops()
+            ->wherePivot('role', 'admin')
+            ->get(['workshops.id', 'workshops.number', 'workshops.name']);
+
         return [
             'id'                => $user->id,
             'name'              => $user->name,
+            'last_name'         => $user->last_name,
             'email'             => $user->email,
             'role'              => $user->role,
             'status'            => $user->status,
+            'masonic_id'        => $user->masonic_id,
             'email_verified_at' => $user->email_verified_at,
+            'principal_workshop' => $principal ? [
+                'id'     => $principal->id,
+                'number' => $principal->number,
+                'name'   => $principal->name,
+            ] : null,
+            'admin_workshops' => $adminWorkshops->map(fn ($w) => [
+                'id'     => $w->id,
+                'number' => $w->number,
+                'name'   => $w->name,
+            ])->all(),
         ];
     }
 }

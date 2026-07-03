@@ -1,12 +1,22 @@
 import client from './client'
 
+export interface WorkshopSummary {
+  id: number
+  number: number
+  name: string
+}
+
 export interface User {
   id: number
   name: string
+  last_name: string | null
   email: string
   role: string
   status: 'verifying' | 'pending' | 'active' | 'rejected' | 'suspended' | 'inactive' | 'o_eterno'
+  masonic_id: string | null
   email_verified_at: string | null
+  principal_workshop: WorkshopSummary | null
+  admin_workshops: WorkshopSummary[]
 }
 
 interface AuthResponse {
