@@ -2,8 +2,7 @@
 namespace App\Http\Controllers;
 use App\Enums\UserStatus;
 use App\Models\User;
-use App\Models\UserVisibilitySetting;
-use App\Support\ProfileVisibility;
+use App\Support\VisibilityPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 class PeopleController extends Controller {
@@ -71,26 +70,20 @@ class PeopleController extends Controller {
             ->orderBy('last_name')->orderBy('name')
             ->paginate($perPage);
 
-        // Identidad enmascarada: si el viewer no califica para la audiencia de
-        // Identidad y el Hermano marcó "aparecer sin revelar identidad", figura
-        // como "Hermano registrado" (nombre, apellido y matrícula ocultos).
-        $ids = $people->getCollection()->pluck('id');
-        $identitySettings = UserVisibilitySetting::whereIn('user_id', $ids)
-            ->where('block', 'identity')
-            ->get()->keyBy('user_id');
-        $vis = new ProfileVisibility($authUser);
-        $selfId = $authUser->id;
+        // Identidad enmascarada: la decisión (audiencia + flag de aparición
+        // anónima) la resuelve la política central de visibilidad.
+        $policy = new VisibilityPolicy($authUser);
+        $policy->primeSettings($people->getCollection()->pluck('id'));
 
         // Aplanar el rol del pivote en cada taller (para identificar admins)
         // y enmascarar la identidad de los hermanos anónimos (excepto uno mismo).
-        $people->getCollection()->each(function ($u) use ($identitySettings, $vis, $selfId) {
-            $workshopIds = $u->workshops->pluck('id')->all();
-            $principalId = optional($u->workshops->first(fn($w) => (bool) ($w->pivot->is_principal ?? false)))->id;
-            $idSetting = $identitySettings->get($u->id);
-            $idLevel = $idSetting->visibility ?? 'workshop';
-            $anonSearch = (bool) ($idSetting->anonymous_search ?? false);
-            $identityVisible = $u->id === $selfId
-                || $vis->canSee($idLevel, $u->id, $workshopIds, $principalId);
+        // Mínimo dato: la matrícula queda ligada a la visibilidad de identidad
+        // y el estado masónico al bloque "masonic".
+        $people->getCollection()->transform(function ($u) use ($policy) {
+            // La identidad y los bloques se resuelven antes de aplanar la
+            // relación de talleres, porque la política necesita el pivote.
+            $identity = $policy->identityFor($u);
+            $masonicVisible = $policy->canSeeBlock($u, 'masonic');
 
             $u->setRelation('workshops', $u->workshops->map(fn($w) => [
                 'id'            => $w->id,
@@ -99,13 +92,20 @@ class PeopleController extends Controller {
                 'workshop_role' => $w->pivot->role ?? 'member',
             ]));
 
-            $isAnon = ! $identityVisible && $anonSearch;
-            if ($isAnon) {
-                $u->name       = 'Hermano registrado';
-                $u->last_name  = null;
+            if ($identity->anonymous) {
+                $u->name      = VisibilityPolicy::MASKED_NAME;
+                $u->last_name = null;
+            }
+            if (! $identity->visible) {
                 $u->masonic_id = null;
             }
-            $u->anonymous = $isAnon;
+            if (! $masonicVisible) {
+                $u->masonic_status = null;
+            }
+            $u->anonymous = $identity->anonymous;
+
+            // Whitelist de campos comunitarios (nunca email, teléfono ni DNI).
+            return (new \App\Http\Resources\CommunityPersonResource($u))->resolve();
         });
 
         return response()->json($people);
@@ -116,14 +116,14 @@ class PeopleController extends Controller {
      * Un Hermano aparece si coincidís por un campo que podés ver y, o bien podés
      * ver su identidad (aparece con nombre), o marcó "anónimo" (aparece como
      * "Hermano registrado"). Si limitó su identidad y no calificás (y no es
-     * anónimo), no aparece.
+     * anónimo), no aparece. Las decisiones las toma la política central.
      */
     private function visibilitySearch(Request $request): JsonResponse
     {
         $viewer = auth()->user();
-        $vis = new ProfileVisibility($viewer);
+        $policy = new VisibilityPolicy($viewer);
 
-        $hasQ        = $request->filled('q');            // identidad
+        $hasQ        = $request->filled('q');            // identidad visible o profesion/oficio visible
         $hasWorkshop = $request->filled('workshop_id');  // institucional (siempre buscable)
         $hasLocation = $request->filled('province') || $request->filled('locality') || $request->filled('country');
         $hasMasonic  = $request->filled('masonic_status');
@@ -142,8 +142,8 @@ class PeopleController extends Controller {
             $query->where(function ($qb) use ($q) {
                 $qb->whereRaw('unaccent(LOWER(name)) like unaccent(?)', ["%{$q}%"])
                    ->orWhereRaw('unaccent(LOWER(last_name)) like unaccent(?)', ["%{$q}%"])
-                   ->orWhereRaw('unaccent(LOWER(email)) like unaccent(?)', ["%{$q}%"])
-                   ->orWhereRaw("CAST(masonic_id AS TEXT) like ?", ["%{$q}%"]);
+                   ->orWhereRaw('unaccent(LOWER(profession)) like unaccent(?)', ["%{$q}%"])
+                   ->orWhereRaw('unaccent(LOWER(occupation)) like unaccent(?)', ["%{$q}%"]);
             });
         }
         if ($hasWorkshop) {
@@ -164,44 +164,41 @@ class PeopleController extends Controller {
         }
 
         $candidates = $query->orderBy('last_name')->orderBy('name')->limit(1000)->get();
+        $policy->primeSettings($candidates->pluck('id'));
 
-        $settingsByUser = UserVisibilitySetting::whereIn('user_id', $candidates->pluck('id'))
-            ->get()->groupBy('user_id');
+        $q = $hasQ ? mb_strtolower($request->q) : null;
+        $matches = fn ($value) => $q !== null
+            && $value !== null
+            && str_contains(mb_strtolower((string) $value), $q);
 
-        $level = function ($settings, string $block): string {
-            return optional($settings->firstWhere('block', $block))->visibility ?? 'workshop';
-        };
-        $principalOf = fn ($u) => optional($u->workshops->first(fn($w) => (bool) ($w->pivot->is_principal ?? false)))->id;
+        $shaped = $candidates->map(function ($u) use ($policy, $hasQ, $hasLocation, $hasMasonic, $matches) {
+            $identity = $policy->identityFor($u);
+            $identityVisible = $identity->visible;
 
-        $shaped = $candidates->map(function ($u) use ($vis, $settingsByUser, $level, $principalOf, $hasQ, $hasLocation, $hasMasonic) {
-            $settings = $settingsByUser->get($u->id) ?? collect();
-            $workshopIds = $u->workshops->pluck('id')->all();
-            $principalId = $principalOf($u);
-
-            // La identidad se evalúa en dos pasos: primero la audiencia
-            // configurada; el flag de aparición anónima solo habilita un
-            // resultado enmascarado para quienes no califican para la audiencia.
-            $idSetting = $settings->firstWhere('block', 'identity');
-            $idLevel = $idSetting->visibility ?? 'workshop';
-            $anonSearch = (bool) ($idSetting->anonymous_search ?? false);
-            $identityVisible = $vis->canSee($idLevel, $u->id, $workshopIds, $principalId);
-            $isAnon = ! $identityVisible && $anonSearch;
-            $locationVisible   = $vis->canSee($level($settings, 'location'), $u->id, $workshopIds, $principalId);
-            $professionVisible = $vis->canSee($level($settings, 'profession'), $u->id, $workshopIds, $principalId);
-            $masonicVisible    = $vis->canSee($level($settings, 'masonic'), $u->id, $workshopIds, $principalId);
+            $locationVisible   = $policy->canSeeBlock($u, 'location');
+            $professionVisible = $policy->canSeeBlock($u, 'profession');
+            $masonicVisible    = $policy->canSeeBlock($u, 'masonic');
 
             // Permisos por criterio aplicado.
-            if ($hasQ && ! $identityVisible) return null;        // no se lo puede buscar por identidad
+            if ($hasQ) {
+                $identityMatch = $matches($u->name) || $matches($u->last_name);
+                $professionMatch = $matches($u->profession) || $matches($u->occupation);
+                $matchedVisibleCriterion =
+                    ($identityMatch && $identityVisible)
+                    || ($professionMatch && $professionVisible);
+
+                if (! $matchedVisibleCriterion) return null;
+            }
             if ($hasLocation && ! $locationVisible) return null;
             if ($hasMasonic && ! $masonicVisible) return null;
 
             // Inclusión: con nombre si la identidad es visible; enmascarado si es
             // anónimo; en cualquier otro caso no aparece.
-            if (! $identityVisible && ! $isAnon) return null;
+            if (! $identityVisible && ! $identity->anonymous) return null;
 
             return [
                 'id'             => $u->id,
-                'name'           => $identityVisible ? $u->name : 'Hermano registrado',
+                'name'           => $identityVisible ? $u->name : VisibilityPolicy::MASKED_NAME,
                 'last_name'      => $identityVisible ? $u->last_name : null,
                 'masonic_id'     => $identityVisible ? $u->masonic_id : null,
                 'masonic_status' => $masonicVisible ? $u->masonic_status : null,

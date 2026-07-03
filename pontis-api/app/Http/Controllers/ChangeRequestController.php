@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 use App\Models\ChangeRequest;
 use App\Models\PontisNotification;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,6 +33,10 @@ class ChangeRequestController extends Controller {
         $data['user_id']       = $user->id;
         $data['current_value'] = $user->{$data['field']};
         $cr = ChangeRequest::create($data);
+        AuditLogger::log($request, 'change_request.created', $cr, 'pending', [
+            'field' => $cr->field,
+            'user_id' => $cr->user_id,
+        ]);
         $superadmins = \App\Models\User::where('role', 'superadmin')->pluck('id');
         foreach ($superadmins as $sid) {
             PontisNotification::create([
@@ -57,6 +62,10 @@ class ChangeRequestController extends Controller {
             'reviewer_notes' => $data['reviewer_notes'] ?? null,
             'reviewed_at'    => now(),
         ]);
+        AuditLogger::log($request, 'change_request.approved', $changeRequest, 'approved', [
+            'field' => $changeRequest->field,
+            'user_id' => $changeRequest->user_id,
+        ]);
         PontisNotification::create([
             'user_id' => $user->id,
             'type'    => 'change_approved',
@@ -76,6 +85,10 @@ class ChangeRequestController extends Controller {
             'reviewer_id'    => $request->user()->id,
             'reviewer_notes' => $data['reviewer_notes'] ?? null,
             'reviewed_at'    => now(),
+        ]);
+        AuditLogger::log($request, 'change_request.rejected', $changeRequest, 'rejected', [
+            'field' => $changeRequest->field,
+            'user_id' => $changeRequest->user_id,
         ]);
         PontisNotification::create([
             'user_id' => $changeRequest->user_id,
@@ -97,6 +110,10 @@ class ChangeRequestController extends Controller {
             'reviewer_notes' => $data['reviewer_notes'],
             'reviewed_at'    => now(),
         ]);
+        AuditLogger::log($request, 'change_request.requires_info', $changeRequest, 'requires_info', [
+            'field' => $changeRequest->field,
+            'user_id' => $changeRequest->user_id,
+        ]);
         PontisNotification::create([
             'user_id' => $changeRequest->user_id,
             'type'    => 'change_requires_info',
@@ -111,6 +128,9 @@ class ChangeRequestController extends Controller {
         abort_if($changeRequest->user_id !== $request->user()->id, 403);
         abort_if(!in_array($changeRequest->status, ['pending', 'requires_info']), 422, 'Esta solicitud ya fue resuelta.');
         $changeRequest->update(['status' => 'cancelled_by_user', 'reviewed_at' => now()]);
+        AuditLogger::log($request, 'change_request.cancelled', $changeRequest, 'cancelled_by_user', [
+            'field' => $changeRequest->field,
+        ]);
         return response()->json($changeRequest->fresh());
     }
 }

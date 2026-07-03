@@ -10,8 +10,9 @@ use App\Http\Requests\Admin\RemoveWorkshopUsersRequest;
 use App\Http\Requests\Admin\StoreWorkshopRequest;
 use App\Http\Requests\Admin\UpdateWorkshopRequest;
 use App\Http\Requests\Admin\WorkshopIndexRequest;
-use App\Http\Resources\UserResource;
+use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\WorkshopResource;
+use App\Support\VisibilityPolicy;
 use App\Models\User;
 use App\Models\Workshop;
 use Illuminate\Http\JsonResponse;
@@ -248,7 +249,12 @@ class WorkshopController extends Controller
     {
         Gate::authorize('view', $workshop);
 
-        if (request()->has('include') && str_contains(request()->input('include'), 'users')) {
+        // La relación users lleva payload administrativo (email): solo se
+        // incluye para Superadmin o Admin de este taller. Un miembro común
+        // consulta la nómina por el endpoint de miembros, con mínimo dato.
+        $actor = request()->user();
+        $isAdminContext = $actor->isSuperAdmin() || $actor->isAdminOfWorkshop($workshop);
+        if ($isAdminContext && request()->has('include') && str_contains(request()->input('include'), 'users')) {
             $workshop->load('users');
         }
 
@@ -302,17 +308,23 @@ class WorkshopController extends Controller
         return new WorkshopResource($workshop);
     }
 
-    public function users(Workshop $workshop): AnonymousResourceCollection
+    public function users(Workshop $workshop): AnonymousResourceCollection|JsonResponse
     {
         Gate::authorize('viewUsers', $workshop);
+
+        $actor = request()->user();
+        $isAdminContext = $actor->isSuperAdmin() || $actor->isAdminOfWorkshop($workshop);
 
         $query = $workshop->users()->withPivot('role');
 
         if (request()->filled('search')) {
             $search = mb_strtolower(request()->input('search'));
-            $query->where(function ($q) use ($search) {
-                $q->whereRaw('unaccent(LOWER(users.name)) like unaccent(?)', ["%{$search}%"])
-                  ->orWhereRaw('unaccent(LOWER(users.email)) like unaccent(?)', ["%{$search}%"]);
+            $query->where(function ($q) use ($search, $isAdminContext) {
+                $q->whereRaw('unaccent(LOWER(users.name)) like unaccent(?)', ["%{$search}%"]);
+                // Buscar por email es un criterio administrativo, no comunitario.
+                if ($isAdminContext) {
+                    $q->orWhereRaw('unaccent(LOWER(users.email)) like unaccent(?)', ["%{$search}%"]);
+                }
             });
         }
 
@@ -321,8 +333,28 @@ class WorkshopController extends Controller
         }
 
         $perPage = request()->input('per_page', 15);
+        $users = $query->paginate($perPage);
 
-        return UserResource::collection($query->paginate($perPage));
+        // Separación de payloads: el admin del taller recibe datos operativos;
+        // un miembro común recibe mínimo dato con identidad regida por la política.
+        if ($isAdminContext) {
+            return AdminUserResource::collection($users);
+        }
+
+        $policy = new VisibilityPolicy($actor);
+        $policy->primeSettings($users->getCollection()->pluck('id'));
+        $users->getCollection()->transform(function ($u) use ($policy) {
+            $identity = $policy->identityFor($u);
+            return [
+                'id'            => $u->id,
+                'name'          => $identity->visible ? $u->name : VisibilityPolicy::MASKED_NAME,
+                'last_name'     => $identity->visible ? $u->last_name : null,
+                'anonymous'     => ! $identity->visible,
+                'workshop_role' => $u->pivot->role ?? 'member',
+            ];
+        });
+
+        return response()->json($users);
     }
 
     public function assignUsers(AssignWorkshopUsersRequest $request, Workshop $workshop): WorkshopResource

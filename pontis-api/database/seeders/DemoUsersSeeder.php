@@ -367,41 +367,35 @@ class DemoUsersSeeder extends Seeder
 
     private function seedPublications(User $user, $categories, ?User $admin, array $scenario, array $location, int $seq): void
     {
-        foreach ($scenario['services'] as $offset => $serviceScenario) {
-            $authorized = in_array($serviceScenario['status'], ['active', 'paused', 'hidden'], true);
-
+        foreach ($scenario['services'] as $offset => $s) {
             Service::create([
                 'user_id' => $user->id,
-                'authorized_by' => $authorized ? $admin?->id : null,
-                'authorized_at' => $authorized ? Carbon::now()->subDays($offset + 1) : null,
-                'authorization_notes' => $this->authorizationNotes($serviceScenario['status']),
                 'service_category_id' => $categories->isNotEmpty() ? $categories[($seq + $offset) % $categories->count()]->id : null,
-                'title' => $serviceScenario['title'],
-                'description' => $serviceScenario['description'],
-                'modality' => $serviceScenario['modality'],
+                'title' => $s['title'],
+                'description' => $s['description'],
+                'modality' => $s['modality'],
                 'location' => "{$location['locality']}, {$location['province']}",
                 'availability' => ['Lunes a viernes', 'Turnos por la tarde', 'Remoto con agenda previa'][$offset % 3],
                 'conditions' => ['Sin cargo para consultas iniciales', 'Arancel preferencial', 'Derivación según disponibilidad'][$offset % 3],
-                'visibility' => $serviceScenario['visibility'],
-                'status' => $serviceScenario['status'],
+                'visibility' => $s['visibility'],
+                'status' => $s['status'],
+                'published_at' => $s['published_at'],
+                'expires_at' => $s['expires_at'],
             ]);
         }
 
-        foreach ($scenario['needs'] as $offset => $needScenario) {
-            $authorized = in_array($needScenario['status'], ['open', 'searching', 'with_matches'], true);
-
+        foreach ($scenario['needs'] as $offset => $n) {
             Need::create([
                 'user_id' => $user->id,
-                'authorized_by' => $authorized ? $admin?->id : null,
-                'authorized_at' => $authorized ? Carbon::now()->subDays($offset + 2) : null,
-                'authorization_notes' => $this->authorizationNotes($needScenario['status']),
                 'service_category_id' => $categories->isNotEmpty() ? $categories[($seq + $offset + 3) % $categories->count()]->id : null,
-                'title' => $needScenario['title'],
-                'description' => $needScenario['description'],
+                'title' => $n['title'],
+                'description' => $n['description'],
                 'location' => "{$location['locality']}, {$location['province']}",
-                'urgency' => $needScenario['urgency'],
-                'visibility' => $needScenario['visibility'],
-                'status' => $needScenario['status'],
+                'urgency' => $n['urgency'],
+                'visibility' => $n['visibility'],
+                'status' => $n['status'],
+                'published_at' => $n['published_at'],
+                'expires_at' => $n['expires_at'],
             ]);
         }
     }
@@ -409,17 +403,17 @@ class DemoUsersSeeder extends Seeder
     private function serviceScenarios(int $seq): array
     {
         $catalog = [
-            ['status' => 'active', 'visibility' => 'registered', 'modality' => 'both', 'title' => 'Asesoramiento profesional disponible'],
-            ['status' => 'active', 'visibility' => 'anonymous', 'modality' => 'remoto', 'title' => 'Consulta reservada para hermanos'],
-            ['status' => 'pending_authorization', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio pendiente de aprobación'],
-            ['status' => 'requires_correction', 'visibility' => 'my_workshops', 'modality' => 'both', 'title' => 'Servicio requiere corrección'],
-            ['status' => 'rejected', 'visibility' => 'workshop', 'modality' => 'presencial', 'title' => 'Servicio rechazado de prueba'],
-            ['status' => 'draft', 'visibility' => 'private', 'modality' => 'both', 'title' => 'Borrador de servicio privado'],
-            ['status' => 'paused', 'visibility' => 'my_workshops', 'modality' => 'remoto', 'title' => 'Servicio pausado temporalmente'],
-            ['status' => 'hidden', 'visibility' => 'registered', 'modality' => 'both', 'title' => 'Servicio oculto'],
-            ['status' => 'disabled', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio deshabilitado'],
-            ['status' => 'closed', 'visibility' => 'my_workshops', 'modality' => 'both', 'title' => 'Servicio cerrado'],
-            ['status' => 'cancelled', 'visibility' => 'private', 'modality' => 'remoto', 'title' => 'Servicio cancelado'],
+            ['lifecycle' => 'active', 'visibility' => 'registered', 'modality' => 'both', 'title' => 'Asesoramiento profesional disponible'],
+            ['lifecycle' => 'active', 'visibility' => 'anonymous', 'modality' => 'remoto', 'title' => 'Consulta reservada para hermanos'],
+            ['lifecycle' => 'active', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio presencial disponible'],
+            ['lifecycle' => 'draft', 'visibility' => 'my_workshops', 'modality' => 'both', 'title' => 'Borrador de servicio en preparación'],
+            ['lifecycle' => 'expired', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio vencido de prueba'],
+            ['lifecycle' => 'draft', 'visibility' => 'private', 'modality' => 'both', 'title' => 'Borrador de servicio privado'],
+            ['lifecycle' => 'suspended', 'visibility' => 'my_workshops', 'modality' => 'remoto', 'title' => 'Servicio suspendido temporalmente'],
+            ['lifecycle' => 'active', 'visibility' => 'registered', 'modality' => 'both', 'title' => 'Servicio activo destacado'],
+            ['lifecycle' => 'suspended', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio suspendido por el autor'],
+            ['lifecycle' => 'expired', 'visibility' => 'my_workshops', 'modality' => 'both', 'title' => 'Servicio vencido para republicar'],
+            ['lifecycle' => 'draft', 'visibility' => 'private', 'modality' => 'remoto', 'title' => 'Borrador de servicio remoto'],
         ];
 
         return [
@@ -432,17 +426,17 @@ class DemoUsersSeeder extends Seeder
     private function needScenarios(int $seq): array
     {
         $catalog = [
-            ['status' => 'open', 'visibility' => 'registered', 'urgency' => 'medium', 'title' => 'Necesito recomendación profesional'],
-            ['status' => 'searching', 'visibility' => 'anonymous', 'urgency' => 'high', 'title' => 'Búsqueda urgente y reservada'],
-            ['status' => 'with_matches', 'visibility' => 'my_workshops', 'urgency' => 'low', 'title' => 'Necesidad con contactos sugeridos'],
-            ['status' => 'contact_requested', 'visibility' => 'workshop', 'urgency' => 'medium', 'title' => 'Contacto solicitado'],
-            ['status' => 'linked', 'visibility' => 'registered', 'urgency' => 'low', 'title' => 'Necesidad vinculada'],
-            ['status' => 'closed', 'visibility' => 'registered', 'urgency' => 'low', 'title' => 'Necesidad resuelta'],
-            ['status' => 'cancelled', 'visibility' => 'private', 'urgency' => 'low', 'title' => 'Necesidad cancelada'],
-            ['status' => 'pending_authorization', 'visibility' => 'registered', 'urgency' => 'high', 'title' => 'Necesidad pendiente de aprobación'],
-            ['status' => 'requires_correction', 'visibility' => 'my_workshops', 'urgency' => 'medium', 'title' => 'Necesidad requiere corrección'],
-            ['status' => 'rejected', 'visibility' => 'workshop', 'urgency' => 'medium', 'title' => 'Necesidad rechazada de prueba'],
-            ['status' => 'draft', 'visibility' => 'private', 'urgency' => 'low', 'title' => 'Borrador de necesidad'],
+            ['lifecycle' => 'active', 'visibility' => 'registered', 'urgency' => 'medium', 'title' => 'Necesito recomendación profesional'],
+            ['lifecycle' => 'active', 'visibility' => 'anonymous', 'urgency' => 'high', 'title' => 'Búsqueda urgente y reservada'],
+            ['lifecycle' => 'active', 'visibility' => 'my_workshops', 'urgency' => 'low', 'title' => 'Necesidad con contactos sugeridos'],
+            ['lifecycle' => 'suspended', 'visibility' => 'workshop', 'urgency' => 'medium', 'title' => 'Necesidad suspendida'],
+            ['lifecycle' => 'expired', 'visibility' => 'registered', 'urgency' => 'low', 'title' => 'Necesidad vencida'],
+            ['lifecycle' => 'suspended', 'visibility' => 'registered', 'urgency' => 'low', 'title' => 'Necesidad resuelta y suspendida'],
+            ['lifecycle' => 'draft', 'visibility' => 'private', 'urgency' => 'low', 'title' => 'Borrador de necesidad privada'],
+            ['lifecycle' => 'active', 'visibility' => 'registered', 'urgency' => 'high', 'title' => 'Necesidad urgente abierta'],
+            ['lifecycle' => 'draft', 'visibility' => 'my_workshops', 'urgency' => 'medium', 'title' => 'Borrador de necesidad en preparación'],
+            ['lifecycle' => 'expired', 'visibility' => 'workshop', 'urgency' => 'medium', 'title' => 'Necesidad vencida para republicar'],
+            ['lifecycle' => 'draft', 'visibility' => 'private', 'urgency' => 'low', 'title' => 'Borrador de necesidad'],
         ];
 
         return [
@@ -454,22 +448,27 @@ class DemoUsersSeeder extends Seeder
 
     private function publicationPayload(array $base, string $type, int $seq): array
     {
-        $description = $type === 'service'
-            ? 'Oferta demo para probar exploración, visibilidad, autorización y filtros.'
-            : 'Necesidad demo para probar estados, urgencia, autorización y filtros.';
+        $now = Carbon::now();
+        [$status, $publishedAt, $expiresAt] = match ($base['lifecycle']) {
+            'active'    => ['active', $now->copy()->subDays(5), $now->copy()->addDays(30)],
+            'expired'   => ['active', $now->copy()->subDays(100), $now->copy()->subDays(10)],
+            'suspended' => ['suspended', $now->copy()->subDays(20), $now->copy()->addDays(20)],
+            default     => ['draft', null, null],
+        };
 
-        return $base + [
+        $description = $type === 'service'
+            ? 'Oferta demo para probar exploración, visibilidad y vencimiento.'
+            : 'Necesidad demo para probar estados, urgencia y vencimiento.';
+
+        return [
+            'title' => $base['title'],
+            'visibility' => $base['visibility'],
+            'modality' => $base['modality'] ?? null,
+            'urgency' => $base['urgency'] ?? null,
+            'status' => $status,
+            'published_at' => $publishedAt,
+            'expires_at' => $expiresAt,
             'description' => "{$description} Caso {$seq}.",
         ];
-    }
-
-    private function authorizationNotes(string $status): ?string
-    {
-        return match ($status) {
-            'requires_correction' => 'Revisar descripción y condiciones antes de publicar.',
-            'rejected' => 'No cumple los criterios de publicación demo.',
-            'pending_authorization' => 'Pendiente de revisión por administrador.',
-            default => null,
-        };
     }
 }

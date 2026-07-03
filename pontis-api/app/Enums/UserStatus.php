@@ -10,4 +10,5 @@ enum UserStatus: string
     case REJECTED = 'rejected';
     case SUSPENDED = 'suspended';
     case INACTIVE = 'inactive';
+    case O_ETERNO = 'o_eterno';
 }

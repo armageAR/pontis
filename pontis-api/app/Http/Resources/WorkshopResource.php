@@ -26,7 +26,9 @@ class WorkshopResource extends JsonResource
             'notes' => $this->notes,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'users' => UserResource::collection($this->whenLoaded('users')),
+            // La relación users solo se carga en respuestas de acciones
+            // administrativas (asignar/quitar miembros); payload de admin.
+            'users' => AdminUserResource::collection($this->whenLoaded('users')),
             'is_member'  => $this->is_member ?? false,
             'is_pending' => $this->is_pending ?? false,
             'my_role'    => $this->my_role ?? null,

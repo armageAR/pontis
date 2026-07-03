@@ -3,8 +3,10 @@
 use App\Http\Controllers\Admin\WorkshopController;
 use App\Http\Controllers\Admin\WorkshopSyncController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ChangeRequestController;
 use App\Http\Controllers\ContactRequestController;
+use App\Http\Controllers\ContactConsentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DegreeController;
 use App\Http\Controllers\NeedController;
@@ -27,6 +29,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 Route::get('/workshops/search', [AuthController::class, 'searchWorkshops']);
 
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
@@ -45,9 +49,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
 
     Route::get('/users', [UserController::class, 'index']);
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
     Route::get('/my-workshops', [UserController::class, 'myWorkshops']);
     Route::patch('/users/{user}', [UserController::class, 'update']);
     Route::patch('/users/{user}/status', [UserController::class, 'updateStatus']);
+    Route::post('/users/{user}/o-eterno', [UserController::class, 'markOEterno']);
+    Route::post('/users/{user}/o-eterno/revert', [UserController::class, 'revertOEterno']);
     Route::patch('/users/{user}/password', [UserController::class, 'updatePassword']);
     Route::post('/users/{user}/workshops/{workshop}', [UserController::class, 'addWorkshop']);
     Route::patch('/users/{user}/workshops/{workshop}', [UserController::class, 'updateWorkshopRole']);
@@ -57,6 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/email', [ProfileController::class, 'requestEmailChange']);
+    Route::get('/profile/contact-consent', [ContactConsentController::class, 'show']);
+    Route::patch('/profile/contact-consent', [ContactConsentController::class, 'update']);
 
     // Mis Talleres (membresías activas y pendientes) desde el perfil
     Route::get('/profile/workshops', [ProfileWorkshopController::class, 'index']);
@@ -67,12 +76,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/degrees', [DegreeController::class, 'store']);
     Route::patch('/profile/degrees/{degree}', [DegreeController::class, 'update']);
     Route::delete('/profile/degrees/{degree}', [DegreeController::class, 'destroy']);
+    Route::get('/admin/degree-validations', [DegreeController::class, 'pendingValidations']);
+    Route::post('/admin/users/{user}/degrees', [DegreeController::class, 'storeForUser']);
+    Route::post('/admin/degrees/{degree}/validate', [DegreeController::class, 'validateDeclaration']);
+    Route::post('/admin/degrees/{degree}/reject', [DegreeController::class, 'rejectDeclaration']);
 
     // Cargos del usuario autenticado
     Route::get('/profile/positions', [UserPositionController::class, 'index']);
     Route::post('/profile/positions', [UserPositionController::class, 'store']);
     Route::patch('/profile/positions/{userPosition}', [UserPositionController::class, 'update']);
     Route::delete('/profile/positions/{userPosition}', [UserPositionController::class, 'destroy']);
+    Route::get('/admin/position-validations', [UserPositionController::class, 'pendingValidations']);
+    Route::post('/admin/users/{user}/positions', [UserPositionController::class, 'storeForUser']);
+    Route::post('/admin/positions/{userPosition}/validate', [UserPositionController::class, 'validateDeclaration']);
+    Route::post('/admin/positions/{userPosition}/reject', [UserPositionController::class, 'rejectDeclaration']);
 
     // Catálogo de cargos
     Route::get('/positions', [PositionCatalogController::class, 'index']);
@@ -92,9 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/services/{service}', [ServiceController::class, 'show']);
     Route::patch('/services/{service}', [ServiceController::class, 'update']);
     Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
-    Route::post('/services/{service}/authorize', [ServiceController::class, 'authorize']);
-    Route::post('/services/{service}/reject', [ServiceController::class, 'rejectPublication']);
-    Route::post('/services/{service}/request-correction', [ServiceController::class, 'requestCorrection']);
+    Route::post('/services/{service}/suspend', [ServiceController::class, 'suspend']);
 
     // Necesidades
     Route::get('/needs', [NeedController::class, 'index']);
@@ -102,9 +117,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/needs/{need}', [NeedController::class, 'show']);
     Route::patch('/needs/{need}', [NeedController::class, 'update']);
     Route::delete('/needs/{need}', [NeedController::class, 'destroy']);
-    Route::post('/needs/{need}/authorize', [NeedController::class, 'authorize']);
-    Route::post('/needs/{need}/reject', [NeedController::class, 'rejectPublication']);
-    Route::post('/needs/{need}/request-correction', [NeedController::class, 'requestCorrection']);
+    Route::post('/needs/{need}/suspend', [NeedController::class, 'suspend']);
 
     // Provincias (catálogo)
     Route::get('/provinces', [ProvinceController::class, 'index']);
@@ -121,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Configuración de visibilidad por bloque
     Route::get('/profile/visibility', [VisibilitySettingsController::class, 'index']);
     Route::post('/profile/visibility', [VisibilitySettingsController::class, 'update']);
+    Route::get('/profile/publication-preview', [VisibilitySettingsController::class, 'publicationPreview']);
 
     // Búsqueda de personas
     Route::get('/people', [PeopleController::class, 'index']);
@@ -150,6 +164,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/contact-requests', [ContactRequestController::class, 'store']);
     Route::post('/contact-requests/{contactRequest}/accept', [ContactRequestController::class, 'accept']);
     Route::post('/contact-requests/{contactRequest}/reject', [ContactRequestController::class, 'reject']);
+    Route::post('/contact-requests/{contactRequest}/request-info', [ContactRequestController::class, 'requestInfo']);
     Route::post('/contact-requests/{contactRequest}/cancel', [ContactRequestController::class, 'cancel']);
     Route::post('/contact-requests/{contactRequest}/close', [ContactRequestController::class, 'close']);
 

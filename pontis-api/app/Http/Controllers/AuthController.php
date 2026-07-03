@@ -9,6 +9,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -101,12 +102,60 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->status === UserStatus::O_ETERNO) {
+            throw ValidationException::withMessages([
+                'email' => ['La cuenta no tiene acceso activo.'],
+            ]);
+        }
+
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([
             'token' => $token,
             'user'  => $this->userPayload($user),
         ]);
+    }
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        Password::sendResetLink(['email' => $data['email']]);
+
+        return response()->json([
+            'message' => 'Si el email corresponde a una cuenta registrada, enviaremos instrucciones para restablecer la contraseña.',
+        ]);
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $data,
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => \Illuminate\Support\Str::random(60),
+                ])->save();
+
+                $user->tokens()->delete();
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'email' => ['El enlace de recuperación es inválido o expiró.'],
+            ]);
+        }
+
+        return response()->json(['message' => 'Contraseña actualizada correctamente.']);
     }
 
     public function logout(Request $request): JsonResponse

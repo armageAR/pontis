@@ -5,7 +5,13 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserResource extends JsonResource
+/**
+ * Payload administrativo de usuario. Incluye datos operativos (email, estado
+ * de verificación) que solo corresponden a flujos de administración.
+ * Los endpoints comunitarios nunca deben usar este resource: para la
+ * comunidad existe CommunityPersonResource y los payloads de VisibilityPolicy.
+ */
+class AdminUserResource extends JsonResource
 {
     public function toArray(Request $request): array
     {

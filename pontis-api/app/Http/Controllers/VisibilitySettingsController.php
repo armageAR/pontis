@@ -1,12 +1,24 @@
 <?php
 namespace App\Http\Controllers;
 use App\Models\UserVisibilitySetting;
+use App\Support\VisibilityPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 class VisibilitySettingsController extends Controller {
     public function index(Request $request): JsonResponse {
         $settings = UserVisibilitySetting::where('user_id', $request->user()->id)->get()->keyBy('block');
         return response()->json($settings);
+    }
+
+    /**
+     * Vista previa de qué datos del autor quedarán visibles al publicar con
+     * la visibilidad indicada. La resuelve la política central.
+     */
+    public function publicationPreview(Request $request): JsonResponse {
+        $data = $request->validate([
+            'visibility' => 'required|string|in:private,workshop,my_workshops,registered,anonymous',
+        ]);
+        return response()->json(VisibilityPolicy::publicationPreview($request->user(), $data['visibility']));
     }
     public function update(Request $request): JsonResponse {
         $data = $request->validate([

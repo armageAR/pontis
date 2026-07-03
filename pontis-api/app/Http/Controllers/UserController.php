@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\UserResource;
+use App\Http\Resources\AdminUserResource;
+use App\Models\ContactRequest;
+use App\Models\Need;
+use App\Models\Service;
 use App\Models\User;
 use App\Models\Workshop;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Support\AuditLogger;
 
 class UserController extends Controller
 {
@@ -16,7 +20,7 @@ class UserController extends Controller
         $request->validate([
             'search'         => ['nullable', 'string', 'max:255'],
             'role'           => ['nullable', 'string', 'in:superadmin,user'],
-            'status'         => ['nullable', 'string', 'in:pending,active,rejected,suspended,inactive'],
+            'status'         => ['nullable', 'string', 'in:pending,active,rejected,suspended,inactive,o_eterno'],
             'workshop_id'    => ['nullable', 'integer', 'exists:workshops,id'],
             'workshop_role'  => ['nullable', 'string', 'in:admin,member'],
             'per_page'       => ['nullable', 'integer', 'min:1', 'max:100'],
@@ -25,6 +29,11 @@ class UserController extends Controller
         ]);
 
         $currentUser = $request->user();
+
+        // Payload administrativo (incluye email): solo Superadmin o Admin de
+        // Taller. La comunidad consulta Hermanos por /people, con mínimo dato.
+        $isWorkshopAdmin = $currentUser->workshops()->wherePivot('role', 'admin')->exists();
+        abort_unless($currentUser->isSuperAdmin() || $isWorkshopAdmin, 403);
 
         $query = User::with('workshops');
 
@@ -37,7 +46,8 @@ class UserController extends Controller
             $search = mb_strtolower($request->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->whereRaw('unaccent(LOWER(name)) like unaccent(?)', ["%{$search}%"])
-                  ->orWhereRaw('unaccent(LOWER(email)) like unaccent(?)', ["%{$search}%"]);
+                  ->orWhereRaw('unaccent(LOWER(email)) like unaccent(?)', ["%{$search}%"])
+                  ->orWhereRaw("CAST(masonic_id AS TEXT) like ?", ["%{$search}%"]);
             });
         }
 
@@ -63,7 +73,7 @@ class UserController extends Controller
 
         $perPage = $request->input('per_page', 15);
 
-        return UserResource::collection($query->paginate($perPage));
+        return AdminUserResource::collection($query->paginate($perPage));
     }
 
     public function myWorkshops(Request $request): JsonResponse
@@ -94,7 +104,7 @@ class UserController extends Controller
         return response()->json($workshops);
     }
 
-    public function updateStatus(Request $request, User $user): UserResource|JsonResponse
+    public function updateStatus(Request $request, User $user): AdminUserResource|JsonResponse
     {
         $request->validate([
             'status' => ['required', 'string', 'in:pending,active,rejected,suspended,inactive'],
@@ -107,6 +117,7 @@ class UserController extends Controller
         }
 
         $newStatus = $request->input('status');
+        $oldStatus = $user->status?->value ?? (string) $user->status;
         $user->status = $newStatus;
 
         // Al activar manualmente un usuario que aún no verificó su email,
@@ -117,11 +128,47 @@ class UserController extends Controller
         }
 
         $user->save();
+        AuditLogger::log($request, 'user.status_changed', $user, $newStatus, [
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+        ]);
 
-        return new UserResource($user->load('workshops'));
+        return new AdminUserResource($user->load('workshops'));
     }
 
-    public function update(Request $request, User $user): UserResource|JsonResponse
+    public function markOEterno(Request $request, User $user): AdminUserResource|JsonResponse
+    {
+        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_if($request->user()->id === $user->id, 422, 'No podés marcarte como O Eterno.');
+
+        $oldStatus = $user->status?->value ?? (string) $user->status;
+        $user->update(['status' => 'o_eterno', 'masonic_status' => 'deceased']);
+        $user->tokens()->delete();
+
+        ContactRequest::where(function ($q) use ($user) {
+            $q->where('requester_id', $user->id)->orWhere('requestee_id', $user->id);
+        })->whereIn('status', ['pending', 'info_requested'])->update(['status' => 'closed']);
+
+        Service::where('user_id', $user->id)->where('status', 'active')->update(['status' => 'suspended']);
+        Need::where('user_id', $user->id)->where('status', 'active')->update(['status' => 'suspended']);
+
+        AuditLogger::log($request, 'user.marked_o_eterno', $user, 'o_eterno', ['old_status' => $oldStatus]);
+
+        return new AdminUserResource($user->fresh()->load('workshops'));
+    }
+
+    public function revertOEterno(Request $request, User $user): AdminUserResource|JsonResponse
+    {
+        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless(($user->status?->value ?? (string) $user->status) === 'o_eterno', 422, 'El usuario no está marcado como O Eterno.');
+
+        $user->update(['status' => 'inactive', 'masonic_status' => 'inactive']);
+        AuditLogger::log($request, 'user.reverted_o_eterno', $user, 'inactive');
+
+        return new AdminUserResource($user->fresh()->load('workshops'));
+    }
+
+    public function update(Request $request, User $user): AdminUserResource|JsonResponse
     {
         $request->validate([
             'name'  => ['sometimes', 'required', 'string', 'max:255'],
@@ -144,9 +191,13 @@ class UserController extends Controller
             return response()->json(['message' => 'Solo un Super Admin puede cambiar el rol global.'], 403);
         }
 
-        $user->update($request->only(['name', 'email', 'role']));
+        $changes = $request->only(['name', 'email', 'role']);
+        $user->update($changes);
+        AuditLogger::log($request, 'user.updated', $user, 'updated', [
+            'fields' => array_keys($changes),
+        ]);
 
-        return new UserResource($user->load('workshops'));
+        return new AdminUserResource($user->load('workshops'));
     }
 
     public function updatePassword(Request $request, User $user): JsonResponse
@@ -162,11 +213,12 @@ class UserController extends Controller
         }
 
         $user->update(['password' => $request->input('password')]);
+        AuditLogger::log($request, 'user.password_changed', $user, 'updated');
 
         return response()->json(['message' => 'Contraseña actualizada correctamente.']);
     }
 
-    public function addWorkshop(Request $request, User $user, Workshop $workshop): UserResource|JsonResponse
+    public function addWorkshop(Request $request, User $user, Workshop $workshop): AdminUserResource|JsonResponse
     {
         $currentUser = $request->user();
 
@@ -181,11 +233,12 @@ class UserController extends Controller
         if (! $user->workshops()->where('workshop_id', $workshop->id)->exists()) {
             $user->workshops()->attach($workshop->id, ['role' => 'member']);
         }
+        AuditLogger::log($request, 'membership.added', $user, 'added', ['workshop_id' => $workshop->id]);
 
-        return new UserResource($user->load('workshops'));
+        return new AdminUserResource($user->load('workshops'));
     }
 
-    public function updateWorkshopRole(Request $request, User $user, Workshop $workshop): UserResource|JsonResponse
+    public function updateWorkshopRole(Request $request, User $user, Workshop $workshop): AdminUserResource|JsonResponse
     {
         $data = $request->validate([
             'role'   => ['sometimes', 'required', 'string', 'in:admin,member'],
@@ -207,11 +260,12 @@ class UserController extends Controller
         if (isset($data['status'])) $pivot['status'] = $data['status'];
 
         $user->workshops()->updateExistingPivot($workshop->id, $pivot);
+        AuditLogger::log($request, 'membership.updated', $user, 'updated', ['workshop_id' => $workshop->id, 'fields' => array_keys($pivot)]);
 
-        return new UserResource($user->load('workshops'));
+        return new AdminUserResource($user->load('workshops'));
     }
 
-    public function removeWorkshop(Request $request, User $user, Workshop $workshop): UserResource|JsonResponse
+    public function removeWorkshop(Request $request, User $user, Workshop $workshop): AdminUserResource|JsonResponse
     {
         $currentUser = $request->user();
 
@@ -224,8 +278,9 @@ class UserController extends Controller
         }
 
         $user->workshops()->detach($workshop->id);
+        AuditLogger::log($request, 'membership.removed', $user, 'removed', ['workshop_id' => $workshop->id]);
 
-        return new UserResource($user->load('workshops'));
+        return new AdminUserResource($user->load('workshops'));
     }
 
     private function canActOn(User $actor, User $target): bool

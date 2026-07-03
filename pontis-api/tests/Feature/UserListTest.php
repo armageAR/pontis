@@ -43,11 +43,13 @@ class UserListTest extends TestCase
         $this->getJson('/api/users')->assertUnauthorized();
     }
 
-    public function test_any_authenticated_user_can_list_users(): void
+    public function test_user_without_admin_role_cannot_list_users(): void
     {
+        // /users es payload administrativo (incluye email): mínimo dato exige
+        // que la comunidad consulte Hermanos por /people.
         $this->actingAs($this->user(), 'sanctum')
              ->getJson('/api/users')
-             ->assertOk();
+             ->assertForbidden();
     }
 
     // ── scope ────────────────────────────────────────────────────────────────
@@ -82,23 +84,17 @@ class UserListTest extends TestCase
         $this->assertNotContains($outsider->id, $ids);
     }
 
-    public function test_regular_user_sees_only_own_workshop_users(): void
+    public function test_regular_workshop_member_cannot_list_users(): void
     {
+        // Un miembro común (sin rol de admin en ningún taller) no accede al
+        // listado administrativo; su vista comunitaria es /people.
         $workshop = Workshop::factory()->create();
         $user = $this->workshopMember($workshop);
-        $fellow = $this->workshopMember($workshop);
+        $this->workshopMember($workshop);
 
-        $otherWorkshop = Workshop::factory()->create();
-        $stranger = $this->workshopMember($otherWorkshop);
-
-        $response = $this->actingAs($user, 'sanctum')
+        $this->actingAs($user, 'sanctum')
              ->getJson('/api/users')
-             ->assertOk();
-
-        $ids = collect($response->json('data'))->pluck('id')->toArray();
-        $this->assertContains($user->id, $ids);
-        $this->assertContains($fellow->id, $ids);
-        $this->assertNotContains($stranger->id, $ids);
+             ->assertForbidden();
     }
 
     // ── filters ──────────────────────────────────────────────────────────────
@@ -114,6 +110,21 @@ class UserListTest extends TestCase
              ->assertOk()
              ->assertJsonCount(1, 'data')
              ->assertJsonPath('data.0.name', 'Juan Perez');
+    }
+
+    public function test_superadmin_admin_search_matches_masonic_id(): void
+    {
+        $sa = $this->superAdmin();
+        $target = User::factory()->create(['name' => 'Sin Coincidencia', 'masonic_id' => 123456]);
+        User::factory()->create(['name' => 'Otro Usuario', 'masonic_id' => 654321]);
+
+        $response = $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users?search=123456')
+             ->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($target->id));
+        $this->assertCount(1, $ids);
     }
 
     public function test_filter_by_global_role_superadmin(): void

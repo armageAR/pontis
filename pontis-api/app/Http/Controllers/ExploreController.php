@@ -1,7 +1,8 @@
 <?php
 namespace App\Http\Controllers;
+use App\Models\Need;
 use App\Models\Service;
-use App\Models\User;
+use App\Support\VisibilityPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,54 +18,27 @@ class ExploreController extends Controller {
         ]);
 
         $viewer = $request->user();
-        $viewerWorkshopIds = $viewer->workshops()->pluck('workshops.id');
+        $policy = new VisibilityPolicy($viewer);
 
         $query = Service::with(['user:id,name,last_name,profession,locality,province', 'category:id,name'])
             ->where('user_id', '!=', $viewer->id)
-            ->where('status', 'active');
+            ->where('status', 'active')
+            ->where('expires_at', '>', now());
+        $query->whereHas('user', fn($q) => $q->where('status', 'active'));
 
-        // Resolve which visibility levels the viewer qualifies for
-        // Build a list of eligible service IDs based on visibility rules
-        $query->where(function ($q) use ($viewer, $viewerWorkshopIds) {
-            // Always include services visible to all registered users
-            $q->whereIn('visibility', ['registered', 'anonymous']);
-
-            // Include workshop-level services if viewer shares any workshop with the service owner
-            if ($viewerWorkshopIds->isNotEmpty()) {
-                $ownerIdsInPrincipalWorkshops = User::whereHas('workshops', function ($wq) use ($viewerWorkshopIds) {
-                    $wq->whereIn('workshops.id', $viewerWorkshopIds)
-                        ->where('user_workshop.is_principal', true);
-                })->pluck('id');
-
-                $ownerIdsInSameWorkshops = User::whereHas('workshops', function ($wq) use ($viewerWorkshopIds) {
-                    $wq->whereIn('workshops.id', $viewerWorkshopIds);
-                })->pluck('id');
-
-                if ($ownerIdsInPrincipalWorkshops->isNotEmpty()) {
-                    $q->orWhere(function ($sub) use ($ownerIdsInPrincipalWorkshops) {
-                        $sub->where('visibility', 'workshop')
-                            ->whereIn('user_id', $ownerIdsInPrincipalWorkshops);
-                    });
-                }
-
-                if ($ownerIdsInSameWorkshops->isNotEmpty()) {
-                    $q->orWhere(function ($sub) use ($ownerIdsInSameWorkshops) {
-                        $sub->where('visibility', 'my_workshops')
-                            ->whereIn('user_id', $ownerIdsInSameWorkshops);
-                    });
-                }
-            }
-        });
+        // El alcance por visibilidad de publicación lo resuelve la política central.
+        $policy->scopePublicationVisibility($query);
 
         // Scope filter
         $scope = $request->input('scope', 'all');
+        $viewerWorkshopIds = collect($policy->viewerWorkshopIds);
         if ($scope === 'my_workshop') {
             $query->whereIn('user_id',
-                User::whereHas('workshops', fn($q) => $q->where('workshops.id', $viewerWorkshopIds->first() ?? 0))->pluck('id')
+                \App\Models\User::whereHas('workshops', fn($q) => $q->where('workshops.id', $viewerWorkshopIds->first() ?? 0))->pluck('id')
             );
         } elseif ($scope === 'my_workshops') {
             $query->whereIn('user_id',
-                User::whereHas('workshops', fn($q) => $q->whereIn('workshops.id', $viewerWorkshopIds))->pluck('id')
+                \App\Models\User::whereHas('workshops', fn($q) => $q->whereIn('workshops.id', $viewerWorkshopIds))->pluck('id')
             );
         }
 
@@ -90,21 +64,8 @@ class ExploreController extends Controller {
 
         $results = $query->orderByDesc('created_at')->paginate(20);
 
-        // Apply identity masking for anonymous visibility
-        $results->getCollection()->transform(function ($service) {
-            if ($service->visibility === 'anonymous') {
-                $service->user = [
-                    'id' => null,
-                    'name' => 'Hermano registrado',
-                    'last_name' => null,
-                    'profession' => $service->user?->profession,
-                    'locality' => $service->user?->locality,
-                    'province' => $service->user?->province,
-                    'anonymous' => true,
-                ];
-            }
-            return $service;
-        });
+        // Enmascarado de identidad para visibilidad anónima (política central).
+        $results->getCollection()->transform(fn ($service) => $policy->maskAnonymousAuthor($service, withProfession: true));
 
         return response()->json($results);
     }
@@ -120,40 +81,15 @@ class ExploreController extends Controller {
         ]);
 
         $viewer = $request->user();
-        $viewerWorkshopIds = $viewer->workshops()->pluck('workshops.id');
+        $policy = new VisibilityPolicy($viewer);
 
-        $query = \App\Models\Need::with(['user:id,name,last_name,locality,province', 'category:id,name'])
+        $query = Need::with(['user:id,name,last_name,locality,province', 'category:id,name'])
             ->where('user_id', '!=', $viewer->id)
-            ->whereIn('status', ['open', 'searching', 'with_matches']);
+            ->where('status', 'active')
+            ->where('expires_at', '>', now());
+        $query->whereHas('user', fn($q) => $q->where('status', 'active'));
 
-        $query->where(function ($q) use ($viewer, $viewerWorkshopIds) {
-            $q->whereIn('visibility', ['registered', 'anonymous']);
-
-            if ($viewerWorkshopIds->isNotEmpty()) {
-                $ownerIdsInPrincipalWorkshops = User::whereHas('workshops', function ($wq) use ($viewerWorkshopIds) {
-                    $wq->whereIn('workshops.id', $viewerWorkshopIds)
-                        ->where('user_workshop.is_principal', true);
-                })->pluck('id');
-
-                $ownerIdsInSameWorkshops = User::whereHas('workshops', function ($wq) use ($viewerWorkshopIds) {
-                    $wq->whereIn('workshops.id', $viewerWorkshopIds);
-                })->pluck('id');
-
-                if ($ownerIdsInPrincipalWorkshops->isNotEmpty()) {
-                    $q->orWhere(function ($sub) use ($ownerIdsInPrincipalWorkshops) {
-                        $sub->where('visibility', 'workshop')
-                            ->whereIn('user_id', $ownerIdsInPrincipalWorkshops);
-                    });
-                }
-
-                if ($ownerIdsInSameWorkshops->isNotEmpty()) {
-                    $q->orWhere(function ($sub) use ($ownerIdsInSameWorkshops) {
-                        $sub->where('visibility', 'my_workshops')
-                            ->whereIn('user_id', $ownerIdsInSameWorkshops);
-                    });
-                }
-            }
-        });
+        $policy->scopePublicationVisibility($query);
 
         if ($request->filled('q')) {
             $q = mb_strtolower($request->q);
@@ -177,19 +113,7 @@ class ExploreController extends Controller {
 
         $results = $query->orderByDesc('created_at')->paginate(20);
 
-        $results->getCollection()->transform(function ($need) {
-            if ($need->visibility === 'anonymous') {
-                $need->user = [
-                    'id' => null,
-                    'name' => 'Hermano registrado',
-                    'last_name' => null,
-                    'locality' => $need->user?->locality,
-                    'province' => $need->user?->province,
-                    'anonymous' => true,
-                ];
-            }
-            return $need;
-        });
+        $results->getCollection()->transform(fn ($need) => $policy->maskAnonymousAuthor($need));
 
         return response()->json($results);
     }

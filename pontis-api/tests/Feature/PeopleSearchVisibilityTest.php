@@ -29,6 +29,14 @@ class PeopleSearchVisibilityTest extends TestCase
         ]);
     }
 
+    private function setBlock(User $user, string $block, string $visibility): void
+    {
+        UserVisibilitySetting::updateOrCreate(
+            ['user_id' => $user->id, 'block' => $block],
+            ['visibility' => $visibility]
+        );
+    }
+
     /** 4.1 Qualified viewer sees identity even with anonymous-search enabled. */
     public function test_qualified_viewer_sees_identity_even_with_anonymous_search_enabled(): void
     {
@@ -114,5 +122,76 @@ class PeopleSearchVisibilityTest extends TestCase
             ->json();
 
         $this->assertNull(collect($res['data'])->firstWhere('id', $subject->id));
+    }
+
+    public function test_community_search_does_not_match_by_email_or_masonic_id(): void
+    {
+        $workshop = Workshop::factory()->create();
+
+        $subject = $this->member($workshop);
+        $subject->update([
+            'name' => 'NombreComun',
+            'last_name' => 'ApellidoComun',
+            'email' => 'sensible@example.com',
+            'masonic_id' => 999888,
+        ]);
+        $this->setIdentity($subject, 'registered', false);
+
+        $viewer = $this->member($workshop);
+
+        $byEmail = $this->actingAs($viewer, 'sanctum')
+            ->getJson('/api/people?scope=search&q=sensible@example.com')
+            ->assertOk()
+            ->json('data');
+
+        $byMasonicId = $this->actingAs($viewer, 'sanctum')
+            ->getJson('/api/people?scope=search&q=999888')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertNull(collect($byEmail)->firstWhere('id', $subject->id));
+        $this->assertNull(collect($byMasonicId)->firstWhere('id', $subject->id));
+    }
+
+    public function test_profession_search_matches_when_profession_is_visible(): void
+    {
+        $workshopA = Workshop::factory()->create();
+        $workshopB = Workshop::factory()->create();
+
+        $subject = $this->member($workshopA);
+        $subject->update(['name' => 'NoCoincide', 'last_name' => 'Tampoco', 'profession' => 'Carpintero']);
+        $this->setIdentity($subject, 'my_workshops', true);
+        $this->setBlock($subject, 'profession', 'registered');
+
+        $viewer = $this->member($workshopB);
+
+        $res = $this->actingAs($viewer, 'sanctum')
+            ->getJson('/api/people?scope=search&q=Carpintero')
+            ->assertOk()
+            ->json();
+
+        $found = collect($res['data'])->firstWhere('id', $subject->id);
+        $this->assertNotNull($found);
+        $this->assertTrue($found['anonymous']);
+        $this->assertSame('Carpintero', $found['profession']);
+    }
+
+    public function test_profession_search_does_not_match_when_profession_is_hidden(): void
+    {
+        $workshop = Workshop::factory()->create();
+
+        $subject = $this->member($workshop);
+        $subject->update(['name' => 'NoCoincide', 'last_name' => 'Tampoco', 'profession' => 'Cerrajero']);
+        $this->setIdentity($subject, 'registered', false);
+        $this->setBlock($subject, 'profession', 'private');
+
+        $viewer = $this->member($workshop);
+
+        $res = $this->actingAs($viewer, 'sanctum')
+            ->getJson('/api/people?scope=search&q=Cerrajero')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertNull(collect($res)->firstWhere('id', $subject->id));
     }
 }

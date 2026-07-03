@@ -11,6 +11,7 @@ use App\Models\Service;
 use App\Models\UserDegree;
 use App\Models\UserPosition;
 use App\Notifications\VerifyEmailNotification;
+use App\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name', 'last_name', 'email', 'password', 'role', 'status',
         'dni', 'masonic_id', 'birth_date', 'initiation_date', 'masonic_status',
         'phone', 'whatsapp', 'alternative_email', 'contact_preference',
+        'contact_default_shared_fields', 'contact_preferred_channels', 'contact_allowed_sources',
         'country', 'province', 'locality', 'neighborhood', 'address',
         'profession', 'occupation', 'company', 'profession_description', 'bio',
         'photo_url', 'linkedin', 'website', 'facebook', 'instagram', 'availability_notes', 'admin_notes',
@@ -45,6 +47,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'status' => UserStatus::class,
             'birth_date' => 'date',
             'initiation_date' => 'date',
+            'contact_default_shared_fields' => 'array',
+            'contact_preferred_channels' => 'array',
+            'contact_allowed_sources' => 'array',
         ];
     }
 
@@ -114,5 +119,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifyEmailNotification);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
