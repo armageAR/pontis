@@ -1,0 +1,9 @@
+.validation-detail { display: flex; flex-direction: column; gap: var(--space-4); }
+.validation-detail-grid { display: flex; flex-direction: column; gap: var(--space-2); }
+.validation-detail-row { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: var(--space-3); align-items: center; }
+.validation-detail-label { color: var(--text-muted); font-size: var(--text-sm); }
+.validation-detail-value { color: var(--text-h); }
+.validation-detail-actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
+@media (max-width: 560px) {
+  .validation-detail-row { grid-template-columns: 1fr; gap: var(--space-1); }
+}

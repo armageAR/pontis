@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Check, X, Info, Crown } from 'lucide-react'
+import { Building2, Users, Check, X, Info, Crown, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import * as dashApi from '@/api/dashboard'
 import type { PendingRequest, MembershipNotification } from '@/api/dashboard'
@@ -15,6 +15,8 @@ export default function DashboardPage() {
 
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([])
   const [notifications, setNotifications] = useState<MembershipNotification[]>([])
+  const [isWorkshopAdmin, setIsWorkshopAdmin] = useState(false)
+  const [pendingValidationCount, setPendingValidationCount] = useState(0)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [userInfoModal, setUserInfoModal] = useState<PendingRequest | null>(null)
   const [correctionModal, setCorrectionModal] = useState<PendingRequest | null>(null)
@@ -24,6 +26,8 @@ export default function DashboardPage() {
     dashApi.getDashboard().then((data) => {
       setPendingRequests(data.pending_requests)
       setNotifications(data.membership_notifications)
+      setIsWorkshopAdmin(data.is_workshop_admin)
+      setPendingValidationCount(data.pending_validation_count)
     }).catch(() => {})
   }, [])
 
@@ -170,6 +174,16 @@ export default function DashboardPage() {
       )}
 
       <div className="dashboard-cards">
+        {(isWorkshopAdmin || user?.role === 'superadmin') && (
+          <Link to="/administracion" className="dashboard-card dashboard-card-admin">
+            {pendingValidationCount > 0 && (
+              <span className="dashboard-card-indicator" aria-label="Validaciones pendientes" />
+            )}
+            <span className="dashboard-card-icon"><ShieldCheck size={28} /></span>
+            <h3>Administracion</h3>
+            <p>tareas de administracion en tu taller</p>
+          </Link>
+        )}
         {user?.role === 'superadmin' && (
           <Link to="/workshops" className="dashboard-card">
             <span className="dashboard-card-icon"><Building2 size={28} /></span>

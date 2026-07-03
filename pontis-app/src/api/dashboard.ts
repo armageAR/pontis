@@ -26,6 +26,8 @@ export interface MembershipNotification {
 export interface DashboardData {
   pending_requests: PendingRequest[]
   membership_notifications: MembershipNotification[]
+  is_workshop_admin: boolean
+  pending_validation_count: number
 }
 
 export async function getDashboard(): Promise<DashboardData> {

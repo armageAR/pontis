@@ -275,6 +275,21 @@
   box-shadow: 0 0 0 3px var(--accent-bg), var(--shadow-sm);
 }
 
+.dashboard-card-admin {
+  position: relative;
+}
+
+.dashboard-card-indicator {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #dc2626;
+  box-shadow: 0 0 0 3px var(--surface);
+}
+
 .dashboard-card-icon {
   color: var(--accent);
   display: flex;

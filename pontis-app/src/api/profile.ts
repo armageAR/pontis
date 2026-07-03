@@ -72,6 +72,7 @@ export interface UserDegree {
   validation_status: 'declared' | 'validated' | 'rejected'
   validated_at: string | null
   validation_notes: string | null
+  created_at?: string | null
   workshop?: { id: number; name: string; number: number }
   user?: { id: number; name: string; last_name: string | null; email: string }
 }
@@ -87,6 +88,7 @@ export interface UserPosition {
   validation_status: 'declared' | 'validated' | 'rejected'
   validated_at: string | null
   validation_notes: string | null
+  created_at?: string | null
   position?: { id: number; name: string }
   workshop?: { id: number; name: string; number: number }
   user?: { id: number; name: string; last_name: string | null; email: string }

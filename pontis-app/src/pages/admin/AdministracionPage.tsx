@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import AppLayout from '@/components/AppLayout'
 import UsersPage from '@/pages/users/UsersPage'
 import AuditLogPage from '@/pages/audit/AuditLogPage'
@@ -12,7 +11,9 @@ type Tab = 'hermanos' | 'talleres' | 'validaciones' | 'auditoria'
 export default function AdministracionPage() {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superadmin'
-  const [tab, setTab] = useState<Tab>('hermanos')
+  // El Admin de Taller entra desde el Panel principalmente para resolver
+  // validaciones pendientes, así que su vista por defecto es Validaciones.
+  const [tab, setTab] = useState<Tab>(isSuperAdmin ? 'hermanos' : 'validaciones')
 
   return (
     <AppLayout>
