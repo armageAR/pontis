@@ -407,7 +407,7 @@ Accepted
 
 El Hermano no podrá modificar libremente ciertos datos sensibles.
 
-Los cambios deberán gestionarse mediante una solicitud y aprobación de Superadmin.
+Los cambios deberán gestionarse mediante una solicitud y aprobación de un revisor autorizado (Superadmin o Admin de Taller con alcance, ver más abajo).
 
 ## Datos sensibles iniciales
 
@@ -425,9 +425,18 @@ Estos datos impactan identidad, validación institucional y trazabilidad.
 
 * La ficha debe bloquear edición directa de estos campos.
 * El usuario debe poder solicitar cambios.
-* El Superadmin puede aprobar, rechazar o pedir más información.
-* La resolución debe quedar auditada.
-* El Admin de Taller no puede aprobar cambios sensibles globales.
+* El Superadmin puede aprobar, rechazar o pedir más información para cualquier solicitud.
+* El Admin de Taller puede aprobar, rechazar o pedir más información **solo** para solicitudes de Hermanos que pertenezcan a un Taller que administra (ver enmienda 2026-07-03).
+* La resolución debe quedar auditada, registrando al revisor real.
+
+## Enmienda 2026-07-03: alcance de revisión del Admin de Taller
+
+Se amplía la autoridad de revisión de nombre, apellido, DNI y matrícula masónica.
+
+* El Admin de Taller ya valida datos institucionales de los Hermanos de sus Talleres, por lo que también puede revisar estos cambios sensibles de identidad cuando el Hermano solicitante pertenece a un Taller que administra.
+* El alcance es acotado: el Admin de Taller solo ve y resuelve solicitudes de Hermanos con membresía activa en alguno de sus Talleres administrados; no puede ver ni resolver solicitudes de Hermanos fuera de esos Talleres.
+* El Superadmin mantiene autoridad global sobre todas las solicitudes.
+* Al crear una solicitud se notifica a los Superadmin y a los Admin de Taller de los Talleres del solicitante, sin duplicar destinatarios.
 
 ## Documentos relacionados
 

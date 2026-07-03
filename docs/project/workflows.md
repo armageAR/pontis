@@ -185,8 +185,8 @@ Permitir que un Hermano activo complete y mantenga su ficha personal respetando 
 ## Actores
 
 * Hermano activo.
-* Superadmin, para cambios sensibles.
-* Admin de Taller, solo si existe una necesidad funcional dentro de su alcance.
+* Superadmin, para cambios sensibles de cualquier Hermano.
+* Admin de Taller, para cambios sensibles de identidad de Hermanos de un Taller que administra.
 
 ## Flujo principal
 
@@ -257,9 +257,9 @@ Permitir cambios en datos restringidos mediante solicitud, revisión y aprobaci�
    * Nuevo valor propuesto.
    * Motivo u observación, si corresponde.
 4. El sistema crea una solicitud en estado `Pendiente`.
-5. El sistema notifica a Superadmin.
-6. El Superadmin revisa la solicitud.
-7. El Superadmin puede:
+5. El sistema notifica a los Superadmin y a los Admin de Taller de los Talleres del solicitante (sin duplicar destinatarios).
+6. Un revisor autorizado (Superadmin, o Admin de Taller de un Taller del solicitante) revisa la solicitud.
+7. El revisor puede:
 
    * Aprobar.
    * Rechazar.
@@ -289,9 +289,9 @@ Permitir cambios en datos restringidos mediante solicitud, revisión y aprobaci�
 
 ## Reglas
 
-* Solo Superadmin puede aprobar cambios sensibles globales.
-* El Admin de Taller no puede aprobar documento, matrícula o identidad legal.
-* Toda resolución debe quedar auditada.
+* El Superadmin puede aprobar cualquier cambio sensible.
+* El Admin de Taller puede aprobar cambios de nombre, apellido, DNI y matrícula masónica solo para Hermanos de un Taller que administra; no puede ver ni resolver solicitudes de Hermanos fuera de sus Talleres.
+* Toda resolución debe quedar auditada, registrando al revisor real.
 * Si el usuario cancela la solicitud, el dato original se conserva.
 
 ---

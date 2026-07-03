@@ -132,6 +132,7 @@ El Admin de Taller administra información y solicitudes relacionadas con uno o 
 * Administrar información básica de sus Talleres si tiene permiso.
 * Cargar o actualizar cargos masónicos dentro de sus Talleres si tiene permiso.
 * Solicitar correcciones en registros vinculados a sus Talleres.
+* Resolver cambios sensibles de identidad (nombre, apellido, DNI y matrícula masónica) solo de Hermanos que pertenezcan a un Taller que administra: aprobar, rechazar o pedir más información.
 * Ver información administrativa mínima necesaria para cumplir sus funciones.
 
 ### No puede
@@ -140,7 +141,7 @@ El Admin de Taller administra información y solicitudes relacionadas con uno o 
 * Validar usuarios de otros Talleres.
 * Ejecutar o confirmar el crawler global.
 * Administrar roles globales.
-* Aprobar cambios sensibles globales como documento, matrícula o identidad legal.
+* Ver ni resolver cambios sensibles de identidad de Hermanos fuera de sus Talleres administrados.
 * Ver datos privados sin relación funcional con sus Talleres.
 * Administrar Talleres donde no tiene permiso.
 * Usar un cargo o rol de un Taller para operar sobre otro Taller.

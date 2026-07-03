@@ -2,18 +2,64 @@
 namespace App\Http\Controllers;
 use App\Models\ChangeRequest;
 use App\Models\PontisNotification;
+use App\Models\User;
 use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ChangeRequestController extends Controller {
     public function index(Request $request): JsonResponse {
         $user = $request->user();
-        $query = $user->isSuperAdmin()
-            ? ChangeRequest::with('user:id,name,last_name,email')->latest()
-            : ChangeRequest::where('user_id', $user->id)->latest();
+
+        if ($user->isSuperAdmin()) {
+            $query = ChangeRequest::with('user:id,name,last_name,email')->latest();
+        } else {
+            $adminWorkshopIds = $this->adminWorkshopIds($user);
+            $query = $adminWorkshopIds->isEmpty()
+                ? ChangeRequest::where('user_id', $user->id)->latest()
+                : ChangeRequest::with('user:id,name,last_name,email')
+                    ->whereHas('user.workshops', fn ($q) => $q->whereIn('workshops.id', $adminWorkshopIds))
+                    ->latest();
+        }
+
         if ($request->filled('status')) $query->where('status', $request->status);
         return response()->json($query->paginate(20));
+    }
+
+    /** IDs of Talleres where the actor has an active admin membership. */
+    private function adminWorkshopIds(User $user): Collection {
+        return $user->workshops()->wherePivot('role', 'admin')->pluck('workshops.id');
+    }
+
+    /**
+     * A reviewer may resolve a request when they are Superadmin, or an Admin de
+     * Taller of a Taller the request owner actively belongs to.
+     */
+    private function canReview(ChangeRequest $changeRequest, User $user): bool {
+        if ($user->isSuperAdmin()) return true;
+        $adminWorkshopIds = $this->adminWorkshopIds($user);
+        if ($adminWorkshopIds->isEmpty()) return false;
+        return $changeRequest->user->workshops()->whereIn('workshops.id', $adminWorkshopIds)->exists();
+    }
+
+    /**
+     * Recipients notified when the given owner creates a request: all Superadmins
+     * plus Admin de Taller users of the owner's active Talleres, deduplicated and
+     * excluding the requesting owner.
+     */
+    private function reviewerRecipientIds(User $owner): Collection {
+        $superadminIds = User::where('role', 'superadmin')->pluck('id');
+        $ownerWorkshopIds = $owner->workshops()->pluck('workshops.id');
+        $adminIds = $ownerWorkshopIds->isEmpty()
+            ? collect()
+            : DB::table('user_workshop')
+                ->whereIn('workshop_id', $ownerWorkshopIds)
+                ->where('role', 'admin')
+                ->where('status', 'active')
+                ->pluck('user_id');
+        return $superadminIds->merge($adminIds)->unique()->reject(fn ($id) => $id === $owner->id)->values();
     }
 
     public function store(Request $request): JsonResponse {
@@ -37,10 +83,9 @@ class ChangeRequestController extends Controller {
             'field' => $cr->field,
             'user_id' => $cr->user_id,
         ]);
-        $superadmins = \App\Models\User::where('role', 'superadmin')->pluck('id');
-        foreach ($superadmins as $sid) {
+        foreach ($this->reviewerRecipientIds($user) as $rid) {
             PontisNotification::create([
-                'user_id' => $sid,
+                'user_id' => $rid,
                 'type'    => 'change_request',
                 'title'   => 'Solicitud de cambio sensible',
                 'body'    => "{$user->name} solicita cambiar su {$data['field']}.",
@@ -51,7 +96,7 @@ class ChangeRequestController extends Controller {
     }
 
     public function approve(Request $request, ChangeRequest $changeRequest): JsonResponse {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($this->canReview($changeRequest, $request->user()), 403);
         abort_if(!in_array($changeRequest->status, ['pending', 'requires_info']), 422, 'Esta solicitud ya fue resuelta.');
         $data = $request->validate(['reviewer_notes' => 'nullable|string']);
         $user = $changeRequest->user;
@@ -77,7 +122,7 @@ class ChangeRequestController extends Controller {
     }
 
     public function reject(Request $request, ChangeRequest $changeRequest): JsonResponse {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($this->canReview($changeRequest, $request->user()), 403);
         abort_if(!in_array($changeRequest->status, ['pending', 'requires_info']), 422, 'Esta solicitud ya fue resuelta.');
         $data = $request->validate(['reviewer_notes' => 'nullable|string']);
         $changeRequest->update([
@@ -101,7 +146,7 @@ class ChangeRequestController extends Controller {
     }
 
     public function requireInfo(Request $request, ChangeRequest $changeRequest): JsonResponse {
-        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_unless($this->canReview($changeRequest, $request->user()), 403);
         abort_if(!in_array($changeRequest->status, ['pending', 'requires_info']), 422, 'Esta solicitud ya fue resuelta.');
         $data = $request->validate(['reviewer_notes' => 'required|string']);
         $changeRequest->update([

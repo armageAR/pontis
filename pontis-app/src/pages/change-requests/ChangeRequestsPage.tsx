@@ -35,6 +35,7 @@ const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
 export default function ChangeRequestsPage({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superadmin'
+  const canReview = isSuperAdmin || (user?.admin_workshops?.length ?? 0) > 0
 
   const [requests, setRequests] = useState<ChangeRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -132,7 +133,7 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
       </div>
 
       {loading ? <div className="cr-loading"><Spinner /></div> : requests.length === 0 ? (
-        <EmptyState title="Sin solicitudes" description={isSuperAdmin ? 'No hay solicitudes de cambio para este filtro.' : 'No enviaste ninguna solicitud de cambio aún.'} />
+        <EmptyState title="Sin solicitudes" description={canReview ? 'No hay solicitudes de cambio para este filtro.' : 'No enviaste ninguna solicitud de cambio aún.'} />
       ) : (
         <>
           <div className="cr-list">
@@ -140,7 +141,7 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
               <div key={r.id} className="cr-card">
                 <div className="cr-card-header">
                   <div>
-                    {isSuperAdmin && r.user && <span className="cr-user">{r.user.name} {r.user.last_name} · {r.user.email}</span>}
+                    {canReview && r.user && <span className="cr-user">{r.user.name} {r.user.last_name} · {r.user.email}</span>}
                     <span className="cr-field">{FIELD_LABELS[r.field]}</span>
                   </div>
                   <Badge variant={STATUS_VARIANTS[r.status]}>{STATUS_LABELS[r.status]}</Badge>
@@ -159,7 +160,7 @@ export default function ChangeRequestsPage({ embedded = false }: { embedded?: bo
                 )}
                 <div className="cr-meta">Solicitado: {formatDate(r.created_at)}</div>
                 <div className="cr-actions">
-                  {isSuperAdmin && ['pending', 'requires_info'].includes(r.status) && (
+                  {canReview && ['pending', 'requires_info'].includes(r.status) && (
                     <Button onClick={() => { setReviewModal(r); setReviewNotes('') }}>Revisar</Button>
                   )}
                   {canCancel(r) && (
