@@ -13,7 +13,7 @@ export interface UserListItem {
   name: string
   email: string
   role: 'superadmin' | 'user' | null
-  status: 'pending' | 'active' | 'rejected' | 'suspended' | 'inactive'
+  status: 'pending' | 'active' | 'rejected' | 'suspended' | 'inactive' | 'o_eterno'
   email_verified_at: string | null
   created_at: string
   workshops: UserWorkshop[]
@@ -83,5 +83,15 @@ export async function updateUserWorkshopRole(userId: number, workshopId: number,
 
 export async function removeUserWorkshop(userId: number, workshopId: number): Promise<UserListItem> {
   const { data } = await client.delete<{ data: UserListItem }>(`/users/${userId}/workshops/${workshopId}`)
+  return data.data
+}
+
+export async function markUserOEterno(userId: number): Promise<UserListItem> {
+  const { data } = await client.post<{ data: UserListItem }>(`/users/${userId}/o-eterno`)
+  return data.data
+}
+
+export async function revertUserOEterno(userId: number): Promise<UserListItem> {
+  const { data } = await client.post<{ data: UserListItem }>(`/users/${userId}/o-eterno/revert`)
   return data.data
 }

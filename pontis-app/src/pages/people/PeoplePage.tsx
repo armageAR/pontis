@@ -20,7 +20,7 @@ const MASONIC_STATUS_LABELS: Record<string, string> = {
   inactive:   'Inactivo',
   suspended:  'Suspendido',
   discharged: 'Dado de baja',
-  deceased:   'O∴ Eterno',
+  deceased:   'O Eterno',
 }
 const MASONIC_STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = {
   active:     'success',
@@ -82,7 +82,7 @@ export default function PeoplePage({ embedded = false }: { embedded?: boolean })
         <div className="people-search-row">
           <Input
             className="people-search-name"
-            placeholder="Nombre, apellido, matrícula o email…"
+            placeholder="Nombre, apellido, profesión u oficio…"
             value={q}
             onChange={e => setQ(e.target.value)}
           />

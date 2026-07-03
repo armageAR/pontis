@@ -7,6 +7,8 @@ import RegisterPage from '@/pages/register/RegisterPage'
 import PendingPage from '@/pages/pending/PendingPage'
 import VerifyEmailPage from '@/pages/verify-email/VerifyEmailPage'
 import ConfirmEmailChangePage from '@/pages/confirm-email/ConfirmEmailChangePage'
+import ForgotPasswordPage from '@/pages/password/ForgotPasswordPage'
+import ResetPasswordPage from '@/pages/password/ResetPasswordPage'
 import DashboardPage from '@/pages/dashboard/DashboardPage'
 import WorkshopsPage from '@/pages/workshops/WorkshopsPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
@@ -28,6 +30,8 @@ export default function App() {
           <Route path="/pending" element={<PendingPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/confirmar-email" element={<ConfirmEmailChangePage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/workshops" element={<WorkshopsPage />} />

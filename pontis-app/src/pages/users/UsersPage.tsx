@@ -115,6 +115,14 @@ export default function UsersPage({ embedded = false }: UsersPageProps) {
     return updated
   }
 
+  async function handleMarkOEterno(user: UserListItem) {
+    const updated = user.status === 'o_eterno'
+      ? await api.revertUserOEterno(user.id)
+      : await api.markUserOEterno(user.id)
+    patchUser(updated)
+    notify(updated.status === 'o_eterno' ? `${updated.name} fue marcado como O Eterno.` : `${updated.name} fue revertido a baja/inactivo.`)
+  }
+
   async function handlePassword(userId: number, password: string, confirmation: string) {
     await api.updateUserPassword(userId, password, confirmation)
     const target = users.find((u) => u.id === userId)
@@ -151,6 +159,7 @@ export default function UsersPage({ embedded = false }: UsersPageProps) {
             onEdit={setEditingUser}
             onChangePassword={setPasswordUser}
             onToggleSuperadmin={handleToggleSuperadmin}
+            onMarkOEterno={handleMarkOEterno}
           />
           <Pagination
             currentPage={meta.current_page}

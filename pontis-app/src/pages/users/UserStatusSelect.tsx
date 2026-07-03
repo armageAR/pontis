@@ -19,6 +19,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'error' | 'default'
   rejected: 'error',
   suspended: 'error',
   inactive: 'default',
+  o_eterno: 'default',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -28,6 +29,7 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: 'Rechazado',
   suspended: 'Suspendido',
   inactive: 'Baja',
+  o_eterno: 'O Eterno',
 }
 
 interface UserStatusSelectProps {
@@ -73,6 +75,9 @@ export default function UserStatusSelect({ user, editable, onStatusChange }: Use
     >
       {displayStatus === 'verifying' && (
         <option value="verifying">Verificando</option>
+      )}
+      {displayStatus === 'o_eterno' && (
+        <option value="o_eterno">O Eterno</option>
       )}
       {STATUS_OPTIONS.map((opt) => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>

@@ -6,6 +6,8 @@ export interface ServiceCategory {
   description: string | null
 }
 
+export type PublicationStatus = 'draft' | 'active' | 'suspended' | 'expired'
+
 export interface Service {
   id: number
   user_id: number
@@ -17,10 +19,26 @@ export interface Service {
   availability: string | null
   conditions: string | null
   visibility: 'private' | 'workshop' | 'my_workshops' | 'registered' | 'anonymous'
-  status: 'draft' | 'active' | 'paused' | 'hidden' | 'disabled' | 'pending_authorization' | 'requires_correction' | 'rejected' | 'closed' | 'cancelled'
-  authorization_notes: string | null
+  status: PublicationStatus
+  effective_status: PublicationStatus
+  published_at: string | null
+  expires_at: string | null
   category?: ServiceCategory
   created_at: string
+}
+
+export interface ServiceInput {
+  title: string
+  description: string
+  service_category_id: number | null
+  modality: string
+  location: string
+  availability: string
+  conditions: string
+  visibility: string
+  publish: boolean
+  validity_days?: number | null
+  preview_confirmed?: boolean
 }
 
 export interface ServiceFilters {
@@ -46,12 +64,12 @@ export async function getServices(filters: ServiceFilters = {}): Promise<Paginat
   return data
 }
 
-export async function createService(payload: Partial<Service>): Promise<Service> {
+export async function createService(payload: ServiceInput): Promise<Service> {
   const { data } = await client.post<Service>('/services', payload)
   return data
 }
 
-export async function updateService(id: number, payload: Partial<Service>): Promise<Service> {
+export async function updateService(id: number, payload: ServiceInput): Promise<Service> {
   const { data } = await client.patch<Service>(`/services/${id}`, payload)
   return data
 }
@@ -60,17 +78,7 @@ export async function deleteService(id: number): Promise<void> {
   await client.delete(`/services/${id}`)
 }
 
-export async function authorizeService(id: number, notes?: string): Promise<Service> {
-  const { data } = await client.post<Service>(`/services/${id}/authorize`, { notes })
-  return data
-}
-
-export async function rejectService(id: number, notes?: string): Promise<Service> {
-  const { data } = await client.post<Service>(`/services/${id}/reject`, { notes })
-  return data
-}
-
-export async function requestServiceCorrection(id: number, notes: string): Promise<Service> {
-  const { data } = await client.post<Service>(`/services/${id}/request-correction`, { notes })
+export async function suspendService(id: number): Promise<Service> {
+  const { data } = await client.post<Service>(`/services/${id}/suspend`, {})
   return data
 }

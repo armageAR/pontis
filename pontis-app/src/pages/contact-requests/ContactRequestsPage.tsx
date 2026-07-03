@@ -8,17 +8,38 @@ import Alert from '@/components/Alert'
 import Spinner from '@/components/Spinner'
 import EmptyState from '@/components/EmptyState'
 import Pagination from '@/components/Pagination'
+import PrivacyIndicator from '@/components/PrivacyIndicator'
 import * as api from '@/api/contactRequests'
 import type { ContactRequest } from '@/api/contactRequests'
 import { formatDate } from '@/utils/date'
 import './ContactRequestsPage.css'
 
-const STATUS_LABELS: Record<string, string> = { pending: 'Pendiente', accepted: 'Aceptada', rejected: 'Rechazada', cancelled: 'Cancelada', expired: 'Expirada', closed: 'Cerrada' }
-const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { pending: 'warning', accepted: 'success', rejected: 'error', cancelled: 'default', expired: 'default', closed: 'default' }
+const STATUS_LABELS: Record<string, string> = { pending: 'Pendiente', info_requested: 'Más información solicitada', accepted: 'Aceptada', rejected: 'Rechazada', cancelled: 'Cancelada', expired: 'Expirada', closed: 'Cerrada' }
+const STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { pending: 'warning', info_requested: 'warning', accepted: 'success', rejected: 'error', cancelled: 'default', expired: 'default', closed: 'default' }
+const REASON_LABELS: Record<string, string> = {
+  offer_publication: 'Publicación: Lo que ofrezco',
+  need_publication: 'Publicación: Lo que necesito',
+  profession_search: 'Búsqueda por profesión u oficio',
+  workshop_location_search: 'Búsqueda por Taller o ubicación',
+  other: 'Otro motivo',
+}
 
 function personName(p?: { name: string; last_name: string | null }) {
   if (!p) return '-'
   return p.last_name ? `${p.last_name}, ${p.name}` : p.name
+}
+
+function sharedInfo(person?: ContactRequest['requester'] | ContactRequest['requestee']) {
+  if (!person) return null
+  const values = [
+    person.email,
+    person.phone ? `Tel: ${person.phone}` : null,
+    person.whatsapp ? `WA: ${person.whatsapp}` : null,
+    person.profession,
+    person.principal_workshop ? `Taller Nº${person.principal_workshop.number} ${person.principal_workshop.name}` : null,
+  ].filter(Boolean)
+  if (values.length === 0) return null
+  return <>{values.map((value) => <span key={value}> · {value}</span>)}</>
 }
 
 export default function ContactRequestsPage({ embedded = false }: { embedded?: boolean }) {
@@ -55,6 +76,14 @@ export default function ContactRequestsPage({ embedded = false }: { embedded?: b
     if (!respondModal) return; setSaving(true)
     try { await api.rejectContactRequest(respondModal.id, responseMsg || undefined); setRespondModal(null); load() }
     catch { alert('Error al rechazar.') } finally { setSaving(false) }
+  }
+
+  async function handleRequestInfo() {
+    if (!respondModal) return
+    if (!responseMsg.trim()) { alert('Escribí qué información necesitás.'); return }
+    setSaving(true)
+    try { await api.requestContactInfo(respondModal.id, responseMsg); setRespondModal(null); load() }
+    catch { alert('Error al pedir más información.') } finally { setSaving(false) }
   }
 
   async function handleCancel(cr: ContactRequest) {
@@ -103,25 +132,31 @@ export default function ContactRequestsPage({ embedded = false }: { embedded?: b
                   <Badge variant={STATUS_VARIANTS[cr.status]}>{STATUS_LABELS[cr.status]}</Badge>
                 </div>
                 <p className="cont-message">{cr.message}</p>
+                {cr.reason_type && <p className="cont-response"><strong>Motivo:</strong> {REASON_LABELS[cr.reason_type] ?? cr.reason_type}</p>}
+                {(cr.service_id || cr.need_id) && (
+                  <p className="cont-response"><strong>Contexto:</strong> {cr.service_id ? 'Publicación de ofrecimiento' : 'Publicación de necesidad'}</p>
+                )}
                 {cr.response_message && <p className="cont-response"><strong>Respuesta:</strong> {cr.response_message}</p>}
+                {direction === 'received' && cr.requester && sharedInfo(cr.requester) && (
+                  <div className="cont-contact-info">
+                    <strong>Datos compartidos por el solicitante:</strong>
+                    {sharedInfo(cr.requester)}
+                  </div>
+                )}
                 {cr.status === 'accepted' && direction === 'sent' && cr.requestee && (
                   <div className="cont-contact-info">
                     <strong>Datos de contacto:</strong>
-                    {cr.requestee.email && <span> · {cr.requestee.email}</span>}
-                    {cr.requestee.phone && <span> · Tel: {cr.requestee.phone}</span>}
-                    {cr.requestee.whatsapp && <span> · WA: {cr.requestee.whatsapp}</span>}
+                    {sharedInfo(cr.requestee)}
                   </div>
                 )}
                 {cr.status === 'accepted' && direction === 'received' && cr.requester && (
                   <div className="cont-contact-info">
                     <strong>Datos del solicitante:</strong>
-                    {cr.requester.email && <span> · {cr.requester.email}</span>}
-                    {cr.requester.phone && <span> · Tel: {cr.requester.phone}</span>}
-                    {cr.requester.whatsapp && <span> · WA: {cr.requester.whatsapp}</span>}
+                    {sharedInfo(cr.requester)}
                   </div>
                 )}
                 <div className="cont-actions">
-                  {direction === 'received' && cr.status === 'pending' && (
+                  {direction === 'received' && (cr.status === 'pending' || cr.status === 'info_requested') && (
                     <Button onClick={() => { setRespondModal(cr); setResponseMsg('') }}>Responder</Button>
                   )}
                   {direction === 'sent' && cr.status === 'pending' && (
@@ -143,12 +178,21 @@ export default function ContactRequestsPage({ embedded = false }: { embedded?: b
           <div className="cont-form">
             <p><strong>Mensaje recibido:</strong></p>
             <p className="cont-modal-msg">{respondModal.message}</p>
-            <FormField label="Mensaje de respuesta (opcional)">
+            <FormField label="Mensaje de respuesta">
               <textarea className="cont-textarea" value={responseMsg} onChange={e => setResponseMsg(e.target.value)} rows={3} placeholder="Escribí un mensaje opcional..." />
             </FormField>
+            <PrivacyIndicator
+              summary="Antes de aceptar, revisá los datos compartidos por el solicitante."
+              details={[
+                respondModal.requester ? `Solicitante visible: ${personName(respondModal.requester)}` : 'El solicitante reservó su identidad.',
+                'Al aceptar se habilita el contacto dentro del flujo y se conserva el registro de la decisión.',
+                'Rechazar o pedir más información no revela datos adicionales.',
+              ]}
+            />
             <div className="cont-modal-actions">
               <Button type="button" variant="outline" onClick={() => setRespondModal(null)}>Cancelar</Button>
               <Button type="button" variant="outline" onClick={handleReject} loading={saving}>Rechazar</Button>
+              {respondModal.status === 'pending' && <Button type="button" variant="outline" onClick={handleRequestInfo} loading={saving}>Pedir más información</Button>}
               <Button type="button" onClick={handleAccept} loading={saving}>Aceptar</Button>
             </div>
           </div>

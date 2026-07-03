@@ -1,5 +1,5 @@
 import client from './client'
-import type { ServiceCategory } from './services'
+import type { ServiceCategory, PublicationStatus } from './services'
 
 export interface Need {
   id: number
@@ -10,10 +10,24 @@ export interface Need {
   location: string | null
   urgency: 'low' | 'medium' | 'high' | null
   visibility: 'private' | 'workshop' | 'my_workshops' | 'registered' | 'anonymous'
-  status: 'draft' | 'open' | 'searching' | 'with_matches' | 'contact_requested' | 'linked' | 'closed' | 'cancelled' | 'pending_authorization' | 'requires_correction' | 'rejected'
-  authorization_notes: string | null
+  status: PublicationStatus
+  effective_status: PublicationStatus
+  published_at: string | null
+  expires_at: string | null
   category?: ServiceCategory
   created_at: string
+}
+
+export interface NeedInput {
+  title: string
+  description: string
+  service_category_id: number | null
+  location: string
+  urgency: string | null
+  visibility: string
+  publish: boolean
+  validity_days?: number | null
+  preview_confirmed?: boolean
 }
 
 export interface NeedFilters {
@@ -34,12 +48,12 @@ export async function getNeeds(filters: NeedFilters = {}): Promise<PaginatedNeed
   return data
 }
 
-export async function createNeed(payload: Partial<Need>): Promise<Need> {
+export async function createNeed(payload: NeedInput): Promise<Need> {
   const { data } = await client.post<Need>('/needs', payload)
   return data
 }
 
-export async function updateNeed(id: number, payload: Partial<Need>): Promise<Need> {
+export async function updateNeed(id: number, payload: NeedInput): Promise<Need> {
   const { data } = await client.patch<Need>(`/needs/${id}`, payload)
   return data
 }
@@ -48,17 +62,7 @@ export async function deleteNeed(id: number): Promise<void> {
   await client.delete(`/needs/${id}`)
 }
 
-export async function authorizeNeed(id: number, notes?: string): Promise<Need> {
-  const { data } = await client.post<Need>(`/needs/${id}/authorize`, { notes })
-  return data
-}
-
-export async function rejectNeed(id: number, notes?: string): Promise<Need> {
-  const { data } = await client.post<Need>(`/needs/${id}/reject`, { notes })
-  return data
-}
-
-export async function requestNeedCorrection(id: number, notes: string): Promise<Need> {
-  const { data } = await client.post<Need>(`/needs/${id}/request-correction`, { notes })
+export async function suspendNeed(id: number): Promise<Need> {
+  const { data } = await client.post<Need>(`/needs/${id}/suspend`, {})
   return data
 }

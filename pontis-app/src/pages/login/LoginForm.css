@@ -8,3 +8,12 @@
   width: 100%;
   margin-top: var(--space-1);
 }
+
+.login-forgot-link {
+  align-self: flex-end;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.login-forgot-link:hover { text-decoration: underline; }

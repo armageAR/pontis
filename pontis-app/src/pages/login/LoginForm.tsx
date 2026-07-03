@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
@@ -69,6 +70,8 @@ export default function LoginForm() {
           autoComplete="current-password"
         />
       </FormField>
+
+      <Link className="login-forgot-link" to="/forgot-password">Olvidé mi contraseña</Link>
 
       <Button type="submit" loading={loading}>
         Ingresar

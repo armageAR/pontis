@@ -1,7 +1,7 @@
 .services-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); }
 .services-title { font-size: 28px; font-weight: 700; color: var(--text-h); margin: 0; }
 .services-count { font-size: var(--text-lg); font-weight: 400; color: var(--text-muted); }
-.services-filters { margin-bottom: var(--space-5); }
+.services-filters { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
 .services-select {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border);
@@ -10,6 +10,12 @@
   color: var(--text);
   font-size: var(--text-sm);
   width: 100%;
+}
+/* Filtro compacto: menor tamaño y ancho automático, sin cambiar el comportamiento. */
+.services-select-compact {
+  width: auto;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
 }
 .services-loading { display: flex; justify-content: center; padding: var(--space-6) 0; }
 .services-list { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-5); }
@@ -47,3 +53,7 @@
 .services-modal-actions { display: flex; justify-content: flex-end; gap: var(--space-3); padding-top: var(--space-1); }
 .services-link-success { color: var(--success); }
 .service-user-name { display: block; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-1); }
+.services-preview { display: flex; flex-direction: column; gap: var(--space-3); }
+.services-preview-card { border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-4); background: var(--surface); }
+.services-preview-author { border-top: 1px solid var(--border); margin-top: var(--space-3); padding-top: var(--space-3); font-size: var(--text-sm); color: var(--text); }
+.services-preview-note { margin: 0; font-size: var(--text-sm); color: var(--text-muted); }

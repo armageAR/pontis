@@ -1,4 +1,4 @@
-import { ChevronUp, ChevronDown, Pencil, KeyRound, Crown } from 'lucide-react'
+import { ChevronUp, ChevronDown, Pencil, KeyRound, Crown, ShieldX } from 'lucide-react'
 import type { UserListItem, UserFilters } from '@/api/users'
 import ActionMenu from '@/components/ActionMenu'
 import UserStatusSelect from './UserStatusSelect'
@@ -17,6 +17,7 @@ interface UserTableProps {
   onEdit: (user: UserListItem) => void
   onChangePassword: (user: UserListItem) => void
   onToggleSuperadmin: (user: UserListItem) => void
+  onMarkOEterno: (user: UserListItem) => void
 }
 
 interface Column {
@@ -53,6 +54,7 @@ export default function UserTable({
   onEdit,
   onChangePassword,
   onToggleSuperadmin,
+  onMarkOEterno,
 }: UserTableProps) {
   function handleSort(key: string) {
     const newDir = sortBy === key && sortDirection === 'asc' ? 'desc' : 'asc'
@@ -142,6 +144,11 @@ export default function UserTable({
                         label: userIsSuperAdmin ? 'Quitar badge superadmin' : 'Dar badge superadmin',
                         onClick: () => onToggleSuperadmin(u),
                         danger: userIsSuperAdmin,
+                      }, {
+                        icon: <ShieldX size={15} />,
+                        label: u.status === 'o_eterno' ? 'Revertir O Eterno' : 'Marcar O Eterno',
+                        onClick: () => onMarkOEterno(u),
+                        danger: u.status !== 'o_eterno',
                       }] : []),
                     ]}
                   />

@@ -9,9 +9,12 @@ import Spinner from '@/components/Spinner'
 import Badge from '@/components/Badge'
 import Modal from '@/components/Modal'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import PrivacyIndicator from '@/components/PrivacyIndicator'
 import { useAuth } from '@/context/AuthContext'
 import * as profileApi from '@/api/profile'
 import type { Profile, UserDegree, UserPosition } from '@/api/profile'
+import type { ContactChannel, ContactConsentSettings, ContactSource } from '@/api/profile'
+import type { SharedContactField } from '@/api/contactRequests'
 import * as provinceApi from '@/api/provinces'
 import * as visibilityApi from '@/api/visibility'
 import type { VisibilityLevel, VisibilityBlock, VisibilityMap, VisibilitySetting } from '@/api/visibility'
@@ -27,6 +30,8 @@ interface PositionCatalogItem { id: number; name: string }
 interface WorkshopItem { id: number; name: string; number: number }
 
 const DEGREE_LABELS: Record<string, string> = { aprendiz: 'Aprendiz', companero: 'Compañero', maestro: 'Maestro' }
+const VALIDATION_LABELS: Record<string, string> = { declared: 'Pendiente de validación', validated: 'Validado', rejected: 'Rechazado' }
+const VALIDATION_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { declared: 'warning', validated: 'success', rejected: 'error' }
 const DEGREE_ORDER = ['aprendiz', 'companero', 'maestro']
 // Próximo grado válido según el historial (aprendiz -> companero -> maestro), o null si ya es Maestro.
 function nextValidDegree(list: { degree: string }[]): string | null {
@@ -34,7 +39,7 @@ function nextValidDegree(list: { degree: string }[]): string | null {
   return DEGREE_ORDER[maxRank + 1] ?? null
 }
 const MASONIC_STATUS_LABELS: Record<string, string> = {
-  active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'Fallecido'
+  active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'O Eterno'
 }
 // Opciones de audiencia por sección (quiénes pueden verla).
 const PRIVACY_OPTIONS = Object.entries(visibilityApi.VISIBILITY_LABELS) as [VisibilityLevel, string][]
@@ -65,6 +70,8 @@ export default function ProfilePage() {
   const [localities, setLocalities] = useState<{ id: number; name: string }[]>([])
   const [visibility, setVisibility] = useState<VisibilityMap>({})
   const [savingVisibility, setSavingVisibility] = useState(false)
+  const [contactConsent, setContactConsent] = useState<ContactConsentSettings | null>(null)
+  const [savingContactConsent, setSavingContactConsent] = useState(false)
 
   const [showDegreeModal, setShowDegreeModal] = useState(false)
   const [showPositionModal, setShowPositionModal] = useState(false)
@@ -102,7 +109,8 @@ export default function ProfilePage() {
       provinceApi.getProvinces(),
       visibilityApi.getVisibility(),
       workshopsApi.getProfileWorkshops(),
-    ]).then(([p, d, pos, catalog, ws, prov, vis, pws]) => {
+      profileApi.getContactConsent(),
+    ]).then(([p, d, pos, catalog, ws, prov, vis, pws, consent]) => {
       setProfile(p)
       setDegrees(d)
       setPositions(pos)
@@ -112,6 +120,7 @@ export default function ProfilePage() {
       setProvinces(prov)
       setVisibility(vis)
       setProfileWorkshops(pws)
+      setContactConsent(consent)
     }).catch(() => setError('Error cargando el perfil.')).finally(() => setLoading(false))
   }, [])
 
@@ -154,6 +163,14 @@ export default function ProfilePage() {
         >
           {PRIVACY_OPTIONS.map(([level, label]) => <option key={level} value={level}>{label}</option>)}
         </select>
+        <PrivacyIndicator
+          summary={`Esta sección será visible para: ${visibilityApi.VISIBILITY_LABELS[value]}.`}
+          details={[
+            'El cambio se aplica al guardar la selección.',
+            'No cambia tus preferencias para solicitudes de contacto.',
+            'La decisión queda asociada a tu cuenta para controles internos.',
+          ]}
+        />
       </div>
     )
   }
@@ -191,6 +208,14 @@ export default function ProfilePage() {
           sin ver tu nombre ni tus datos de identidad. Ambas opciones se combinan: cambiar la audiencia
           no desactiva la aparición anónima.
         </p>
+        <PrivacyIndicator
+          summary={anonSearch ? 'Podés aparecer en búsquedas con identidad reservada.' : `Tu identidad queda limitada a: ${visibilityApi.VISIBILITY_LABELS[audience]}.`}
+          details={[
+            `Audiencia con identidad visible: ${visibilityApi.VISIBILITY_LABELS[audience]}.`,
+            anonSearch ? 'Fuera de esa audiencia pueden encontrarte como Hermano registrado.' : 'Fuera de esa audiencia no se habilita aparición anónima por este control.',
+            'La decisión queda asociada a tu cuenta para controles internos.',
+          ]}
+        />
       </div>
     )
   }
@@ -253,6 +278,27 @@ export default function ProfilePage() {
       setError('No se pudo actualizar la privacidad.')
     }
     finally { setSavingVisibility(false) }
+  }
+
+  async function saveContactConsent(next: ContactConsentSettings) {
+    setContactConsent(next)
+    setSavingContactConsent(true); setError(''); setSuccess('')
+    try {
+      const updated = await profileApi.updateContactConsent(next)
+      setContactConsent(updated)
+      setSuccess('Preferencias de contacto actualizadas.')
+    } catch {
+      setError('No se pudieron actualizar las preferencias de contacto.')
+    } finally { setSavingContactConsent(false) }
+  }
+
+  function toggleContactConsent<T extends SharedContactField | ContactChannel | ContactSource>(key: keyof ContactConsentSettings, value: T) {
+    if (!contactConsent) return
+    const current = contactConsent[key] as T[]
+    const nextValues = current.includes(value)
+      ? current.filter(item => item !== value)
+      : [...current, value]
+    saveContactConsent({ ...contactConsent, [key]: nextValues })
   }
 
   async function handleSaveDegree(e: FormEvent) {
@@ -418,6 +464,56 @@ export default function ProfilePage() {
               <textarea className="profile-textarea" value={profile?.availability_notes ?? ''} onChange={field('availability_notes')} rows={2} placeholder="Ej: disponible de lunes a viernes por las tardes..." />
             </FormField>
             {renderSectionPrivacy('contact')}
+            {contactConsent && (
+              <div className="profile-contact-consent">
+                <h3 className="profile-subsection-title">Consentimiento para solicitudes de contacto</h3>
+                <p className="profile-section-desc">Estos valores solo se usan como predeterminados cuando decidís iniciar o recibir contacto. No hacen públicos tus datos.</p>
+                <div className="profile-consent-grid">
+                  <div>
+                    <span className="profile-consent-label">Datos que comparto por defecto</span>
+                    {[
+                      ['identity', 'Identidad'],
+                      ['email', 'Email'],
+                      ['phone', 'Teléfono'],
+                      ['whatsapp', 'WhatsApp'],
+                      ['workshop', 'Taller principal'],
+                      ['profession', 'Profesión/oficio'],
+                    ].map(([value, label]) => (
+                      <label key={value} className="profile-check-row">
+                        <input type="checkbox" disabled={savingContactConsent} checked={contactConsent.default_shared_fields.includes(value as SharedContactField)} onChange={() => toggleContactConsent('default_shared_fields', value as SharedContactField)} />
+                        <span>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div>
+                    <span className="profile-consent-label">Canales preferidos</span>
+                    {[
+                      ['in_flow', 'Responder dentro del flujo'],
+                      ['email', 'Email'],
+                      ['phone', 'Teléfono'],
+                      ['whatsapp', 'WhatsApp'],
+                    ].map(([value, label]) => (
+                      <label key={value} className="profile-check-row">
+                        <input type="checkbox" disabled={savingContactConsent} checked={contactConsent.preferred_channels.includes(value as ContactChannel)} onChange={() => toggleContactConsent('preferred_channels', value as ContactChannel)} />
+                        <span>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div>
+                    <span className="profile-consent-label">Acepto solicitudes desde</span>
+                    {[
+                      ['search', 'Búsquedas de Hermanos'],
+                      ['publications', 'Publicaciones'],
+                    ].map(([value, label]) => (
+                      <label key={value} className="profile-check-row">
+                        <input type="checkbox" disabled={savingContactConsent} checked={contactConsent.allowed_sources.includes(value as ContactSource)} onChange={() => toggleContactConsent('allowed_sources', value as ContactSource)} />
+                        <span>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="profile-section">
@@ -486,7 +582,7 @@ export default function ProfilePage() {
           </div>
           {degrees.length === 0 ? <p className="profile-empty">Sin grados registrados.</p> : (
             <table className="profile-table">
-              <thead><tr><th>Grado</th><th>Taller</th><th>Inicio</th><th>Fin</th><th></th></tr></thead>
+              <thead><tr><th>Grado</th><th>Taller</th><th>Inicio</th><th>Fin</th><th>Validación</th><th></th></tr></thead>
               <tbody>
                 {degrees.map(d => (
                   <tr key={d.id}>
@@ -494,6 +590,7 @@ export default function ProfilePage() {
                     <td>{d.workshop?.name ?? '-'}</td>
                     <td>{formatDate(d.start_date)}</td>
                     <td>{formatDate(d.end_date)}</td>
+                    <td><Badge variant={VALIDATION_VARIANTS[d.validation_status]}>{VALIDATION_LABELS[d.validation_status]}</Badge></td>
                     <td className="profile-table-actions">
                       <button className="profile-link-btn" onClick={() => { setEditingDegree(d); setDegreeModalError(''); setDegreeForm({ degree: d.degree, workshop_id: d.workshop_id?.toString() ?? '', start_date: toDateInputValue(d.start_date), notes: d.notes ?? '' }); setShowDegreeModal(true) }}>Editar</button>
                       <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeleteDegree(d.id)}>Eliminar</button>
@@ -514,7 +611,7 @@ export default function ProfilePage() {
           </div>
           {positions.length === 0 ? <p className="profile-empty">Sin cargos registrados.</p> : (
             <table className="profile-table">
-              <thead><tr><th>Cargo</th><th>Taller</th><th>Inicio</th><th>Fin</th><th></th></tr></thead>
+              <thead><tr><th>Cargo</th><th>Taller</th><th>Inicio</th><th>Fin</th><th>Validación</th><th></th></tr></thead>
               <tbody>
                 {positions.map(p => (
                   <tr key={p.id}>
@@ -522,6 +619,7 @@ export default function ProfilePage() {
                     <td>{p.workshop?.name ?? '-'}</td>
                     <td>{formatDate(p.start_date)}</td>
                     <td>{formatDate(p.end_date)}</td>
+                    <td><Badge variant={VALIDATION_VARIANTS[p.validation_status]}>{VALIDATION_LABELS[p.validation_status]}</Badge></td>
                     <td className="profile-table-actions">
                       <button className="profile-link-btn" onClick={() => { setEditingPosition(p); setPositionModalError(''); setPositionForm({ position_id: p.position_id.toString(), workshop_id: p.workshop_id.toString(), start_date: toDateInputValue(p.start_date), end_date: toDateInputValue(p.end_date), notes: p.notes ?? '' }); setShowPositionModal(true) }}>Editar</button>
                       <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeletePosition(p.id)}>Eliminar</button>

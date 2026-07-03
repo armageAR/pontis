@@ -7,15 +7,27 @@ import Spinner from '@/components/Spinner'
 import Alert from '@/components/Alert'
 import Modal from '@/components/Modal'
 import FormField from '@/components/FormField'
+import PrivacyIndicator from '@/components/PrivacyIndicator'
 import { useAuth } from '@/context/AuthContext'
 import client from '@/api/client'
 import * as contactApi from '@/api/contactRequests'
+import type { SharedContactField } from '@/api/contactRequests'
+import type { ContactReasonType } from '@/api/contactRequests'
+import * as profileApi from '@/api/profile'
 import { formatDate } from '@/utils/date'
 import './PersonPage.css'
 
 const DEGREE_LABELS: Record<string, string> = { aprendiz: 'Aprendiz', companero: 'Compañero', maestro: 'Maestro' }
-const MASONIC_STATUS_LABELS: Record<string, string> = { active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'Fallecido' }
+const MASONIC_STATUS_LABELS: Record<string, string> = { active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'O Eterno' }
 const MASONIC_STATUS_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { active: 'success', inactive: 'default', suspended: 'warning', discharged: 'error', deceased: 'default' }
+const SHARED_FIELD_LABELS: Record<SharedContactField, string> = {
+  identity: 'Identidad',
+  email: 'Email',
+  phone: 'Teléfono',
+  whatsapp: 'WhatsApp',
+  workshop: 'Taller principal',
+  profession: 'Profesión/oficio',
+}
 
 interface PublicProfile {
   id: number
@@ -32,6 +44,7 @@ interface PublicProfile {
   workshops: { id: number; name: string; number: number }[]
   degrees: { id: number; degree: string; start_date: string; end_date: string | null; workshop?: { name: string } }[]
   positions: { id: number; start_date: string; end_date: string | null; position?: { name: string }; workshop?: { name: string } }[]
+  can_request_contact?: boolean
 }
 
 export default function PersonPage() {
@@ -43,6 +56,8 @@ export default function PersonPage() {
   const [error, setError] = useState('')
   const [showContactModal, setShowContactModal] = useState(false)
   const [contactMessage, setContactMessage] = useState('')
+  const [sharedFields, setSharedFields] = useState<SharedContactField[]>(['identity'])
+  const [contactReason, setContactReason] = useState<ContactReasonType>('profession_search')
   const [sending, setSending] = useState(false)
   const [contactSent, setContactSent] = useState(false)
 
@@ -53,10 +68,22 @@ export default function PersonPage() {
       .finally(() => setLoading(false))
   }, [id])
 
+  useEffect(() => {
+    profileApi.getContactConsent()
+      .then(settings => setSharedFields(settings.default_shared_fields))
+      .catch(() => {})
+  }, [])
+
   async function handleContact(e: FormEvent) {
     e.preventDefault(); setSending(true)
     try {
-      await contactApi.createContactRequest({ requestee_id: Number(id), message: contactMessage })
+      await contactApi.createContactRequest({
+        requestee_id: Number(id),
+        message: contactMessage,
+        shared_fields: sharedFields,
+        reason_type: contactReason,
+        source: 'search',
+      })
       setShowContactModal(false); setContactSent(true)
     } catch (err: any) {
       alert(err?.response?.data?.message ?? 'Error al enviar la solicitud.')
@@ -68,6 +95,11 @@ export default function PersonPage() {
 
   const isSelf = me?.id === profile.id
   const fullName = profile.last_name ? `${profile.last_name}, ${profile.name}` : profile.name
+  function toggleSharedField(field: SharedContactField) {
+    setSharedFields((current) => current.includes(field)
+      ? current.filter((item) => item !== field)
+      : [...current, field])
+  }
 
   return (
     <AppLayout>
@@ -84,8 +116,11 @@ export default function PersonPage() {
               </Badge>
             )}
           </div>
-          {!isSelf && !contactSent && (
+          {!isSelf && !contactSent && profile.can_request_contact !== false && (
             <Button onClick={() => setShowContactModal(true)}>Solicitar contacto</Button>
+          )}
+          {!isSelf && profile.can_request_contact === false && (
+            <Alert>Este Hermano no acepta solicitudes de contacto desde búsquedas.</Alert>
           )}
           {contactSent && <Alert variant="success">Solicitud de contacto enviada.</Alert>}
         </div>
@@ -149,10 +184,39 @@ export default function PersonPage() {
 
       <Modal open={showContactModal} onClose={() => setShowContactModal(false)} title={`Contactar a ${profile.name}`}>
         <form onSubmit={handleContact} className="person-contact-form">
-          <p className="person-contact-info">Al aceptar tu solicitud, {profile.name} podrá ver tus datos de contacto y vos los de él/ella.</p>
+          <p className="person-contact-info">Elegí qué datos tuyos querés compartir con esta solicitud. Lo que no selecciones no se mostrará al destinatario.</p>
           <FormField label="Mensaje *">
             <textarea className="person-textarea" required rows={4} value={contactMessage} onChange={e => setContactMessage(e.target.value)} placeholder="Presentate y explicá por qué querés contactarte..." />
           </FormField>
+          <FormField label="Motivo *">
+            <select className="person-select" required value={contactReason} onChange={e => setContactReason(e.target.value as ContactReasonType)}>
+              <option value="profession_search">Lo encontré por profesión u oficio</option>
+              <option value="workshop_location_search">Lo encontré por Taller o ubicación</option>
+              <option value="other">Otro motivo</option>
+            </select>
+          </FormField>
+          <FormField label="Datos a compartir">
+            <div className="person-shared-fields">
+              {Object.entries(SHARED_FIELD_LABELS).map(([value, label]) => (
+                <label key={value} className="person-shared-field">
+                  <input
+                    type="checkbox"
+                    checked={sharedFields.includes(value as SharedContactField)}
+                    onChange={() => toggleSharedField(value as SharedContactField)}
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </FormField>
+          <PrivacyIndicator
+            summary={`Vas a compartir: ${sharedFields.map(field => SHARED_FIELD_LABELS[field]).join(', ') || 'ningún dato de contacto'}.`}
+            details={[
+              'El destinatario verá tu mensaje y el motivo de contacto.',
+              'Los campos no seleccionados no se incluyen en la solicitud.',
+              'La solicitud queda registrada para seguimiento interno.',
+            ]}
+          />
           <div className="person-modal-actions">
             <Button type="button" variant="outline" onClick={() => setShowContactModal(false)}>Cancelar</Button>
             <Button type="submit" loading={sending}>Enviar solicitud</Button>

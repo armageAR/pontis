@@ -1,0 +1,12 @@
+.validation-page { display: flex; flex-direction: column; gap: var(--space-5); }
+.validation-loading { display: flex; justify-content: center; padding: var(--space-6); }
+.validation-title { margin: 0 0 var(--space-3); color: var(--text-h); font-size: var(--text-lg); }
+.validation-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.validation-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--space-3); align-items: center; border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3); background: var(--surface); }
+.validation-row strong { display: block; color: var(--text-h); }
+.validation-row span { display: block; color: var(--text-muted); font-size: var(--text-sm); margin-top: var(--space-1); }
+.validation-actions { display: flex; gap: var(--space-2); }
+@media (max-width: 760px) {
+  .validation-row { grid-template-columns: 1fr; }
+  .validation-actions { justify-content: flex-start; }
+}

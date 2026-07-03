@@ -13,7 +13,7 @@ export interface ExploreServiceUser {
 
 export interface ExploreService {
   id: number
-  user_id: number
+  user_id: number | null
   service_category_id: number | null
   title: string
   description: string | null
@@ -37,7 +37,7 @@ export interface ExploreNeedUser {
 
 export interface ExploreNeed {
   id: number
-  user_id: number
+  user_id: number | null
   service_category_id: number | null
   title: string
   description: string | null

@@ -18,7 +18,7 @@ export default function UserFilters({ filters, onChange, workshops }: UserFilter
   return (
     <div className="user-filters">
       <Input
-        placeholder="Nombre o email"
+        placeholder="Nombre, email o matrícula"
         value={filters.search ?? ''}
         onChange={(e: ChangeEvent<HTMLInputElement>) => set('search', e.target.value)}
         className="user-filters-search"
@@ -50,6 +50,7 @@ export default function UserFilters({ filters, onChange, workshops }: UserFilter
         <option value="rejected">Rechazado</option>
         <option value="suspended">Suspendido</option>
         <option value="inactive">Baja</option>
+        <option value="o_eterno">O Eterno</option>
       </Select>
     </div>
   )

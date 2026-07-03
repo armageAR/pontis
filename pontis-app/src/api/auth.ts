@@ -5,7 +5,7 @@ export interface User {
   name: string
   email: string
   role: string
-  status: 'verifying' | 'pending' | 'active' | 'rejected'
+  status: 'verifying' | 'pending' | 'active' | 'rejected' | 'suspended' | 'inactive' | 'o_eterno'
   email_verified_at: string | null
 }
 
@@ -23,7 +23,7 @@ export interface MembershipStatus {
 }
 
 export interface AccountStatus {
-  status: 'verifying' | 'pending' | 'active' | 'rejected'
+  status: 'verifying' | 'pending' | 'active' | 'rejected' | 'suspended' | 'inactive' | 'o_eterno'
   email_verified: boolean
   email_verified_at: string | null
   verification_sent_at: string
@@ -32,6 +32,16 @@ export interface AccountStatus {
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
   const { data } = await client.post<AuthResponse>('/login', { email, password })
+  return data
+}
+
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  const { data } = await client.post<{ message: string }>('/forgot-password', { email })
+  return data
+}
+
+export async function resetPassword(payload: { email: string; token: string; password: string; password_confirmation: string }): Promise<{ message: string }> {
+  const { data } = await client.post<{ message: string }>('/reset-password', payload)
   return data
 }
 

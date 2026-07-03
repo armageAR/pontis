@@ -20,7 +20,7 @@ import './MisHermanosPage.css'
 
 const MASONIC_STATUS_LABELS: Record<string, string> = {
   active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido',
-  discharged: 'Dado de baja', deceased: 'O∴ Eterno',
+  discharged: 'Dado de baja', deceased: 'O Eterno',
 }
 const DEGREE_LABELS: Record<string, string> = {
   aprendiz: 'Aprendiz', companero: 'Compañero', maestro: 'Maestro',

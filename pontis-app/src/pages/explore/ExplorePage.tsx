@@ -8,10 +8,15 @@ import Spinner from '@/components/Spinner'
 import Alert from '@/components/Alert'
 import EmptyState from '@/components/EmptyState'
 import Pagination from '@/components/Pagination'
+import Modal from '@/components/Modal'
+import FormField from '@/components/FormField'
+import PrivacyIndicator from '@/components/PrivacyIndicator'
 import * as exploreApi from '@/api/explore'
 import type { ExploreService, ExploreNeed } from '@/api/explore'
 import { getCategories } from '@/api/services'
 import type { ServiceCategory } from '@/api/services'
+import { createContactRequest, type SharedContactField } from '@/api/contactRequests'
+import { getContactConsent } from '@/api/profile'
 import { PROVINCIAS } from '@/constants/provincias'
 import './ExplorePage.css'
 
@@ -22,8 +27,17 @@ const SCOPE_LABELS: Record<string, string> = {
 }
 
 const MODALITY_LABELS: Record<string, string> = { presencial: 'Presencial', remoto: 'Remoto', both: 'Ambas' }
+const SHARED_FIELD_LABELS: Record<SharedContactField, string> = {
+  identity: 'Identidad',
+  email: 'Email',
+  phone: 'Teléfono',
+  whatsapp: 'WhatsApp',
+  workshop: 'Taller',
+  profession: 'Profesión u oficio',
+}
 
 type Tab = 'services' | 'needs'
+type ContactTarget = { type: 'service'; item: ExploreService } | { type: 'need'; item: ExploreNeed }
 
 export default function ExplorePage({ embedded = false }: { embedded?: boolean }) {
   const [tab, setTab] = useState<Tab>('services')
@@ -41,9 +55,14 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
   const [lastPage, setLastPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [searched, setSearched] = useState(false)
+  const [contactTarget, setContactTarget] = useState<ContactTarget | null>(null)
+  const [contactMessage, setContactMessage] = useState('')
+  const [sharedFields, setSharedFields] = useState<SharedContactField[]>(['identity'])
+  const [sendingContact, setSendingContact] = useState(false)
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
+    getContactConsent().then(settings => setSharedFields(settings.default_shared_fields)).catch(() => {})
     // Load default results on mount
     handleSearch()
   }, [])
@@ -89,6 +108,41 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
 
   function switchTab(t: Tab) {
     setTab(t); setServices([]); setNeeds([]); setTotal(0); setSearched(false)
+  }
+
+  function openContact(target: ContactTarget) {
+    setContactTarget(target)
+    setContactMessage('')
+  }
+
+  function toggleSharedField(field: SharedContactField) {
+    setSharedFields(fields => fields.includes(field) ? fields.filter(f => f !== field) : [...fields, field])
+  }
+
+  async function sendContactRequest() {
+    if (!contactTarget) return
+    if (contactMessage.trim().length < 10) { setError('El mensaje de contacto debe tener al menos 10 caracteres.'); return }
+    setSendingContact(true); setError('')
+    try {
+      await createContactRequest({
+        service_id: contactTarget.type === 'service' ? contactTarget.item.id : undefined,
+        need_id: contactTarget.type === 'need' ? contactTarget.item.id : undefined,
+        message: contactMessage,
+        shared_fields: sharedFields,
+        reason_type: contactTarget.type === 'service' ? 'offer_publication' : 'need_publication',
+        source: 'publications',
+        source_context: {
+          title: contactTarget.item.title,
+          category: contactTarget.item.category?.name ?? null,
+        },
+      })
+      setContactTarget(null)
+      setContactMessage('')
+    } catch {
+      setError('No se pudo enviar la solicitud de contacto.')
+    } finally {
+      setSendingContact(false)
+    }
   }
 
   const content = (
@@ -149,15 +203,18 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
                     {s.availability && <span>· {s.availability}</span>}
                   </div>
                   <div className="explore-card-footer">
-                    {s.user?.anonymous ? (
-                      <span className="explore-anonymous">Hermano registrado — identidad no publicada</span>
-                    ) : s.user?.id ? (
-                      <Link to={`/people/${s.user.id}`} className="explore-user-link">
-                        {[s.user.last_name, s.user.name].filter(Boolean).join(', ')}
-                        {s.user.profession && <span className="explore-user-profession"> · {s.user.profession}</span>}
-                        {(s.user.locality || s.user.province) && <span className="explore-user-location"> · {[s.user.locality, s.user.province].filter(Boolean).join(', ')}</span>}
-                      </Link>
-                    ) : null}
+                    <div className="explore-author">
+                      {s.user?.anonymous ? (
+                        <span className="explore-anonymous">Hermano registrado — identidad no publicada</span>
+                      ) : s.user?.id ? (
+                        <Link to={`/people/${s.user.id}`} className="explore-user-link">
+                          {[s.user.last_name, s.user.name].filter(Boolean).join(', ')}
+                          {s.user.profession && <span className="explore-user-profession"> · {s.user.profession}</span>}
+                          {(s.user.locality || s.user.province) && <span className="explore-user-location"> · {[s.user.locality, s.user.province].filter(Boolean).join(', ')}</span>}
+                        </Link>
+                      ) : null}
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => openContact({ type: 'service', item: s })}>Solicitar contacto</Button>
                   </div>
                 </div>
               ))}
@@ -182,14 +239,17 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
                   {n.description && <p className="explore-card-desc">{n.description}</p>}
                   {n.location && <div className="explore-card-meta">{n.location}</div>}
                   <div className="explore-card-footer">
-                    {n.user?.anonymous ? (
-                      <span className="explore-anonymous">Hermano registrado — identidad no publicada</span>
-                    ) : n.user?.id ? (
-                      <Link to={`/people/${n.user.id}`} className="explore-user-link">
-                        {[n.user.last_name, n.user.name].filter(Boolean).join(', ')}
-                        {(n.user.locality || n.user.province) && <span className="explore-user-location"> · {[n.user.locality, n.user.province].filter(Boolean).join(', ')}</span>}
-                      </Link>
-                    ) : null}
+                    <div className="explore-author">
+                      {n.user?.anonymous ? (
+                        <span className="explore-anonymous">Hermano registrado — identidad no publicada</span>
+                      ) : n.user?.id ? (
+                        <Link to={`/people/${n.user.id}`} className="explore-user-link">
+                          {[n.user.last_name, n.user.name].filter(Boolean).join(', ')}
+                          {(n.user.locality || n.user.province) && <span className="explore-user-location"> · {[n.user.locality, n.user.province].filter(Boolean).join(', ')}</span>}
+                        </Link>
+                      ) : null}
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => openContact({ type: 'need', item: n })}>Solicitar contacto</Button>
                   </div>
                 </div>
               ))}
@@ -199,6 +259,41 @@ export default function ExplorePage({ embedded = false }: { embedded?: boolean }
           <Pagination currentPage={page} lastPage={lastPage} total={total} onPageChange={handlePageChange} />
         </>
       )}
+
+      <Modal open={contactTarget !== null} onClose={() => setContactTarget(null)} title="Solicitar contacto">
+        {contactTarget && (
+          <div className="explore-contact-form">
+            <p className="explore-contact-context">{contactTarget.item.title}</p>
+            <FormField label="Mensaje">
+              <textarea className="explore-textarea" value={contactMessage} onChange={e => setContactMessage(e.target.value)} rows={4} placeholder="Contá por qué querés ponerte en contacto..." />
+            </FormField>
+            <div className="explore-shared-fields">
+              {Object.entries(SHARED_FIELD_LABELS).map(([field, label]) => (
+                <label key={field} className="explore-shared-field">
+                  <input
+                    type="checkbox"
+                    checked={sharedFields.includes(field as SharedContactField)}
+                    onChange={() => toggleSharedField(field as SharedContactField)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <PrivacyIndicator
+              summary={`Vas a compartir: ${sharedFields.map(field => SHARED_FIELD_LABELS[field]).join(', ') || 'ningún dato de contacto'}.`}
+              details={[
+                'El destinatario verá el mensaje y el contexto de la publicación.',
+                'Los datos no seleccionados no se incluyen en la solicitud.',
+                'La solicitud queda registrada para seguimiento interno.',
+              ]}
+            />
+            <div className="explore-modal-actions">
+              <Button type="button" variant="outline" onClick={() => setContactTarget(null)}>Cancelar</Button>
+              <Button type="button" onClick={sendContactRequest} loading={sendingContact}>Enviar solicitud</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </>
   )
   if (embedded) return content
