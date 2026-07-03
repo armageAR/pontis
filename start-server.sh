@@ -4,20 +4,25 @@ set -e
 # Get the directory of the script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PID_FILE="$SCRIPT_DIR/.servers.pid"
-LOG_FILE="$SCRIPT_DIR/vite-dev.log"
+VITE_LOG_FILE="$SCRIPT_DIR/vite-dev.log"
+LARAVEL_LOG_FILE="$SCRIPT_DIR/laravel-dev.log"
 
-# Read backend URL from .env
-BACKEND_URL=$(grep "^APP_URL=" "$SCRIPT_DIR/pontis-api/.env" | cut -d'=' -f2- | tr -d '\r')
-if [ -z "$BACKEND_URL" ]; then
-    BACKEND_URL="http://pontis.api.local" # Fallback
-fi
+BACKEND_URL="${VITE_API_PROXY_TARGET:-http://127.0.0.1:8000}"
 
 # Check if servers are already running
 if [ -f "$PID_FILE" ]; then
-    OLD_PID=$(cat "$PID_FILE")
-    if ps -p "$OLD_PID" > /dev/null 2>&1; then
+    OLD_PIDS=$(cat "$PID_FILE")
+    RUNNING=0
+    for OLD_PID in $OLD_PIDS; do
+        if ps -p "$OLD_PID" > /dev/null 2>&1; then
+            RUNNING=1
+            break
+        fi
+    done
+
+    if [ "$RUNNING" -eq 1 ]; then
         echo "=================================================="
-        echo "Los servidores ya están corriendo (PID: $OLD_PID)."
+        echo "Los servidores ya están corriendo (PIDs: $OLD_PIDS)."
         echo "Frontend: http://localhost:5173"
         echo "Backend:  $BACKEND_URL"
         echo "=================================================="
@@ -32,11 +37,15 @@ echo "==> Migraciones..."
 cd "$SCRIPT_DIR/pontis-api"
 php artisan migrate --force
 
+echo "==> Iniciando backend Laravel..."
+nohup php artisan serve --host=127.0.0.1 --port=8000 > "$LARAVEL_LOG_FILE" 2>&1 &
+LARAVEL_PID=$!
+
 echo "==> Build frontend..."
 cd "$SCRIPT_DIR/pontis-app"
 npm run build
 
-echo "==> Iniciando dev server..."
+echo "==> Iniciando frontend Vite..."
 
 # Choose Vite command (prefer local node_modules binary)
 if [ -f "./node_modules/.bin/vite" ]; then
@@ -46,11 +55,11 @@ else
 fi
 
 # Start Vite dev server in the background and redirect output to log file
-nohup $VITE_CMD > "$LOG_FILE" 2>&1 &
+VITE_API_PROXY_TARGET="$BACKEND_URL" nohup $VITE_CMD > "$VITE_LOG_FILE" 2>&1 &
 VITE_PID=$!
 
 # Save PID to file
-echo "$VITE_PID" > "$PID_FILE"
+echo "$LARAVEL_PID $VITE_PID" > "$PID_FILE"
 
 # Wait for the log file to contain "Local" or timeout after 5 seconds
 TIMEOUT=5
@@ -60,12 +69,12 @@ FRONTEND_URL="http://localhost:5173" # Fallback
 while [ $COUNT -lt $TIMEOUT ]; do
     if ! ps -p "$VITE_PID" > /dev/null 2>&1; then
         echo "Error: El servidor de desarrollo de Vite no pudo iniciarse."
-        echo "Revisa el archivo de log para más detalles: $LOG_FILE"
+        echo "Revisa el archivo de log para más detalles: $VITE_LOG_FILE"
         rm -f "$PID_FILE"
         exit 1
     fi
-    if [ -f "$LOG_FILE" ] && grep -q -E "(Local:|Local)" "$LOG_FILE"; then
-        RAW_URL=$(grep -E "(Local:|Local)" "$LOG_FILE" | head -n 1 | awk '{print $NF}')
+    if [ -f "$VITE_LOG_FILE" ] && grep -q -E "(Local:|Local)" "$VITE_LOG_FILE"; then
+        RAW_URL=$(grep -E "(Local:|Local)" "$VITE_LOG_FILE" | head -n 1 | awk '{print $NF}')
         CLEANED_URL=$(echo "$RAW_URL" | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n')
         if [ -n "$CLEANED_URL" ]; then
             FRONTEND_URL="$CLEANED_URL"
@@ -81,6 +90,6 @@ echo "--------------------------------------------------"
 echo "Frontend (React):   $FRONTEND_URL"
 echo "Backend (Laravel):  $BACKEND_URL"
 echo "--------------------------------------------------"
-echo "Logs de Vite en: $LOG_FILE"
+echo "Logs de Laravel en: $LARAVEL_LOG_FILE"
+echo "Logs de Vite en: $VITE_LOG_FILE"
 echo "Para detener los servidores ejecuta: ./stop-servers.sh"
-

@@ -13,3 +13,4 @@ pontis-app/dist/
 pontis-app/.env
 .servers.pid
 vite-dev.log
+laravel-dev.log
