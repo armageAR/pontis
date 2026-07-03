@@ -338,8 +338,7 @@ En V1 pueden existir notificaciones para:
 * Solicitud de contacto recibida.
 * Solicitud de contacto aceptada o rechazada.
 * Necesidad con coincidencias relevantes.
-* Publicación pendiente de autorización.
-* Publicación aprobada, rechazada o con correcciones.
+* Intervención administrativa a posteriori sobre una publicación (baja o suspensión), cuando corresponda.
 * Resultado del crawler con diferencias para revisar.
 
 ## Auditoría funcional

@@ -307,7 +307,7 @@ El grado masónico y el rol administrativo son conceptos distintos. Mezclarlos g
 
 ## Consecuencias
 
-* Un Maestro puede publicar sin autorización previa.
+* Publicar no depende del grado: cualquier usuario registrado publica sin autorización previa (ver Decisión 16). Ser Maestro no agrega un privilegio de publicación.
 * Un Maestro no es automáticamente Admin de Taller.
 * Un Maestro no puede validar usuarios por el solo hecho de ser Maestro.
 * Un Maestro no puede administrar Talleres por el solo hecho de ser Maestro.
@@ -615,7 +615,7 @@ No se implementará en V1:
 
 ---
 
-# 16. Las publicaciones de Aprendices y Compañeros requieren aprobación
+# 16. Las publicaciones son libres para todo usuario registrado, sin aprobación previa
 
 ## Estado
 
@@ -623,26 +623,34 @@ Accepted
 
 ## Fecha
 
-2026-06-28
+2026-07-03
+
+## Reemplaza a
+
+Decisión previa "Las publicaciones de Aprendices y Compañeros requieren aprobación" (2026-06-28), que exigía autorización según el grado del autor.
 
 ## Decisión
 
-Si el autor de una publicación es Aprendiz o Compañero, la publicación debe requerir autorización antes de quedar visible.
+Cualquier usuario registrado y validado puede crear publicaciones (servicios y necesidades) sin autorización administrativa previa.
 
-Si el autor es Maestro, podrá publicar sin autorización previa.
+El grado del autor (Aprendiz, Compañero o Maestro) no condiciona la posibilidad de publicar. La publicación queda disponible de inmediato en Mis Publicaciones con el estado elegido por el autor.
+
+No existe estado `Pendiente de autorización` ni acción "Pedir corrección" en el ciclo de vida de una publicación nueva.
 
 ## Motivo
 
-Se busca una regla simple para moderar publicaciones internas en V1 sin implementar un workflow complejo de moderación.
+El requerimiento de producto indica que publicar debe ser libre dentro de la comunidad ya validada. Mantener un paso de moderación previa por grado generaba una experiencia contradictoria y agregaba complejidad de workflow que no se justifica en V1.
+
+La validación de ingreso al sistema sigue siendo el control principal: solo usuarios validados acceden al sistema interno y, por lo tanto, pueden publicar.
 
 ## Consecuencias
 
-* El sistema debe conocer el grado actual del autor.
-* Una publicación de Aprendiz o Compañero queda en estado `Pendiente de autorización`.
-* La autorización puede realizarla un Admin del Taller principal o un Superadmin.
-* Un Maestro puede publicar sin autorización previa.
-* Ser Maestro no otorga permisos administrativos generales.
-* Si se desea permitir aprobación por Maestros no administradores, debe definirse un permiso específico aparte.
+* El sistema no necesita evaluar el grado del autor para permitir publicar.
+* Una publicación nueva no pasa por `Pendiente de autorización`; queda en el estado elegido por el autor (por ejemplo `Activa` o `Borrador`).
+* Se retira la acción "Pedir corrección" y el estado `Requiere corrección` del flujo activo de publicaciones.
+* Los datos históricos con estados `Pendiente de autorización` o `Requiere corrección` se tratan como legacy: no se generan nuevos y no se ofrecen como estado seleccionable en la UI.
+* El moderar publicaciones a posteriori (por seguridad o abuso) queda como acción administrativa opcional fuera del ciclo básico de publicar, no como requisito previo.
+* Esta decisión afecta solo a publicaciones. La validación de usuarios, la aprobación de pertenencia a Talleres y la aprobación de cambios de datos sensibles se mantienen sin cambios.
 
 ## Documentos relacionados
 
@@ -866,7 +874,7 @@ Deben auditarse acciones como:
 * Resoluciones administrativas.
 * Ejecución y confirmación del crawler.
 * Baja o suspensión de usuarios.
-* Publicaciones aprobadas o rechazadas.
+* Creación y baja de publicaciones, y cualquier intervención administrativa a posteriori sobre ellas.
 
 No debe auditarse cada aparición en una búsqueda común ni cada visualización normal de un dato permitido.
 
@@ -972,14 +980,14 @@ Pontis V1 manejará estados funcionales simples para las entidades principales.
 ## Estados de publicación
 
 * Borrador.
-* Pendiente de autorización.
 * Activa.
-* Requiere corrección.
 * Rechazada.
 * Pausada.
 * Cerrada.
 * Cancelada.
 * Dada de baja lógica.
+
+Estados legacy, presentes solo en datos históricos y no seleccionables en nuevas publicaciones (ver Decisión 16): `Pendiente de autorización`, `Requiere corrección`.
 
 ## Estados de solicitud de contacto
 

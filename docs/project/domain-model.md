@@ -263,7 +263,7 @@ Representa un grado masónico disponible en Pontis V1.
 * Maestro es el grado mayor dentro de V1.
 * El grado debe conservar historial.
 * El grado no equivale automáticamente a un rol administrativo.
-* Ser Maestro puede habilitar reglas funcionales específicas, por ejemplo publicar sin autorización previa.
+* Publicar no depende del grado: es libre para todo usuario registrado (ver Decisión 16). Ser Maestro no agrega un privilegio de publicación.
 * Ser Maestro no convierte automáticamente al usuario en admin.
 
 ---
@@ -542,22 +542,23 @@ Representa un aviso interno creado por un Hermano para comunicar una necesidad, 
 
 ## Aprobación
 
-* Si el Hermano es Maestro, puede publicar sin autorización previa.
-* Si el Hermano es Aprendiz o Compañero, la publicación requiere autorización antes de quedar visible.
-* La autorización puede realizarla un admin del Taller principal o un superadmin.
+* Publicar es libre para todo usuario registrado y validado, sin autorización previa y sin importar el grado (ver Decisión 16).
+* La publicación queda disponible de inmediato en el estado elegido por el autor.
+* No existe estado `Pendiente de autorización` ni acción "Pedir corrección" en el ciclo de una publicación nueva.
+* Un admin del Taller principal (en su alcance) o un superadmin puede intervenir o dar de baja una publicación a posteriori por razones administrativas o de seguridad; es una acción excepcional y auditada, no un paso previo.
 * Ser Maestro no otorga por sí solo permisos administrativos generales.
 
 ## Estados posibles
 
 * Borrador.
-* Pendiente de autorización.
 * Activa.
-* Requiere corrección.
 * Rechazada.
 * Pausada.
 * Cerrada.
 * Cancelada.
 * Dada de baja lógica.
+
+Estados legacy, solo en datos históricos y no seleccionables en nuevas publicaciones (ver Decisión 16): `Pendiente de autorización`, `Requiere corrección`.
 
 ---
 
@@ -756,8 +757,7 @@ Representa un aviso funcional generado por un evento relevante.
 * Solicitud de contacto aceptada o rechazada.
 * Necesidad con coincidencias relevantes.
 * Servicio o publicación con solicitud de contacto.
-* Publicación pendiente de autorización.
-* Publicación aprobada, rechazada o con correcciones requeridas.
+* Intervención administrativa a posteriori sobre una publicación (baja o suspensión), cuando corresponda.
 * Resultado del crawler con diferencias para revisar.
 
 ---
@@ -793,7 +793,7 @@ La auditoría conserva trazabilidad funcional, pero no busca registrar cada inte
 * Cambios relevantes de visibilidad.
 * Creación, modificación, pausa, cierre o baja de servicios.
 * Creación, modificación, cierre o cancelación de necesidades.
-* Creación, aprobación, rechazo, corrección o baja de publicaciones.
+* Creación, baja o intervención administrativa a posteriori de publicaciones.
 * Solicitudes de contacto y sus resoluciones.
 * Acciones realizadas por permisos derivados de cargos.
 
@@ -986,7 +986,7 @@ Deben requerir revisión humana:
 * Validación de usuarios.
 * Cambios sensibles.
 * Confirmación de cambios del crawler.
-* Aprobación de publicaciones cuando corresponda.
+* Intervención administrativa a posteriori sobre una publicación (baja o suspensión), cuando corresponda. Publicar en sí no requiere revisión previa (ver Decisión 16).
 * Suspensión o baja de usuarios.
 
 ---

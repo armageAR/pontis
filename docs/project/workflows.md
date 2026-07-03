@@ -409,7 +409,7 @@ Registrar el grado actual y el historial de grados del Hermano.
 * Todo Hermano activo debe tener grado actual.
 * Maestro es el grado mayor en V1.
 * El grado no equivale a rol administrativo.
-* Ser Maestro puede permitir publicar sin autorización previa.
+* Publicar es libre para todo usuario registrado y no depende del grado (ver Decisión 16).
 * Ser Maestro no permite ver datos privados ni administrar usuarios automáticamente.
 * El historial de grados no debe eliminarse.
 
@@ -786,53 +786,37 @@ Permitir que un Hermano comunique una necesidad, búsqueda, aviso u ofrecimiento
    * Anónima, si se permite.
 5. El sistema muestra vista previa de qué datos quedarán visibles.
 6. El Hermano confirma.
-7. El sistema evalúa grado y reglas de aprobación.
-8. Si el autor es Maestro:
+7. La publicación queda disponible de inmediato en el estado elegido por el autor, sin autorización previa.
 
-   * La publicación puede quedar activa sin autorización previa.
-9. Si el autor es Aprendiz o Compañero:
+   * No se evalúa el grado del autor.
+   * No existe estado `Pendiente de autorización` ni acción "Pedir corrección" (ver Decisión 16).
+8. El autor puede luego pausar, cerrar, cancelar o dar de baja su propia publicación según estado.
+9. De forma excepcional y a posteriori, un Admin de Taller (en su alcance) o el Superadmin puede intervenir o dar de baja una publicación por razones administrativas o de seguridad.
 
-   * La publicación queda `Pendiente de autorización`.
-10. Admin de Taller o Superadmin revisa si corresponde.
-11. El revisor puede:
-
-    * Aprobar.
-    * Rechazar.
-    * Solicitar corrección.
-12. Si aprueba:
-
-    * La publicación pasa a `Activa`.
-    * Se notifica al autor.
-13. Si rechaza:
-
-    * La publicación pasa a `Rechazada`.
-    * Se notifica al autor.
-14. Si solicita corrección:
-
-    * La publicación pasa a `Requiere corrección`.
-    * El autor puede editar y reenviar.
+   * Esta intervención se audita y notifica al autor.
+   * No es un paso previo del ciclo de publicar.
 
 ## Estados posibles
 
 * Borrador.
-* Pendiente de autorización.
 * Activa.
-* Requiere corrección.
 * Rechazada.
 * Pausada.
 * Cerrada.
 * Cancelada.
 * Dada de baja lógica.
 
+Estados legacy, solo en datos históricos y no seleccionables en nuevas publicaciones (ver Decisión 16): `Pendiente de autorización`, `Requiere corrección`.
+
 ## Reglas
 
 * No hay publicaciones públicas sin login en V1.
 * Solo usuarios activos y validados pueden crear publicaciones.
+* Publicar es libre para todo usuario registrado, sin importar el grado ni aprobación previa.
 * La publicación no modifica la visibilidad general de la ficha.
 * El contacto derivado de una publicación debe respetar consentimiento.
 * Ser Maestro no otorga permisos administrativos generales.
-* Admin de Taller solo puede aprobar publicaciones dentro de su alcance.
-* Superadmin puede intervenir cualquier publicación.
+* La intervención administrativa sobre publicaciones es posterior, excepcional y auditada; el Admin de Taller solo actúa dentro de su alcance y el Superadmin en cualquier contexto.
 
 ---
 
@@ -856,10 +840,7 @@ Avisar eventos relevantes sin revelar información sensible innecesaria.
 * Necesidad con coincidencias relevantes.
 * Servicio con solicitud de contacto.
 * Publicación con solicitud de contacto.
-* Publicación pendiente de autorización.
-* Publicación aprobada.
-* Publicación rechazada.
-* Publicación con correcciones requeridas.
+* Intervención administrativa a posteriori sobre una publicación (baja o suspensión), cuando corresponda.
 * Resultado del crawler con diferencias para revisar.
 
 ## Flujo principal
@@ -907,7 +888,7 @@ Registrar acciones relevantes para conservar trazabilidad.
 * Cambios relevantes de visibilidad.
 * Creación, modificación, pausa, cierre o baja de servicios.
 * Creación, modificación, cierre o cancelación de necesidades.
-* Creación, aprobación, rechazo, corrección o baja de publicaciones.
+* Creación, baja o intervención administrativa a posteriori de publicaciones.
 * Solicitudes de contacto y resoluciones.
 * Acciones realizadas por permisos derivados de cargos.
 

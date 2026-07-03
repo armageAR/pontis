@@ -61,7 +61,7 @@ El grado puede influir en reglas funcionales específicas, pero no convierte aut
 
 Ejemplo:
 
-* Un Maestro puede publicar sin autorización previa.
+* El grado no habilita publicar: publicar es libre para todo usuario registrado, sin importar el grado (ver Decisión 16).
 * Un Maestro no es automáticamente Admin de Taller.
 * Un Maestro no puede ver datos privados por el solo hecho de ser Maestro.
 
@@ -131,7 +131,6 @@ El Admin de Taller administra información y solicitudes relacionadas con uno o 
 * Consultar miembros vinculados a sus Talleres según permisos.
 * Administrar información básica de sus Talleres si tiene permiso.
 * Cargar o actualizar cargos masónicos dentro de sus Talleres si tiene permiso.
-* Revisar publicaciones que requieran aprobación y pertenezcan a su contexto.
 * Solicitar correcciones en registros vinculados a sus Talleres.
 * Ver información administrativa mínima necesaria para cumplir sus funciones.
 
@@ -413,7 +412,7 @@ Puede ver:
 * Información mínima necesaria para validar o administrar miembros de sus Talleres.
 * Datos de relación Hermano-Taller dentro de sus Talleres.
 * Solicitudes vinculadas a sus Talleres.
-* Datos necesarios para aprobar pertenencias o publicaciones.
+* Datos necesarios para aprobar pertenencias a sus Talleres.
 
 No puede ver:
 
@@ -555,7 +554,7 @@ Puede:
 
 ## Regla especial sobre Maestro
 
-Ser Maestro puede permitir publicar sin autorización previa.
+Publicar es libre para todo usuario registrado y ya no es un privilegio del grado Maestro (ver Decisión 16).
 
 Ser Maestro no permite automáticamente:
 
@@ -769,59 +768,49 @@ Puede:
 * Definir audiencia.
 * Definir identidad visible.
 * Ver vista previa.
-* Enviar a aprobación, si corresponde.
+* Publicar sin autorización previa.
 * Pausar, cerrar o cancelar publicación propia según estado.
 
 ## Reglas por grado
 
-### Maestro
+El grado del autor no condiciona la posibilidad de publicar. Cualquier usuario registrado y validado publica sin autorización previa, sea Aprendiz, Compañero o Maestro (ver Decisión 16).
 
-Puede publicar sin autorización previa.
-
-Esto no lo convierte en administrador.
-
-### Aprendiz
-
-Debe requerir autorización antes de que la publicación quede visible.
-
-### Compañero
-
-Debe requerir autorización antes de que la publicación quede visible.
+Publicar no otorga ni requiere permisos administrativos.
 
 ## Admin de Taller
 
-Puede:
+La publicación no requiere aprobación previa, por lo que el Admin de Taller no tiene un paso de revisión obligatorio.
 
-* Revisar publicaciones pendientes vinculadas a su Taller cuando corresponda.
-* Aprobar publicaciones de Aprendices o Compañeros dentro de su alcance.
-* Rechazar publicaciones dentro de su alcance.
-* Solicitar correcciones.
+Puede, como intervención administrativa a posteriori y solo dentro de su alcance:
+
+* Dar de baja o suspender publicaciones que infrinjan reglas de la comunidad.
 
 No puede:
 
-* Aprobar publicaciones de Talleres ajenos.
+* Condicionar la publicación de un Hermano a su aprobación previa.
+* Intervenir publicaciones de Talleres ajenos.
 * Modificar visibilidad general de la ficha del autor.
-* Ver datos privados no incluidos en la publicación o no necesarios para la revisión.
+* Ver datos privados no incluidos en la publicación.
 
 ## Superadmin
 
 Puede:
 
-* Aprobar, rechazar o corregir publicaciones en cualquier contexto.
-* Intervenir publicaciones por razones administrativas o de seguridad.
-* Dar de baja publicaciones si corresponde.
+* Intervenir o dar de baja publicaciones en cualquier contexto por razones administrativas o de seguridad.
+
+Esta intervención es posterior y excepcional, no un paso previo del ciclo de publicar.
 
 ## Estados posibles
 
 * Borrador.
-* Pendiente de autorización.
 * Activa.
-* Requiere corrección.
 * Rechazada.
 * Pausada.
 * Cerrada.
 * Cancelada.
 * Dada de baja lógica.
+
+Estados legacy, solo en datos históricos y no seleccionables en nuevas publicaciones (ver Decisión 16): `Pendiente de autorización`, `Requiere corrección`.
 
 ---
 
@@ -948,8 +937,7 @@ Las notificaciones deben respetar:
 * Solicitud de contacto aceptada o rechazada.
 * Necesidad con coincidencias relevantes.
 * Servicio o publicación con solicitud de contacto.
-* Publicación pendiente de autorización.
-* Publicación aprobada, rechazada o con correcciones requeridas.
+* Intervención administrativa a posteriori sobre una publicación (baja o suspensión), cuando corresponda.
 * Resultado del crawler con diferencias para revisar.
 
 ---
@@ -995,7 +983,7 @@ Puede, si se implementa, consultar historial propio limitado, por ejemplo:
 * Cambios relevantes de visibilidad.
 * Creación, modificación, pausa, cierre o baja de servicios.
 * Creación, modificación, cierre o cancelación de necesidades.
-* Creación, aprobación, rechazo, corrección o baja de publicaciones.
+* Creación, baja o intervención administrativa a posteriori de publicaciones.
 * Solicitudes de contacto y resoluciones.
 * Acciones realizadas por permisos derivados de cargos.
 
@@ -1019,8 +1007,8 @@ Puede, si se implementa, consultar historial propio limitado, por ejemplo:
 | Crear servicio                     | Sí                                  | Sí                                  | Sí                       |
 | Crear necesidad                    | Sí                                  | Sí                                  | Sí                       |
 | Crear publicación                  | Sí                                  | Sí                                  | Sí                       |
-| Publicar sin aprobación            | Solo Maestro                        | Según reglas                        | Sí                       |
-| Aprobar publicaciones              | No                                  | En su alcance                       | Sí                       |
+| Publicar sin aprobación            | Sí                                  | Sí                                  | Sí                       |
+| Intervenir/bajar publicaciones     | Solo propias                        | A posteriori, en su alcance         | Sí                       |
 | Buscar Hermanos/servicios/Talleres | Sí, si activo                       | Sí, si activo                       | Sí                       |
 | Iniciar solicitud de contacto      | Sí                                  | Sí                                  | Sí                       |
 | Consultar auditoría                | No, salvo historial propio limitado | Limitado, si se define              | Sí                       |
