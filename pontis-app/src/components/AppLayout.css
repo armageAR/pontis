@@ -22,7 +22,8 @@
 /* ── Sidebar: siempre position fixed, animado con transform ── */
 .app-sidebar {
   width: 240px;
-  height: 100vh;
+  height: 100vh;   /* fallback para navegadores sin dvh */
+  height: 100dvh;  /* respeta la barra dinámica del navegador móvil: el footer queda siempre visible */
   position: fixed;
   top: 0;
   left: 0;
@@ -263,6 +264,7 @@
     top: 0;
     left: 0;
     height: 100vh;
+    height: 100dvh;
     overflow: visible;
     z-index: 249;
     transition: none;
@@ -306,5 +308,10 @@
 
   .app-main {
     padding: var(--space-5) var(--space-4);
+  }
+
+  /* Deja aire bajo el botón "Salir" para el home indicator de iOS */
+  .app-sidebar-footer {
+    padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
   }
 }
