@@ -152,6 +152,23 @@ class DashboardPendingValidationCountTest extends TestCase
             ->assertJsonPath('pending_validation_count', 2);
     }
 
+    public function test_count_includes_active_hermano_second_taller_request(): void
+    {
+        $adminWorkshop = Workshop::factory()->create();
+        $principal = Workshop::factory()->create();
+        $admin = $this->member($adminWorkshop, 'admin');
+
+        // Hermano activo con Taller principal que pide ingreso al Taller administrado.
+        $hermano = User::factory()->create(['role' => 'user', 'status' => 'active']);
+        $hermano->workshopMemberships()->attach($principal->id, ['role' => 'member', 'status' => 'active', 'is_principal' => true]);
+        $hermano->workshopMemberships()->attach($adminWorkshop->id, ['role' => 'member', 'status' => 'pending', 'requested_by_user' => true]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('pending_validation_count', 1);
+    }
+
     public function test_count_includes_pending_join_requests_globally_for_superadmin(): void
     {
         $workshop = Workshop::factory()->create();

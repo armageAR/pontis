@@ -44,6 +44,39 @@ class JoinRequestsListingTest extends TestCase
         $this->assertNotContains($unrelated->id, $ids);
     }
 
+    public function test_active_hermano_requesting_second_taller_is_listed(): void
+    {
+        // Un Hermano ya validado (status active) que pide ingreso a un segundo
+        // Taller debe ser visible para el admin de ese Taller.
+        $principal = Workshop::factory()->create();
+        $secondWorkshop = Workshop::factory()->create();
+        $admin = $this->admin($secondWorkshop);
+
+        $hermano = User::factory()->create(['role' => 'user', 'status' => 'active']);
+        $hermano->workshopMemberships()->attach($principal->id, ['role' => 'member', 'status' => 'active', 'is_principal' => true]);
+        $hermano->workshopMemberships()->attach($secondWorkshop->id, ['role' => 'member', 'status' => 'pending', 'requested_by_user' => true]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/join-requests')
+            ->assertOk()
+            ->assertJsonFragment(['user_id' => $hermano->id, 'workshop_id' => $secondWorkshop->id]);
+    }
+
+    public function test_join_request_from_unverified_user_is_not_listed(): void
+    {
+        // Usuario que aún no verificó su email (status verifying): no debe
+        // aparecer hasta que verifique.
+        $workshop = Workshop::factory()->create();
+        $admin = $this->admin($workshop);
+        $unverified = User::factory()->create(['role' => 'user', 'status' => 'verifying']);
+        $unverified->workshopMemberships()->attach($workshop->id, ['role' => 'member', 'status' => 'pending', 'requested_by_user' => true, 'is_principal' => true]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/join-requests')
+            ->assertOk()
+            ->assertJsonMissing(['user_id' => $unverified->id]);
+    }
+
     public function test_correction_requested_join_requests_are_included(): void
     {
         $workshop = Workshop::factory()->create();

@@ -20,7 +20,10 @@ class JoinRequestQuery
             ->join('users', 'users.id', '=', 'user_workshop.user_id')
             ->join('workshops', 'workshops.id', '=', 'user_workshop.workshop_id')
             ->whereIn('user_workshop.status', ['pending', 'correction_requested'])
-            ->where('users.status', 'pending')
+            // Revisables: usuarios ya con email verificado (pending) o Hermanos
+            // activos que piden ingresar a otro Taller. Se excluyen los que aún
+            // no verificaron su email (verifying) y los estados terminales.
+            ->whereIn('users.status', ['pending', 'active'])
             ->whereNull('workshops.deleted_at');
 
         if (! $user->isSuperAdmin()) {
