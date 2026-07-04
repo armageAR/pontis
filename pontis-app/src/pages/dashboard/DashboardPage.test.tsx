@@ -6,12 +6,10 @@ import DashboardPage from './DashboardPage'
 const h = vi.hoisted(() => ({
   user: { role: 'user', name: 'Test' } as { role: string; name: string },
   dashboard: {
-    pending_requests: [],
     membership_notifications: [],
     is_workshop_admin: false,
     pending_validation_count: 0,
   } as {
-    pending_requests: unknown[]
     membership_notifications: unknown[]
     is_workshop_admin: boolean
     pending_validation_count: number
@@ -35,7 +33,17 @@ function renderPage() {
 describe('DashboardPage administration box', () => {
   beforeEach(() => {
     h.user = { role: 'user', name: 'Test' }
-    h.dashboard = { pending_requests: [], membership_notifications: [], is_workshop_admin: false, pending_validation_count: 0 }
+    h.dashboard = { membership_notifications: [], is_workshop_admin: false, pending_validation_count: 0 }
+  })
+
+  it('does not render a standalone "Solicitudes de ingreso" section on the Panel', async () => {
+    h.dashboard.is_workshop_admin = true
+    h.dashboard.pending_validation_count = 2
+    renderPage()
+
+    await screen.findByText('Administracion')
+    expect(screen.getByLabelText('Validaciones pendientes')).toBeInTheDocument()
+    expect(screen.queryByText('Solicitudes de ingreso')).not.toBeInTheDocument()
   })
 
   it('shows the Administracion box with expected text for a workshop admin', async () => {

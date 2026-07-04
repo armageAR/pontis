@@ -34,6 +34,13 @@ vi.mock('@/api/changeRequests', () => ({
   cancelChangeRequest: vi.fn(),
 }))
 
+vi.mock('@/api/dashboard', () => ({
+  getPendingJoinRequests: () => Promise.resolve([]),
+  approveJoinRequest: vi.fn(),
+  rejectJoinRequest: vi.fn(),
+  requestCorrection: vi.fn(),
+}))
+
 function degree(overrides: Partial<UserDegree> = {}): UserDegree {
   return {
     id: 1,
@@ -73,10 +80,11 @@ describe('DegreeValidationPage', () => {
     expect(screen.queryByText('Cambios de datos sensibles')).not.toBeInTheDocument()
   })
 
-  it('shows the sensitive-changes review section to a reviewer', async () => {
+  it('shows the sensitive-changes and join-request review sections to a reviewer', async () => {
     h.user = { id: 1, role: 'superadmin', name: 'Super', admin_workshops: [] }
     render(<DegreeValidationPage />)
     expect(await screen.findByText('Cambios de datos sensibles')).toBeInTheDocument()
+    expect(await screen.findByText('Solicitudes de ingreso')).toBeInTheDocument()
   })
 
   it('renders a table row per pending record with the actions', async () => {

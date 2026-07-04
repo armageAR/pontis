@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChangeRequest;
 use App\Models\UserDegree;
 use App\Models\UserPosition;
+use App\Support\JoinRequestQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,11 +16,9 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        $pendingRequests = $this->getPendingRequests($user);
-        $notifications   = $this->getMembershipNotifications($user);
+        $notifications = $this->getMembershipNotifications($user);
 
         return response()->json([
-            'pending_requests'         => $pendingRequests,
             'membership_notifications' => $notifications,
             'is_workshop_admin'        => $user->isAdminOfAnyWorkshop(),
             'pending_validation_count' => $this->getPendingValidationCount($user),
@@ -53,44 +52,10 @@ class DashboardController extends Controller
             $changeRequestQuery->whereHas('user.workshops', fn ($q) => $q->whereIn('workshops.id', $adminWorkshopIds));
         }
 
-        return $degreeQuery->count() + $positionQuery->count() + $changeRequestQuery->count();
-    }
-
-    private function getPendingRequests($user): array
-    {
-        $query = DB::table('user_workshop')
-            ->join('users', 'users.id', '=', 'user_workshop.user_id')
-            ->join('workshops', 'workshops.id', '=', 'user_workshop.workshop_id')
-            ->whereIn('user_workshop.status', ['pending', 'correction_requested'])
-            ->where('users.status', 'pending')
-            ->whereNull('workshops.deleted_at')
-            ->select([
-                'user_workshop.user_id',
-                'users.name as user_name',
-                'users.last_name as user_last_name',
-                'users.email as user_email',
-                'users.status as user_status',
-                'user_workshop.workshop_id',
-                'workshops.name as workshop_name',
-                'workshops.number as workshop_number',
-                'user_workshop.status as membership_status',
-                'user_workshop.correction_notes',
-                'user_workshop.created_at as requested_at',
-            ]);
-
-        if (! $user->isSuperAdmin()) {
-            $adminWorkshopIds = $user->workshops()
-                ->wherePivot('role', 'admin')
-                ->pluck('workshops.id');
-
-            if ($adminWorkshopIds->isEmpty()) {
-                return [];
-            }
-
-            $query->whereIn('user_workshop.workshop_id', $adminWorkshopIds);
-        }
-
-        return $query->orderBy('user_workshop.created_at', 'asc')->get()->toArray();
+        return $degreeQuery->count()
+            + $positionQuery->count()
+            + $changeRequestQuery->count()
+            + JoinRequestQuery::pendingForReviewer($user)->count();
     }
 
     private function getMembershipNotifications($user): array

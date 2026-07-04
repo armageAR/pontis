@@ -126,6 +126,46 @@ class DashboardPendingValidationCountTest extends TestCase
             ->assertJsonPath('pending_validation_count', 2);
     }
 
+    /** Solicitud de ingreso pendiente de un usuario nuevo (status pending) a un Taller. */
+    private function pendingJoinRequest(Workshop $workshop): User
+    {
+        $user = User::factory()->create(['role' => 'user', 'status' => 'pending']);
+        $user->workshopMemberships()->attach($workshop->id, [
+            'role' => 'member', 'status' => 'pending', 'requested_by_user' => true, 'is_principal' => true,
+        ]);
+        return $user;
+    }
+
+    public function test_count_includes_pending_join_requests_scoped_for_admin(): void
+    {
+        $adminWorkshop = Workshop::factory()->create();
+        $otherWorkshop = Workshop::factory()->create();
+        $admin = $this->member($adminWorkshop, 'admin');
+
+        $this->declaredDegree($this->member($adminWorkshop), $adminWorkshop); // 1 grado
+        $this->pendingJoinRequest($adminWorkshop);                            // 1 solicitud en el Taller administrado
+        $this->pendingJoinRequest($otherWorkshop);                           // solicitud ajena: no cuenta
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('pending_validation_count', 2);
+    }
+
+    public function test_count_includes_pending_join_requests_globally_for_superadmin(): void
+    {
+        $workshop = Workshop::factory()->create();
+        $superadmin = User::factory()->create(['role' => 'superadmin', 'status' => 'active']);
+
+        $this->pendingJoinRequest($workshop);
+        $this->pendingJoinRequest(Workshop::factory()->create());
+
+        $this->actingAs($superadmin, 'sanctum')
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('pending_validation_count', 2);
+    }
+
     public function test_regular_member_is_not_workshop_admin_and_has_zero_count(): void
     {
         $workshop = Workshop::factory()->create();

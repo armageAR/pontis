@@ -179,6 +179,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/workshops/{workshop}/enable', [WorkshopController::class, 'enable']);
         Route::post('/workshops/{workshop}/join', [WorkshopController::class, 'join']);
         Route::delete('/workshops/{workshop}/leave', [WorkshopController::class, 'leave']);
+        Route::get('/join-requests', [WorkshopController::class, 'pendingJoinRequests']);
         Route::post('/workshops/{workshop}/join-requests/{user}/approve', [WorkshopController::class, 'approveJoinRequest']);
         Route::post('/workshops/{workshop}/join-requests/{user}/request-correction', [WorkshopController::class, 'requestCorrection']);
         Route::post('/workshops/{workshop}/join-requests/{user}/reject', [WorkshopController::class, 'rejectJoinRequest']);

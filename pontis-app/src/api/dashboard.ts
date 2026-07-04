@@ -24,7 +24,6 @@ export interface MembershipNotification {
 }
 
 export interface DashboardData {
-  pending_requests: PendingRequest[]
   membership_notifications: MembershipNotification[]
   is_workshop_admin: boolean
   pending_validation_count: number
@@ -32,6 +31,11 @@ export interface DashboardData {
 
 export async function getDashboard(): Promise<DashboardData> {
   const { data } = await client.get<DashboardData>('/dashboard')
+  return data
+}
+
+export async function getPendingJoinRequests(): Promise<PendingRequest[]> {
+  const { data } = await client.get<PendingRequest[]>('/admin/join-requests')
   return data
 }
 

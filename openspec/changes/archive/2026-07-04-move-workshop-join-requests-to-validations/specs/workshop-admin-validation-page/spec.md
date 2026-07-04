@@ -1,10 +1,4 @@
-# workshop-admin-validation-page
-
-## Purpose
-
-Entrada desde Panel y pantalla de administración para que Admin de Taller revise validaciones masónicas pendientes de sus Talleres, con indicador de pendientes y modal de detalle reutilizable.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Panel exposes workshop administration entry point
 The system SHALL show an administration box on the Panel for users who administer at least one Taller.
@@ -74,19 +68,7 @@ The system SHALL allow authorized Admin de Taller users to accept or reject pend
 - **THEN** the system MUST mark the membership request as requiring correction
 - **AND** the row MUST remain visible as correction-requested until resolved or no longer pending reviewer action
 
-### Requirement: Validation detail modal is reusable
-The system SHALL use a shared validation detail modal for viewing masonic validation requests and performing available validation actions.
-
-#### Scenario: Admin views validation details
-- **WHEN** an Admin de Taller clicks `Ver` on a pending validation row
-- **THEN** the system MUST open a modal showing all available details for that validation
-- **AND** the modal MUST include the requesting Hermano, request date, requested Taller, record type, requested masonic data, notes, and validation status
-- **AND** the modal MUST provide the same accept and reject options available from the table row
-
-#### Scenario: Superadmin uses validation detail modal
-- **WHEN** a Superadmin views a pending masonic validation detail
-- **THEN** the system MUST use the same shared modal component used for Admin de Taller validation details
-- **AND** the modal MUST preserve Superadmin's existing available validation actions
+## ADDED Requirements
 
 ### Requirement: Panel does not duplicate join request review
 The Panel SHALL not render a standalone workshop join request review section when join requests are available in Administración → Validaciones.

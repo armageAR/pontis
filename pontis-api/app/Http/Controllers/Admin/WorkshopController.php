@@ -12,6 +12,7 @@ use App\Http\Requests\Admin\UpdateWorkshopRequest;
 use App\Http\Requests\Admin\WorkshopIndexRequest;
 use App\Http\Resources\AdminUserResource;
 use App\Http\Resources\WorkshopResource;
+use App\Support\JoinRequestQuery;
 use App\Support\VisibilityPolicy;
 use App\Models\User;
 use App\Models\Workshop;
@@ -152,6 +153,32 @@ class WorkshopController extends Controller
         $workshop->my_role    = null;
 
         return new WorkshopResource($workshop);
+    }
+
+    /**
+     * Solicitudes de ingreso pendientes/corrección dentro del alcance del
+     * revisor, para revisarlas desde Administración → Validaciones.
+     */
+    public function pendingJoinRequests(Request $request): JsonResponse
+    {
+        $rows = JoinRequestQuery::pendingForReviewer($request->user())
+            ->select([
+                'user_workshop.user_id',
+                'users.name as user_name',
+                'users.last_name as user_last_name',
+                'users.email as user_email',
+                'users.status as user_status',
+                'user_workshop.workshop_id',
+                'workshops.name as workshop_name',
+                'workshops.number as workshop_number',
+                'user_workshop.status as membership_status',
+                'user_workshop.correction_notes',
+                'user_workshop.created_at as requested_at',
+            ])
+            ->orderBy('user_workshop.created_at', 'asc')
+            ->get();
+
+        return response()->json($rows);
     }
 
     public function approveJoinRequest(Request $request, Workshop $workshop, User $user): JsonResponse

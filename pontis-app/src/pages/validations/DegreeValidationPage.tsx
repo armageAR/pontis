@@ -5,6 +5,7 @@ import EmptyState from '@/components/EmptyState'
 import Spinner from '@/components/Spinner'
 import ValidationDetailModal from '@/components/ValidationDetailModal'
 import ChangeRequestsPage from '@/pages/change-requests/ChangeRequestsPage'
+import JoinRequestsSection from './JoinRequestsSection'
 import * as profileApi from '@/api/profile'
 import { useAuth } from '@/context/AuthContext'
 import { formatDate } from '@/utils/date'
@@ -13,7 +14,7 @@ import './DegreeValidationPage.css'
 
 export default function DegreeValidationPage() {
   const { user } = useAuth()
-  const canReviewChangeRequests = user?.role === 'superadmin' || (user?.admin_workshops?.length ?? 0) > 0
+  const isReviewer = user?.role === 'superadmin' || (user?.admin_workshops?.length ?? 0) > 0
   const [rows, setRows] = useState<ValidationRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -112,7 +113,9 @@ export default function DegreeValidationPage() {
         </div>
       )}
 
-      {canReviewChangeRequests && (
+      {isReviewer && <JoinRequestsSection />}
+
+      {isReviewer && (
         <section className="validation-change-requests">
           <ChangeRequestsPage embedded mode="review" />
         </section>
