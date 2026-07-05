@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import AppLayout from '@/components/AppLayout'
 import ContactRequestsPage from '@/pages/contact-requests/ContactRequestsPage'
 import ChangeRequestsPage from '@/pages/change-requests/ChangeRequestsPage'
@@ -8,7 +9,9 @@ import './BandejaPage.css'
 type Tab = 'contactos' | 'tramites' | 'notificaciones'
 
 export default function BandejaPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('contactos')
+  const [searchParams] = useSearchParams()
+  // Deep-link desde el perfil (dato sensible): ?tramite=<campo> abre Trámites.
+  const [activeTab, setActiveTab] = useState<Tab>(searchParams.get('tramite') ? 'tramites' : 'contactos')
 
   return (
     <AppLayout>

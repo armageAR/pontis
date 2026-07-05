@@ -45,6 +45,12 @@ class ProfileController extends Controller {
             'instagram'              => 'nullable|string|max:255',
             'availability_notes'     => 'nullable|string|max:500',
         ]);
+        // Datos sensibles de identidad: sólo el Superadmin los cambia directo.
+        // Para el resto se descartan; el cambio se gestiona como trámite validable
+        // (ChangeRequest), no por edición directa del perfil.
+        if (! $user->isSuperAdmin()) {
+            unset($data['name'], $data['last_name'], $data['dni'], $data['masonic_id']);
+        }
         $user->update($data);
         return response()->json($user->fresh());
     }

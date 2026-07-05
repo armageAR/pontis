@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import Badge from '@/components/Badge'
@@ -65,6 +66,22 @@ export default function ChangeRequestsPage({ embedded = false, mode = 'self' }: 
   }
 
   useEffect(() => { load() }, [page, statusFilter])
+
+  // Deep-link desde el perfil (dato sensible): ?tramite=<campo> abre el modal de
+  // solicitud con ese campo preseleccionado. Sólo en la vista de autoservicio.
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    if (isReview) return
+    const tramite = searchParams.get('tramite')
+    if (tramite && tramite in FIELD_LABELS) {
+      setForm({ field: tramite, new_value: '', reason: '' })
+      setShowModal(true)
+      const next = new URLSearchParams(searchParams)
+      next.delete('tramite')
+      setSearchParams(next, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault(); setSaving(true)

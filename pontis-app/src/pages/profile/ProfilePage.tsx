@@ -1,64 +1,58 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import FormField from '@/components/FormField'
 import Input from '@/components/Input'
 import Alert from '@/components/Alert'
 import Spinner from '@/components/Spinner'
-import Badge from '@/components/Badge'
 import Modal from '@/components/Modal'
-import ConfirmDialog from '@/components/ConfirmDialog'
 import PrivacyIndicator from '@/components/PrivacyIndicator'
+import Tabs, { type TabItem } from '@/components/Tabs'
 import { useAuth } from '@/context/AuthContext'
 import * as profileApi from '@/api/profile'
-import type { Profile, UserDegree, UserPosition } from '@/api/profile'
-import type { ContactChannel, ContactConsentSettings, ContactSource } from '@/api/profile'
-import type { SharedContactField } from '@/api/contactRequests'
+import type { Profile, UserDegree, UserPosition, ContactConsentSettings, ContactSource } from '@/api/profile'
 import * as provinceApi from '@/api/provinces'
 import * as visibilityApi from '@/api/visibility'
 import type { VisibilityLevel, VisibilityBlock, VisibilityMap, VisibilitySetting } from '@/api/visibility'
 import client from '@/api/client'
-import WorkshopPicker from '@/components/WorkshopPicker'
 import * as workshopsApi from '@/api/workshops'
-import { type WorkshopSearchResult, type ProfileWorkshop } from '@/api/workshops'
-import { Star, LogOut, Plus } from 'lucide-react'
-import { formatDate, toDateInputValue } from '@/utils/date'
+import { type ProfileWorkshop } from '@/api/workshops'
+import { useProfileAutosave } from './useProfileAutosave'
+import IdentidadTab from './IdentidadTab'
+import ContactoTab from './ContactoTab'
+import PerfilProfesionalTab from './PerfilProfesionalTab'
+import UbicacionTab from './UbicacionTab'
+import VidaMasonicaTab from './VidaMasonicaTab'
+import PrivacidadTab from './PrivacidadTab'
 import './ProfilePage.css'
 
 interface PositionCatalogItem { id: number; name: string }
 interface WorkshopItem { id: number; name: string; number: number }
 
-const DEGREE_LABELS: Record<string, string> = { aprendiz: 'Aprendiz', companero: 'Compañero', maestro: 'Maestro' }
-const VALIDATION_LABELS: Record<string, string> = { declared: 'Pendiente de validación', validated: 'Validado', rejected: 'Rechazado' }
-const VALIDATION_VARIANTS: Record<string, 'default'|'success'|'warning'|'error'> = { declared: 'warning', validated: 'success', rejected: 'error' }
-const DEGREE_ORDER = ['aprendiz', 'companero', 'maestro']
-// Próximo grado válido según el historial (aprendiz -> companero -> maestro), o null si ya es Maestro.
-function nextValidDegree(list: { degree: string }[]): string | null {
-  const maxRank = list.reduce((m, d) => Math.max(m, DEGREE_ORDER.indexOf(d.degree)), -1)
-  return DEGREE_ORDER[maxRank + 1] ?? null
-}
-const MASONIC_STATUS_LABELS: Record<string, string> = {
-  active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', discharged: 'Dado de baja', deceased: 'O Eterno'
-}
 // Opciones de audiencia por sección (quiénes pueden verla).
 const PRIVACY_OPTIONS = Object.entries(visibilityApi.VISIBILITY_LABELS) as [VisibilityLevel, string][]
 
-const WORKSHOP_STATUS_LABELS: Record<string, string> = {
-  active: 'Activo',
-  pending: 'Pendiente de aprobación',
-}
-
-function apiError(err: unknown, fallback: string): string {
-  return (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? fallback
-}
+const TABS: TabItem[] = [
+  { key: 'identidad', label: 'Identidad' },
+  { key: 'contacto', label: 'Contacto' },
+  { key: 'profesional', label: 'Perfil profesional' },
+  { key: 'ubicacion', label: 'Ubicación' },
+  { key: 'masonica', label: 'Vida masónica' },
+  { key: 'privacidad', label: 'Privacidad' },
+]
 
 export default function ProfilePage() {
   const { user: authUser } = useAuth()
   const isSuperAdmin = authUser?.role === 'superadmin'
+  const [searchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const tab = searchParams.get('tab')
+    return TABS.some(t => t.key === tab) ? (tab as string) : 'identidad'
+  })
+
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -72,13 +66,7 @@ export default function ProfilePage() {
   const [savingVisibility, setSavingVisibility] = useState(false)
   const [contactConsent, setContactConsent] = useState<ContactConsentSettings | null>(null)
   const [savingContactConsent, setSavingContactConsent] = useState(false)
-
-  const [showDegreeModal, setShowDegreeModal] = useState(false)
-  const [showPositionModal, setShowPositionModal] = useState(false)
-  const [editingDegree, setEditingDegree] = useState<UserDegree | null>(null)
-  const [editingPosition, setEditingPosition] = useState<UserPosition | null>(null)
-  const [confirmDeleteDegree, setConfirmDeleteDegree] = useState<number | null>(null)
-  const [confirmDeletePosition, setConfirmDeletePosition] = useState<number | null>(null)
+  const [profileWorkshops, setProfileWorkshops] = useState<ProfileWorkshop[]>([])
 
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [newEmail, setNewEmail] = useState('')
@@ -86,18 +74,7 @@ export default function ProfilePage() {
   const [emailModalError, setEmailModalError] = useState('')
   const [emailModalSuccess, setEmailModalSuccess] = useState('')
 
-  const [degreeForm, setDegreeForm] = useState({ degree: 'aprendiz', workshop_id: '', start_date: '', notes: '' })
-  const [positionForm, setPositionForm] = useState({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' })
-  const [degreeModalError, setDegreeModalError] = useState('')
-  const [positionModalError, setPositionModalError] = useState('')
-
-  // Mis Talleres (sección del perfil)
-  const [profileWorkshops, setProfileWorkshops] = useState<ProfileWorkshop[]>([])
-  const [showAddWorkshopModal, setShowAddWorkshopModal] = useState(false)
-  const [addWorkshopSel, setAddWorkshopSel] = useState<WorkshopSearchResult | null>(null)
-  const [joiningWorkshop, setJoiningWorkshop] = useState(false)
-  const [confirmLeaveWs, setConfirmLeaveWs] = useState<ProfileWorkshop | null>(null)
-  const [confirmPrincipalWs, setConfirmPrincipalWs] = useState<ProfileWorkshop | null>(null)
+  const { statuses, commitField } = useProfileAutosave(profile, setProfile)
 
   useEffect(() => {
     Promise.all([
@@ -133,91 +110,15 @@ export default function ProfilePage() {
       .catch(() => setLocalities([]))
   }, [profile?.province, provinces])
 
-  async function handleSave(e: FormEvent) {
-    e.preventDefault()
-    if (!profile) return
-    setSaving(true); setError(''); setSuccess('')
-    try {
-      const updated = await profileApi.updateProfile(profile)
-      setProfile(updated)
-      setSuccess('Perfil actualizado correctamente.')
-    } catch { setError('Error al guardar los cambios.') }
-    finally { setSaving(false) }
-  }
-
-  function field(key: keyof Profile) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-      setProfile(p => p ? { ...p, [key]: e.target.value || null } : p)
-  }
-
-  function renderSectionPrivacy(block: VisibilityBlock) {
-    const value: VisibilityLevel = visibility[block]?.visibility ?? 'workshop'
-    return (
-      <div className="profile-privacy-box">
-        <label className="profile-privacy-label">¿Quiénes pueden ver esta sección?</label>
-        <select
-          className="profile-select profile-select-sm"
-          value={value}
-          disabled={savingVisibility}
-          onChange={e => handleVisibilityChange(block, e.target.value as VisibilityLevel)}
-        >
-          {PRIVACY_OPTIONS.map(([level, label]) => <option key={level} value={level}>{label}</option>)}
-        </select>
-        <PrivacyIndicator
-          summary={`Esta sección será visible para: ${visibilityApi.VISIBILITY_LABELS[value]}.`}
-          details={[
-            'El cambio se aplica al guardar la selección.',
-            'No cambia tus preferencias para solicitudes de contacto.',
-            'La decisión queda asociada a tu cuenta para controles internos.',
-          ]}
-        />
-      </div>
-    )
-  }
-
-  function renderIdentityPrivacy() {
-    // Dos decisiones independientes: la audiencia de Identidad y si aparecés en
-    // búsquedas sin revelar identidad para quienes no forman parte de esa audiencia.
-    const audience: VisibilityLevel = visibility.identity?.visibility ?? 'workshop'
-    const anonSearch = visibility.identity?.anonymous_search ?? false
-    return (
-      <div className="profile-privacy-box profile-privacy-box-col">
-        <div className="profile-privacy-row">
-          <label className="profile-privacy-label">¿Quiénes pueden ver mi identidad?</label>
-          <select
-            className="profile-select profile-select-sm"
-            value={audience}
-            disabled={savingVisibility}
-            onChange={e => handleIdentityChange({ visibility: e.target.value as VisibilityLevel })}
-          >
-            {PRIVACY_OPTIONS.map(([level, label]) => <option key={level} value={level}>{label}</option>)}
-          </select>
-        </div>
-        <label className="profile-anon-check">
-          <input
-            type="checkbox"
-            checked={anonSearch}
-            disabled={savingVisibility}
-            onChange={e => handleIdentityChange({ anonymous_search: e.target.checked })}
-          />
-          <span>Aparecer en las búsquedas sin revelar mi identidad</span>
-        </label>
-        <p className="profile-anon-note">
-          Quienes formen parte de la audiencia elegida ven tu identidad. Si activás esta opción,
-          el resto de los Hermanos habilitados pueden encontrarte como <strong>Hermano registrado</strong>,
-          sin ver tu nombre ni tus datos de identidad. Ambas opciones se combinan: cambiar la audiencia
-          no desactiva la aparición anónima.
-        </p>
-        <PrivacyIndicator
-          summary={anonSearch ? 'Podés aparecer en búsquedas con identidad reservada.' : `Tu identidad queda limitada a: ${visibilityApi.VISIBILITY_LABELS[audience]}.`}
-          details={[
-            `Audiencia con identidad visible: ${visibilityApi.VISIBILITY_LABELS[audience]}.`,
-            anonSearch ? 'Fuera de esa audiencia pueden encontrarte como Hermano registrado.' : 'Fuera de esa audiencia no se habilita aparición anónima por este control.',
-            'La decisión queda asociada a tu cuenta para controles internos.',
-          ]}
-        />
-      </div>
-    )
+  // Provincia: se confirma en el cambio y se limpia la localidad (que depende de
+  // la provincia) para no persistir una localidad obsoleta.
+  function handleProvinceChange(value: string) {
+    const hadLocality = !!profile?.locality
+    setProfile(p => (p ? { ...p, province: value, locality: null } : p))
+    commitField('province', value)
+    // La localidad depende de la provincia: si había una, se limpia también en
+    // backend para no persistir una localidad ajena a la nueva provincia.
+    if (hadLocality) commitField('locality', null)
   }
 
   function openEmailModal() {
@@ -280,7 +181,13 @@ export default function ProfilePage() {
     finally { setSavingVisibility(false) }
   }
 
-  async function saveContactConsent(next: ContactConsentSettings) {
+  // El backend exige los tres arrays; mantenemos el objeto completo y enviamos
+  // siempre los tres, cambiando sólo las fuentes permitidas.
+  async function toggleContactSource(value: ContactSource) {
+    if (!contactConsent) return
+    const currentSources = contactConsent.allowed_sources
+    const nextSources = currentSources.includes(value) ? currentSources.filter(v => v !== value) : [...currentSources, value]
+    const next: ContactConsentSettings = { ...contactConsent, allowed_sources: nextSources }
     setContactConsent(next)
     setSavingContactConsent(true); setError(''); setSuccess('')
     try {
@@ -288,70 +195,11 @@ export default function ProfilePage() {
       setContactConsent(updated)
       setSuccess('Preferencias de contacto actualizadas.')
     } catch {
+      setContactConsent(contactConsent)
       setError('No se pudieron actualizar las preferencias de contacto.')
     } finally { setSavingContactConsent(false) }
   }
 
-  function toggleContactConsent<T extends SharedContactField | ContactChannel | ContactSource>(key: keyof ContactConsentSettings, value: T) {
-    if (!contactConsent) return
-    const current = contactConsent[key] as T[]
-    const nextValues = current.includes(value)
-      ? current.filter(item => item !== value)
-      : [...current, value]
-    saveContactConsent({ ...contactConsent, [key]: nextValues })
-  }
-
-  async function handleSaveDegree(e: FormEvent) {
-    e.preventDefault()
-    setDegreeModalError('')
-    try {
-      // El grado no lleva fecha de fin manual: el período se deriva del siguiente grado.
-      const payload = {
-        degree: degreeForm.degree as 'aprendiz'|'companero'|'maestro',
-        workshop_id: degreeForm.workshop_id ? Number(degreeForm.workshop_id) : null,
-        start_date: degreeForm.start_date,
-        notes: degreeForm.notes || null,
-      }
-      if (editingDegree) {
-        await profileApi.updateDegree(editingDegree.id, payload)
-      } else {
-        await profileApi.addDegree(payload)
-      }
-      // Recargar para reflejar los fines de período derivados del historial.
-      setDegrees(await profileApi.getDegrees())
-      setShowDegreeModal(false)
-    } catch (err) { setDegreeModalError(apiError(err, 'Error al guardar el grado.')) }
-  }
-
-  async function handleDeleteDegree(id: number) {
-    await profileApi.deleteDegree(id)
-    setDegrees(await profileApi.getDegrees())
-    setConfirmDeleteDegree(null)
-  }
-
-  async function handleSavePosition(e: FormEvent) {
-    e.preventDefault()
-    setPositionModalError('')
-    try {
-      const payload = { ...positionForm, position_id: Number(positionForm.position_id), workshop_id: Number(positionForm.workshop_id), end_date: positionForm.end_date || null, notes: positionForm.notes || null }
-      if (editingPosition) {
-        const updated = await profileApi.updatePosition(editingPosition.id, payload as any)
-        setPositions(ps => ps.map(p => p.id === updated.id ? updated : p))
-      } else {
-        const created = await profileApi.addPosition(payload as any)
-        setPositions(ps => [created, ...ps])
-      }
-      setShowPositionModal(false)
-    } catch (err) { setPositionModalError(apiError(err, 'Error al guardar el cargo.')) }
-  }
-
-  async function handleDeletePosition(id: number) {
-    await profileApi.deletePosition(id)
-    setPositions(ps => ps.filter(p => p.id !== id))
-    setConfirmDeletePosition(null)
-  }
-
-  // ── Mis Talleres ──────────────────────────────────────────────────────────
   async function reloadProfileWorkshops() {
     const [pws, ws] = await Promise.all([
       workshopsApi.getProfileWorkshops(),
@@ -361,460 +209,163 @@ export default function ProfilePage() {
     setMyWorkshops(Array.isArray(ws) ? ws : (ws.data ?? []))
   }
 
-  async function handleJoinWorkshop() {
-    if (!addWorkshopSel) return
-    setJoiningWorkshop(true); setError(''); setSuccess('')
-    try {
-      await workshopsApi.joinWorkshop(addWorkshopSel.id)
-      await reloadProfileWorkshops()
-      setSuccess('Solicitud enviada. Queda pendiente de aprobación.')
-      setShowAddWorkshopModal(false)
-      setAddWorkshopSel(null)
-    } catch (err) {
-      setError(apiError(err, 'No se pudo enviar la solicitud de ingreso.'))
-    } finally { setJoiningWorkshop(false) }
+  function renderSectionPrivacy(block: VisibilityBlock) {
+    const value: VisibilityLevel = visibility[block]?.visibility ?? 'workshop'
+    return (
+      <div className="profile-privacy-box">
+        <label className="profile-privacy-label">¿Quiénes pueden ver esta sección?</label>
+        <select
+          className="profile-select profile-select-sm"
+          value={value}
+          disabled={savingVisibility}
+          onChange={e => handleVisibilityChange(block, e.target.value as VisibilityLevel)}
+        >
+          {PRIVACY_OPTIONS.map(([level, label]) => <option key={level} value={level}>{label}</option>)}
+        </select>
+        <PrivacyIndicator
+          summary={`Esta sección será visible para: ${visibilityApi.VISIBILITY_LABELS[value]}.`}
+          details={[
+            'El cambio se aplica al guardar la selección.',
+            'No cambia tus preferencias para solicitudes de contacto.',
+            'La decisión queda asociada a tu cuenta para controles internos.',
+          ]}
+        />
+      </div>
+    )
   }
 
-  async function handleLeaveWorkshop(ws: ProfileWorkshop) {
-    setError(''); setSuccess('')
-    try {
-      await workshopsApi.leaveWorkshop(ws.id)
-      await reloadProfileWorkshops()
-      setSuccess(`Saliste del taller ${ws.name}.`)
-    } catch (err) {
-      setError(apiError(err, 'No se pudo salir del taller.'))
-    } finally { setConfirmLeaveWs(null) }
-  }
-
-  async function handleSetPrincipal(ws: ProfileWorkshop) {
-    setError(''); setSuccess('')
-    try {
-      await workshopsApi.setPrincipalWorkshop(ws.id)
-      await reloadProfileWorkshops()
-      setSuccess(`${ws.name} es ahora tu taller principal.`)
-    } catch (err) {
-      setError(apiError(err, 'No se pudo cambiar el taller principal.'))
-    } finally { setConfirmPrincipalWs(null) }
+  function renderIdentityPrivacy() {
+    const audience: VisibilityLevel = visibility.identity?.visibility ?? 'workshop'
+    const anonSearch = visibility.identity?.anonymous_search ?? false
+    return (
+      <div className="profile-privacy-box profile-privacy-box-col">
+        <div className="profile-privacy-row">
+          <label className="profile-privacy-label">¿Quiénes pueden ver mi identidad?</label>
+          <select
+            className="profile-select profile-select-sm"
+            value={audience}
+            disabled={savingVisibility}
+            onChange={e => handleIdentityChange({ visibility: e.target.value as VisibilityLevel })}
+          >
+            {PRIVACY_OPTIONS.map(([level, label]) => <option key={level} value={level}>{label}</option>)}
+          </select>
+        </div>
+        <label className="profile-anon-check">
+          <input
+            type="checkbox"
+            checked={anonSearch}
+            disabled={savingVisibility}
+            onChange={e => handleIdentityChange({ anonymous_search: e.target.checked })}
+          />
+          <span>Aparecer en las búsquedas sin revelar mi identidad</span>
+        </label>
+        <p className="profile-anon-note">
+          Quienes formen parte de la audiencia elegida ven tu identidad. Si activás esta opción,
+          el resto de los Hermanos habilitados pueden encontrarte como <strong>Hermano registrado</strong>,
+          sin ver tu nombre ni tus datos de identidad. Ambas opciones se combinan: cambiar la audiencia
+          no desactiva la aparición anónima.
+        </p>
+        <PrivacyIndicator
+          summary={anonSearch ? 'Podés aparecer en búsquedas con identidad reservada.' : `Tu identidad queda limitada a: ${visibilityApi.VISIBILITY_LABELS[audience]}.`}
+          details={[
+            `Audiencia con identidad visible: ${visibilityApi.VISIBILITY_LABELS[audience]}.`,
+            anonSearch ? 'Fuera de esa audiencia pueden encontrarte como Hermano registrado.' : 'Fuera de esa audiencia no se habilita aparición anónima por este control.',
+            'La decisión queda asociada a tu cuenta para controles internos.',
+          ]}
+        />
+      </div>
+    )
   }
 
   if (loading) return <AppLayout><div className="profile-loading"><Spinner /></div></AppLayout>
+  if (!profile) return <AppLayout><div className="profile-page"><Alert>{error || 'Error cargando el perfil.'}</Alert></div></AppLayout>
+
+  const wide = activeTab === 'masonica'
 
   return (
     <AppLayout>
       <div className="profile-page">
         <h1 className="profile-title">Mi Perfil</h1>
+        <p className="profile-page-desc">
+          Gestioná tu información personal, de contacto y masónica. Los cambios se guardan automáticamente.
+        </p>
 
         {error && <Alert>{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
 
-        <form id="profile-form" onSubmit={handleSave}>
-          <section className="profile-section">
-            <h2 className="profile-section-title">Identidad</h2>
-            {!isSuperAdmin && (
-              <p className="profile-sensitive-note">Nombre, apellido y DNI son datos sensibles. Para modificarlos, <Link to="/change-requests">solicitá un cambio</Link>.</p>
-            )}
-            <div className="profile-grid">
-              <FormField label="Nombre"><Input value={profile?.name ?? ''} onChange={field('name')} disabled={!isSuperAdmin} /></FormField>
-              <FormField label="Apellido"><Input value={profile?.last_name ?? ''} onChange={field('last_name')} disabled={!isSuperAdmin} /></FormField>
-              <FormField label="DNI / Documento"><Input value={profile?.dni ?? ''} onChange={field('dni')} disabled={!isSuperAdmin} /></FormField>
-              <FormField label="Email">
-                <div className="profile-email-field">
-                  <Input value={profile?.email ?? ''} disabled />
-                  <Button type="button" variant="outline" onClick={openEmailModal}>Cambiar</Button>
-                </div>
-                {profile?.pending_email && (
-                  <p className="profile-email-pending">
-                    Cambio pendiente: confirmá desde el correo que enviamos a <strong>{profile.pending_email}</strong>.
-                  </p>
-                )}
-              </FormField>
-              <FormField label="Fecha de nacimiento"><Input type="date" value={toDateInputValue(profile?.birth_date)} onChange={field('birth_date')} /></FormField>
-              <FormField label="Foto de perfil (URL)"><Input type="url" placeholder="https://..." value={profile?.photo_url ?? ''} onChange={field('photo_url')} /></FormField>
-            </div>
-            {renderIdentityPrivacy()}
-          </section>
+        <Tabs tabs={TABS} active={activeTab} onChange={setActiveTab} />
 
-          <section className="profile-section">
-            <h2 className="profile-section-title">Datos masónicos</h2>
-            <div className="profile-grid">
-              <FormField label="Matrícula masónica"><Input value={profile?.masonic_id ?? ''} onChange={field('masonic_id')} disabled={!isSuperAdmin} /></FormField>
-              <FormField label="Estado masónico">
-                <select className="profile-select" value={profile?.masonic_status ?? 'active'} onChange={field('masonic_status')}>
-                  {Object.entries(MASONIC_STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </FormField>
-              <FormField label="Fecha de iniciación"><Input type="date" value={toDateInputValue(profile?.initiation_date)} onChange={field('initiation_date')} /></FormField>
-            </div>
-            {renderSectionPrivacy('masonic')}
-          </section>
-
-          <section className="profile-section">
-            <h2 className="profile-section-title">Contacto</h2>
-            <div className="profile-grid">
-              <FormField label="Teléfono móvil"><Input value={profile?.phone ?? ''} onChange={field('phone')} /></FormField>
-              <FormField label="Teléfono fijo"><Input value={profile?.phone_fixed ?? ''} onChange={field('phone_fixed')} /></FormField>
-              <FormField label="WhatsApp"><Input value={profile?.whatsapp ?? ''} onChange={field('whatsapp')} /></FormField>
-              <FormField label="Email alternativo"><Input type="email" value={profile?.alternative_email ?? ''} onChange={field('alternative_email')} /></FormField>
-              <FormField label="LinkedIn"><Input type="url" placeholder="https://linkedin.com/in/..." value={profile?.linkedin ?? ''} onChange={field('linkedin')} /></FormField>
-              <FormField label="Sitio web"><Input type="url" placeholder="https://..." value={profile?.website ?? ''} onChange={field('website')} /></FormField>
-              <FormField label="Instagram"><Input placeholder="@usuario" value={profile?.instagram ?? ''} onChange={field('instagram')} /></FormField>
-              <FormField label="Facebook"><Input placeholder="URL o usuario" value={profile?.facebook ?? ''} onChange={field('facebook')} /></FormField>
-            </div>
-            <FormField label="Disponibilidad / notas de horario">
-              <textarea className="profile-textarea" value={profile?.availability_notes ?? ''} onChange={field('availability_notes')} rows={2} placeholder="Ej: disponible de lunes a viernes por las tardes..." />
-            </FormField>
-            {renderSectionPrivacy('contact')}
-            {contactConsent && (
-              <div className="profile-contact-consent">
-                <h3 className="profile-subsection-title">Consentimiento para solicitudes de contacto</h3>
-                <p className="profile-section-desc">Estos valores solo se usan como predeterminados cuando decidís iniciar o recibir contacto. No hacen públicos tus datos.</p>
-                <div className="profile-consent-grid">
-                  <div>
-                    <span className="profile-consent-label">Datos que comparto por defecto</span>
-                    {[
-                      ['identity', 'Identidad'],
-                      ['email', 'Email'],
-                      ['phone', 'Teléfono'],
-                      ['whatsapp', 'WhatsApp'],
-                      ['workshop', 'Taller principal'],
-                      ['profession', 'Profesión/oficio'],
-                    ].map(([value, label]) => (
-                      <label key={value} className="profile-check-row">
-                        <input type="checkbox" disabled={savingContactConsent} checked={contactConsent.default_shared_fields.includes(value as SharedContactField)} onChange={() => toggleContactConsent('default_shared_fields', value as SharedContactField)} />
-                        <span>{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div>
-                    <span className="profile-consent-label">Canales preferidos</span>
-                    {[
-                      ['in_flow', 'Responder dentro del flujo'],
-                      ['email', 'Email'],
-                      ['phone', 'Teléfono'],
-                      ['whatsapp', 'WhatsApp'],
-                    ].map(([value, label]) => (
-                      <label key={value} className="profile-check-row">
-                        <input type="checkbox" disabled={savingContactConsent} checked={contactConsent.preferred_channels.includes(value as ContactChannel)} onChange={() => toggleContactConsent('preferred_channels', value as ContactChannel)} />
-                        <span>{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div>
-                    <span className="profile-consent-label">Acepto solicitudes desde</span>
-                    {[
-                      ['search', 'Búsquedas de Hermanos'],
-                      ['publications', 'Publicaciones'],
-                    ].map(([value, label]) => (
-                      <label key={value} className="profile-check-row">
-                        <input type="checkbox" disabled={savingContactConsent} checked={contactConsent.allowed_sources.includes(value as ContactSource)} onChange={() => toggleContactConsent('allowed_sources', value as ContactSource)} />
-                        <span>{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-
-          <section className="profile-section">
-            <h2 className="profile-section-title">Ubicación</h2>
-            <div className="profile-grid">
-              <FormField label="País"><Input value={profile?.country ?? ''} onChange={field('country')} /></FormField>
-              <FormField label="Provincia">
-                <select className="profile-select" value={profile?.province ?? ''} onChange={e => setProfile(p => p ? { ...p, province: e.target.value } : p)}>
-                  <option value="">-- Seleccionar --</option>
-                  {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                </select>
-              </FormField>
-              <FormField label="Localidad">
-                <select className="profile-select" value={profile?.locality ?? ''} onChange={e => setProfile(p => p ? { ...p, locality: e.target.value } : p)}>
-                  <option value="">-- Seleccionar --</option>
-                  {localities.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
-                </select>
-              </FormField>
-              <FormField label="Barrio"><Input value={profile?.neighborhood ?? ''} onChange={field('neighborhood')} /></FormField>
-              <FormField label="Dirección"><Input value={profile?.address ?? ''} onChange={field('address')} /></FormField>
-            </div>
-            {renderSectionPrivacy('location')}
-          </section>
-
-          <section className="profile-section">
-            <h2 className="profile-section-title">Profesión / Actividad</h2>
-            <div className="profile-grid">
-              <FormField label="Profesión"><Input value={profile?.profession ?? ''} onChange={field('profession')} /></FormField>
-              <FormField label="Ocupación / Cargo"><Input value={profile?.occupation ?? ''} onChange={field('occupation')} /></FormField>
-              <FormField label="Empresa / Organización"><Input value={profile?.company ?? ''} onChange={field('company')} /></FormField>
-            </div>
-            <FormField label="Descripción profesional">
-              <textarea className="profile-textarea" value={profile?.profession_description ?? ''} onChange={field('profession_description')} rows={3} />
-            </FormField>
-            <FormField label="Actividades secundarias">
-              <textarea className="profile-textarea" value={profile?.secondary_activities ?? ''} onChange={field('secondary_activities')} rows={2} placeholder="Otras actividades profesionales o laborales" />
-            </FormField>
-            <FormField label="Áreas de conocimiento">
-              <textarea className="profile-textarea" value={profile?.knowledge_areas ?? ''} onChange={field('knowledge_areas')} rows={2} placeholder="Ej: derecho laboral, desarrollo web, diseño gráfico..." />
-            </FormField>
-            <FormField label="Matrículas / Habilitaciones">
-              <textarea className="profile-textarea" value={profile?.certifications ?? ''} onChange={field('certifications')} rows={2} placeholder="Ej: Abogado matriculado (CABA), Contador habilitado..." />
-            </FormField>
-            {renderSectionPrivacy('profession')}
-          </section>
-
-          <section className="profile-section">
-            <h2 className="profile-section-title">Presentación</h2>
-            <FormField label="Bio">
-              <textarea className="profile-textarea" value={profile?.bio ?? ''} onChange={field('bio')} rows={4} placeholder="Contá algo sobre vos..." />
-            </FormField>
-            {renderSectionPrivacy('bio')}
-          </section>
-
-        </form>
-
-        {/* Grados */}
-        <section className="profile-section">
-          <div className="profile-section-header">
-            <h2 className="profile-section-title">Grados masónicos</h2>
-            <Button
-              disabled={nextValidDegree(degrees) === null}
-              title={nextValidDegree(degrees) === null ? 'Ya alcanzaste el grado de Maestro.' : undefined}
-              onClick={() => { setEditingDegree(null); setDegreeModalError(''); setDegreeForm({ degree: nextValidDegree(degrees) ?? 'aprendiz', workshop_id: '', start_date: '', notes: '' }); setShowDegreeModal(true) }}
-            >+ Agregar</Button>
-          </div>
-          {degrees.length === 0 ? <p className="profile-empty">Sin grados registrados.</p> : (
-            <table className="profile-table">
-              <thead><tr><th>Grado</th><th>Taller</th><th>Inicio</th><th>Fin</th><th>Validación</th><th></th></tr></thead>
-              <tbody>
-                {degrees.map(d => (
-                  <tr key={d.id}>
-                    <td><Badge variant="default">{DEGREE_LABELS[d.degree]}</Badge></td>
-                    <td>{d.workshop?.name ?? '-'}</td>
-                    <td>{formatDate(d.start_date)}</td>
-                    <td>{formatDate(d.end_date)}</td>
-                    <td><Badge variant={VALIDATION_VARIANTS[d.validation_status]}>{VALIDATION_LABELS[d.validation_status]}</Badge></td>
-                    <td className="profile-table-actions">
-                      <button className="profile-link-btn" onClick={() => { setEditingDegree(d); setDegreeModalError(''); setDegreeForm({ degree: d.degree, workshop_id: d.workshop_id?.toString() ?? '', start_date: toDateInputValue(d.start_date), notes: d.notes ?? '' }); setShowDegreeModal(true) }}>Editar</button>
-                      <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeleteDegree(d.id)}>Eliminar</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div
+          role="tabpanel"
+          id={`panel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+          tabIndex={0}
+          className={`profile-panel${wide ? ' profile-panel-wide' : ''}`}
+        >
+          {activeTab === 'identidad' && (
+            <IdentidadTab
+              profile={profile}
+              isSuperAdmin={isSuperAdmin}
+              statuses={statuses}
+              commitField={commitField}
+              onOpenEmailModal={openEmailModal}
+              identityPrivacy={renderIdentityPrivacy}
+            />
           )}
-          {renderSectionPrivacy('degrees')}
-        </section>
-
-        {/* Cargos */}
-        <section className="profile-section">
-          <div className="profile-section-header">
-            <h2 className="profile-section-title">Cargos en talleres</h2>
-            <Button onClick={() => { setEditingPosition(null); setPositionModalError(''); setPositionForm({ position_id: '', workshop_id: '', start_date: '', end_date: '', notes: '' }); setShowPositionModal(true) }}>+ Agregar</Button>
-          </div>
-          {positions.length === 0 ? <p className="profile-empty">Sin cargos registrados.</p> : (
-            <table className="profile-table">
-              <thead><tr><th>Cargo</th><th>Taller</th><th>Inicio</th><th>Fin</th><th>Validación</th><th></th></tr></thead>
-              <tbody>
-                {positions.map(p => (
-                  <tr key={p.id}>
-                    <td>{p.position?.name ?? '-'}</td>
-                    <td>{p.workshop?.name ?? '-'}</td>
-                    <td>{formatDate(p.start_date)}</td>
-                    <td>{formatDate(p.end_date)}</td>
-                    <td><Badge variant={VALIDATION_VARIANTS[p.validation_status]}>{VALIDATION_LABELS[p.validation_status]}</Badge></td>
-                    <td className="profile-table-actions">
-                      <button className="profile-link-btn" onClick={() => { setEditingPosition(p); setPositionModalError(''); setPositionForm({ position_id: p.position_id.toString(), workshop_id: p.workshop_id.toString(), start_date: toDateInputValue(p.start_date), end_date: toDateInputValue(p.end_date), notes: p.notes ?? '' }); setShowPositionModal(true) }}>Editar</button>
-                      <button className="profile-link-btn profile-link-danger" onClick={() => setConfirmDeletePosition(p.id)}>Eliminar</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {activeTab === 'contacto' && (
+            <ContactoTab
+              profile={profile}
+              statuses={statuses}
+              commitField={commitField}
+              sectionPrivacy={renderSectionPrivacy}
+              contactConsent={contactConsent}
+              savingContactConsent={savingContactConsent}
+              toggleContactSource={toggleContactSource}
+            />
           )}
-          {renderSectionPrivacy('positions')}
-        </section>
-
-        {/* Mis Talleres */}
-        <section className="profile-section">
-          <div className="profile-section-header">
-            <h2 className="profile-section-title">Mis Talleres</h2>
-            <Button onClick={() => { setAddWorkshopSel(null); setShowAddWorkshopModal(true) }}>
-              <Plus size={16} /> Agregar Taller
-            </Button>
-          </div>
-          <p className="profile-section-desc">
-            Talleres a los que pertenecés y solicitudes de ingreso pendientes. Elegí tu Taller principal o salí de un Taller.
-          </p>
-          {profileWorkshops.length === 0 ? (
-            <p className="profile-empty">No perteneces a ningún Taller ni tenés solicitudes pendientes.</p>
-          ) : (
-            <table className="profile-table">
-              <thead><tr><th>Taller</th><th>Estado</th><th>Principal</th><th></th></tr></thead>
-              <tbody>
-                {profileWorkshops.map(w => (
-                  <tr key={w.id}>
-                    <td>
-                      {w.name} <span className="profile-ws-number">N° {w.number}</span>
-                      {w.my_role === 'admin' && <Badge variant="default">Admin</Badge>}
-                    </td>
-                    <td>
-                      <Badge variant={w.status === 'active' ? 'success' : 'warning'}>
-                        {WORKSHOP_STATUS_LABELS[w.status] ?? w.status}
-                      </Badge>
-                    </td>
-                    <td>{w.is_principal ? <Badge variant="success">Principal</Badge> : <span className="profile-muted">—</span>}</td>
-                    <td className="profile-table-actions">
-                      {w.status === 'active' && !w.is_principal && (
-                        <button
-                          className="profile-icon-btn"
-                          title="Marcar como principal"
-                          aria-label="Marcar como principal"
-                          onClick={() => setConfirmPrincipalWs(w)}
-                        >
-                          <Star size={16} />
-                        </button>
-                      )}
-                      {w.is_principal ? (
-                        <button
-                          className="profile-icon-btn profile-icon-btn-disabled"
-                          title="No podés salir de tu Taller principal"
-                          aria-label="No podés salir de tu Taller principal"
-                          disabled
-                        >
-                          <LogOut size={16} />
-                        </button>
-                      ) : (
-                        <button
-                          className="profile-icon-btn profile-icon-danger"
-                          title="Salir del Taller"
-                          aria-label="Salir del Taller"
-                          onClick={() => setConfirmLeaveWs(w)}
-                        >
-                          <LogOut size={16} />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {activeTab === 'profesional' && (
+            <PerfilProfesionalTab
+              profile={profile}
+              statuses={statuses}
+              commitField={commitField}
+              sectionPrivacy={renderSectionPrivacy}
+            />
           )}
-        </section>
-
-        <div className="profile-save-footer">
-          <Button type="submit" form="profile-form" loading={saving}>Guardar cambios</Button>
+          {activeTab === 'ubicacion' && (
+            <UbicacionTab
+              profile={profile}
+              statuses={statuses}
+              commitField={commitField}
+              provinces={provinces}
+              localities={localities}
+              onProvinceChange={handleProvinceChange}
+              sectionPrivacy={renderSectionPrivacy}
+            />
+          )}
+          {activeTab === 'masonica' && (
+            <VidaMasonicaTab
+              profile={profile}
+              isSuperAdmin={isSuperAdmin}
+              statuses={statuses}
+              commitField={commitField}
+              sectionPrivacy={renderSectionPrivacy}
+              degrees={degrees}
+              setDegrees={setDegrees}
+              positions={positions}
+              setPositions={setPositions}
+              positionCatalog={positionCatalog}
+              myWorkshops={myWorkshops}
+              profileWorkshops={profileWorkshops}
+              reloadProfileWorkshops={reloadProfileWorkshops}
+              onError={setError}
+              onSuccess={setSuccess}
+            />
+          )}
+          {activeTab === 'privacidad' && (
+            <PrivacidadTab visibility={visibility} onEdit={setActiveTab} />
+          )}
         </div>
       </div>
-
-      <Modal open={showDegreeModal} onClose={() => setShowDegreeModal(false)} title={editingDegree ? 'Editar grado' : 'Agregar grado'}>
-        <form onSubmit={handleSaveDegree} className="profile-modal-form">
-          {degreeModalError && <Alert variant="error">{degreeModalError}</Alert>}
-          <FormField label="Grado">
-            <select className="profile-select" value={degreeForm.degree} onChange={e => setDegreeForm(f => ({ ...f, degree: e.target.value }))}>
-              {editingDegree
-                ? DEGREE_ORDER.map(dg => <option key={dg} value={dg}>{DEGREE_LABELS[dg]}</option>)
-                : (() => { const nx = nextValidDegree(degrees); return nx ? <option value={nx}>{DEGREE_LABELS[nx]}</option> : null })()}
-            </select>
-            {!editingDegree && (
-              <p className="profile-modal-note">Los grados progresan en orden: Aprendiz → Compañero → Maestro. Cada grado termina cuando comienza el siguiente.</p>
-            )}
-          </FormField>
-          <FormField label="Taller">
-            <select className="profile-select" value={degreeForm.workshop_id} onChange={e => setDegreeForm(f => ({ ...f, workshop_id: e.target.value }))}>
-              <option value="">— Sin taller —</option>
-              {myWorkshops.map(w => <option key={w.id} value={w.id}>{w.name} (N° {w.number})</option>)}
-            </select>
-          </FormField>
-          <FormField label="Fecha de inicio *"><Input type="date" required value={degreeForm.start_date} onChange={e => setDegreeForm(f => ({ ...f, start_date: e.target.value }))} /></FormField>
-          <FormField label="Notas"><Input value={degreeForm.notes} onChange={e => setDegreeForm(f => ({ ...f, notes: e.target.value }))} /></FormField>
-          <div className="profile-modal-actions">
-            <Button type="button" variant="outline" onClick={() => setShowDegreeModal(false)}>Cancelar</Button>
-            <Button type="submit">Guardar</Button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal open={showPositionModal} onClose={() => setShowPositionModal(false)} title={editingPosition ? 'Editar cargo' : 'Agregar cargo'}>
-        <form onSubmit={handleSavePosition} className="profile-modal-form">
-          {positionModalError && <Alert variant="error">{positionModalError}</Alert>}
-          <FormField label="Cargo *">
-            <select className="profile-select" required value={positionForm.position_id} onChange={e => setPositionForm(f => ({ ...f, position_id: e.target.value }))}>
-              <option value="">Seleccioná un cargo</option>
-              {positionCatalog.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </FormField>
-          <FormField label="Taller *">
-            <select className="profile-select" required value={positionForm.workshop_id} onChange={e => setPositionForm(f => ({ ...f, workshop_id: e.target.value }))}>
-              <option value="">Seleccioná un taller</option>
-              {myWorkshops.map(w => <option key={w.id} value={w.id}>{w.name} (N° {w.number})</option>)}
-            </select>
-          </FormField>
-          <FormField label="Fecha de inicio *"><Input type="date" required value={positionForm.start_date} onChange={e => setPositionForm(f => ({ ...f, start_date: e.target.value }))} /></FormField>
-          <FormField label="Fecha de fin"><Input type="date" value={positionForm.end_date} onChange={e => setPositionForm(f => ({ ...f, end_date: e.target.value }))} /></FormField>
-          <FormField label="Notas"><Input value={positionForm.notes} onChange={e => setPositionForm(f => ({ ...f, notes: e.target.value }))} /></FormField>
-          <div className="profile-modal-actions">
-            <Button type="button" variant="outline" onClick={() => setShowPositionModal(false)}>Cancelar</Button>
-            <Button type="submit">Guardar</Button>
-          </div>
-        </form>
-      </Modal>
-
-      <ConfirmDialog
-        open={confirmDeleteDegree !== null}
-        title="Eliminar grado"
-        message="¿Eliminar este registro de grado?"
-        onConfirm={() => confirmDeleteDegree !== null && handleDeleteDegree(confirmDeleteDegree)}
-        onClose={() => setConfirmDeleteDegree(null)}
-      />
-      <ConfirmDialog
-        open={confirmDeletePosition !== null}
-        title="Eliminar cargo"
-        message="¿Eliminar este registro de cargo?"
-        onConfirm={() => confirmDeletePosition !== null && handleDeletePosition(confirmDeletePosition)}
-        onClose={() => setConfirmDeletePosition(null)}
-      />
-
-      <Modal open={showAddWorkshopModal} onClose={() => setShowAddWorkshopModal(false)} title="Agregar Taller">
-        <div className="profile-modal-form">
-          <p className="profile-modal-note">
-            Buscá el Taller por nombre o número y solicitá tu ingreso. La solicitud queda pendiente hasta que un administrador del Taller la apruebe.
-          </p>
-          <FormField label="Taller">
-            <WorkshopPicker
-              value={addWorkshopSel}
-              onChange={setAddWorkshopSel}
-            />
-          </FormField>
-          <div className="profile-modal-actions">
-            <Button type="button" variant="outline" onClick={() => setShowAddWorkshopModal(false)}>Cancelar</Button>
-            {addWorkshopSel && (
-              <Button type="button" loading={joiningWorkshop} onClick={handleJoinWorkshop}>Solicitar unirse</Button>
-            )}
-          </div>
-        </div>
-      </Modal>
-
-      <ConfirmDialog
-        open={confirmLeaveWs !== null}
-        title="Salir del Taller"
-        message={confirmLeaveWs ? `¿Salir del taller ${confirmLeaveWs.name} (N° ${confirmLeaveWs.number})? También se eliminarán tus cargos asociados a este Taller.` : ''}
-        confirmLabel="Salir"
-        onConfirm={() => confirmLeaveWs && handleLeaveWorkshop(confirmLeaveWs)}
-        onClose={() => setConfirmLeaveWs(null)}
-      />
-
-      <ConfirmDialog
-        open={confirmPrincipalWs !== null}
-        title="Cambiar Taller principal"
-        message={(() => {
-          if (!confirmPrincipalWs) return ''
-          const current = profileWorkshops.find(w => w.is_principal)
-          return current
-            ? `${current.name} dejará de ser tu Taller principal y ${confirmPrincipalWs.name} pasará a ser tu Taller principal.`
-            : `${confirmPrincipalWs.name} pasará a ser tu Taller principal.`
-        })()}
-        confirmLabel="Confirmar"
-        onConfirm={() => confirmPrincipalWs && handleSetPrincipal(confirmPrincipalWs)}
-        onClose={() => setConfirmPrincipalWs(null)}
-      />
 
       <Modal open={showEmailModal} onClose={() => setShowEmailModal(false)} title="Cambiar email">
         {emailModalSuccess ? (

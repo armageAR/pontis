@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render as rtlRender, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import type { ReactElement } from 'react'
 import type { ChangeRequest } from '@/api/changeRequests'
 import ChangeRequestsPage from './ChangeRequestsPage'
+
+// ChangeRequestsPage usa el router (deep-link de trámites); envolvemos en MemoryRouter.
+const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>)
 
 const h = vi.hoisted(() => ({
   user: { id: 1, role: 'user', name: 'Test', admin_workshops: [] as { id: number }[] } as any,
