@@ -253,6 +253,12 @@ Cuando corresponda, debe permitir iniciar una solicitud de contacto.
 
 ### Publicaciones internas
 
+> **Diferido a V2.** Las publicaciones no forman parte del alcance funcional de
+> V1: el módulo queda dormido, oculto de la navegación e inaccesible por ruta o
+> API (403). El código y los datos se preservan. Ver `docs/publicaciones.md` y el
+> cambio OpenSpec `defer-publications-to-v2`. La descripción siguiente aplica al
+> comportamiento objetivo cuando se reactive en V2.
+
 Las publicaciones permiten que un Hermano comunique una necesidad, búsqueda, aviso u ofrecimiento a una audiencia definida.
 
 Una publicación puede representar:
