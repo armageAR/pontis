@@ -257,6 +257,26 @@
   gap: var(--space-4);
 }
 
+.dashboard-cards-loading {
+  pointer-events: none;
+}
+
+.dashboard-card-skeleton {
+  min-height: 142px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent),
+    var(--surface);
+  background-size: 220px 100%, auto;
+  animation: dashboard-skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes dashboard-skeleton {
+  0% { background-position: -220px 0, 0 0; }
+  100% { background-position: calc(100% + 220px) 0, 0 0; }
+}
+
 .dashboard-card {
   background: var(--surface);
   border: 1px solid var(--border);

@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<MembershipNotification[]>([])
   const [isWorkshopAdmin, setIsWorkshopAdmin] = useState(false)
   const [pendingValidationCount, setPendingValidationCount] = useState(0)
+  const [dashboardLoaded, setDashboardLoaded] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export default function DashboardPage() {
       setIsWorkshopAdmin(data.is_workshop_admin)
       setPendingValidationCount(data.pending_validation_count)
     }).catch(() => {})
+      .finally(() => setDashboardLoaded(true))
   }, [])
 
   async function handleDismiss(n: MembershipNotification) {
@@ -79,36 +81,43 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="dashboard-cards">
-        {(isWorkshopAdmin || user?.role === 'superadmin') && (
-          <Link to="/administracion" className="dashboard-card dashboard-card-admin">
-            {pendingValidationCount > 0 && (
-              <span className="dashboard-card-indicator" aria-label="Validaciones pendientes" />
-            )}
-            <span className="dashboard-card-icon"><ShieldCheck size={28} /></span>
-            <h3>Administracion</h3>
-            <p>tareas de administracion en tu taller</p>
+      {!dashboardLoaded ? (
+        <div className="dashboard-cards dashboard-cards-loading" aria-label="Cargando panel">
+          <div className="dashboard-card-skeleton" />
+          <div className="dashboard-card-skeleton" />
+        </div>
+      ) : (
+        <div className="dashboard-cards">
+          {(isWorkshopAdmin || user?.role === 'superadmin') && (
+            <Link to="/administracion" className="dashboard-card dashboard-card-admin">
+              {pendingValidationCount > 0 && (
+                <span className="dashboard-card-indicator" aria-label="Validaciones pendientes" />
+              )}
+              <span className="dashboard-card-icon"><ShieldCheck size={28} /></span>
+              <h3>Administracion</h3>
+              <p>tareas de administracion en tu taller</p>
+            </Link>
+          )}
+          {user?.role === 'superadmin' && (
+            <Link to="/workshops" className="dashboard-card">
+              <span className="dashboard-card-icon"><Building2 size={28} /></span>
+              <h3>Talleres</h3>
+              <p>Gestionar talleres, zonas y asignaciones.</p>
+            </Link>
+          )}
+          <Link
+            to={user?.role === 'superadmin' ? '/users' : '/mis-hermanos'}
+            className="dashboard-card"
+          >
+            <span className="dashboard-card-icon"><Users size={28} /></span>
+            <h3>{user?.role === 'superadmin' ? 'Hermanos' : 'Mis Hermanos'}</h3>
+            <p>{user?.role === 'superadmin'
+              ? 'Ver miembros y gestionar permisos.'
+              : 'Directorio de Hermanos activos de la comunidad.'
+            }</p>
           </Link>
-        )}
-        {user?.role === 'superadmin' && (
-          <Link to="/workshops" className="dashboard-card">
-            <span className="dashboard-card-icon"><Building2 size={28} /></span>
-            <h3>Talleres</h3>
-            <p>Gestionar talleres, zonas y asignaciones.</p>
-          </Link>
-        )}
-        <Link
-          to={user?.role === 'superadmin' ? '/users' : '/mis-hermanos'}
-          className="dashboard-card"
-        >
-          <span className="dashboard-card-icon"><Users size={28} /></span>
-          <h3>{user?.role === 'superadmin' ? 'Hermanos' : 'Mis Hermanos'}</h3>
-          <p>{user?.role === 'superadmin'
-            ? 'Ver miembros y gestionar permisos.'
-            : 'Directorio de Hermanos activos de la comunidad.'
-          }</p>
-        </Link>
-      </div>
+        </div>
+      )}
     </AppLayout>
   )
 }

@@ -14,12 +14,13 @@ const h = vi.hoisted(() => ({
     is_workshop_admin: boolean
     pending_validation_count: number
   },
+  getDashboard: vi.fn(),
 }))
 
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: h.user }) }))
 vi.mock('@/components/AppLayout', () => ({ default: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }))
 vi.mock('@/api/dashboard', () => ({
-  getDashboard: () => Promise.resolve(h.dashboard),
+  getDashboard: () => h.getDashboard(),
   approveJoinRequest: vi.fn(),
   rejectJoinRequest: vi.fn(),
   requestCorrection: vi.fn(),
@@ -34,6 +35,24 @@ describe('DashboardPage administration box', () => {
   beforeEach(() => {
     h.user = { role: 'user', name: 'Test' }
     h.dashboard = { membership_notifications: [], is_workshop_admin: false, pending_validation_count: 0 }
+    h.getDashboard.mockReset()
+    h.getDashboard.mockResolvedValue(h.dashboard)
+  })
+
+  it('does not render dashboard cards until dashboard data is loaded', async () => {
+    let resolveDashboard!: (value: typeof h.dashboard) => void
+    h.getDashboard.mockReturnValue(new Promise((resolve) => { resolveDashboard = resolve }))
+
+    renderPage()
+
+    expect(screen.getByLabelText('Cargando panel')).toBeInTheDocument()
+    expect(screen.queryByText('Mis Hermanos')).not.toBeInTheDocument()
+    expect(screen.queryByText('Administracion')).not.toBeInTheDocument()
+
+    h.dashboard.is_workshop_admin = true
+    resolveDashboard(h.dashboard)
+
+    expect(await screen.findByText('Administracion')).toBeInTheDocument()
   })
 
   it('does not render a standalone "Solicitudes de ingreso" section on the Panel', async () => {
