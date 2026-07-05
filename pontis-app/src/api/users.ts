@@ -11,7 +11,9 @@ export interface UserWorkshop {
 export interface UserListItem {
   id: number
   name: string
+  last_name: string | null
   email: string
+  province: string | null
   role: 'superadmin' | 'user' | null
   status: 'pending' | 'active' | 'rejected' | 'suspended' | 'inactive' | 'o_eterno'
   email_verified_at: string | null
@@ -25,6 +27,7 @@ export interface UserFilters {
   status?: string
   workshop_id?: number | string
   workshop_role?: string
+  province?: string
   per_page?: number
   page?: number
   sort_by?: string

@@ -1,35 +1,56 @@
-import { type ChangeEvent } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import Input from '@/components/Input'
 import Select from '@/components/Select'
-import type { UserFilters as Filters, WorkshopOption } from '@/api/users'
+import WorkshopPicker from '@/components/WorkshopPicker'
+import type { WorkshopSearchResult } from '@/api/workshops'
+import { getProvinces, type Province } from '@/api/provinces'
+import type { UserFilters as Filters } from '@/api/users'
 import './UserFilters.css'
 
 interface UserFiltersProps {
   filters: Filters
   onChange: (filters: Filters) => void
-  workshops: WorkshopOption[]
 }
 
-export default function UserFilters({ filters, onChange, workshops }: UserFiltersProps) {
+export default function UserFilters({ filters, onChange }: UserFiltersProps) {
+  const [provinces, setProvinces] = useState<Province[]>([])
+  const [selectedWorkshop, setSelectedWorkshop] = useState<WorkshopSearchResult | null>(null)
+
+  useEffect(() => {
+    getProvinces().then(setProvinces).catch(() => {})
+  }, [])
+
   function set(key: keyof Filters, value: string) {
     onChange({ ...filters, [key]: value, page: 1 })
+  }
+
+  function handleWorkshop(w: WorkshopSearchResult | null) {
+    setSelectedWorkshop(w)
+    onChange({ ...filters, workshop_id: w ? w.id : '', page: 1 })
   }
 
   return (
     <div className="user-filters">
       <Input
-        placeholder="Nombre, email o matrícula"
+        placeholder="Nombre, apellido, email o matrícula"
         value={filters.search ?? ''}
         onChange={(e: ChangeEvent<HTMLInputElement>) => set('search', e.target.value)}
         className="user-filters-search"
       />
+      <div className="user-filters-workshop">
+        <WorkshopPicker
+          value={selectedWorkshop}
+          onChange={handleWorkshop}
+          placeholder="Taller (nombre o número)"
+        />
+      </div>
       <Select
-        value={filters.workshop_id ? String(filters.workshop_id) : ''}
-        onChange={(e) => set('workshop_id', e.target.value)}
+        value={filters.province ?? ''}
+        onChange={(e) => set('province', e.target.value)}
       >
-        <option value="">Taller</option>
-        {workshops.map((w) => (
-          <option key={w.id} value={String(w.id)}>Nº{w.number} {w.name}</option>
+        <option value="">Provincia</option>
+        {provinces.map((p) => (
+          <option key={p.id} value={p.name}>{p.name}</option>
         ))}
       </Select>
       <Select

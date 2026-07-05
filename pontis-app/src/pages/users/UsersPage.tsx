@@ -21,7 +21,7 @@ export default function UsersPage({ embedded = false }: UsersPageProps) {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<UserListItem[]>([])
   const [meta, setMeta] = useState({ current_page: 1, last_page: 1, per_page: 15, total: 0 })
-  const [filters, setFilters] = useState<Filters>({ sort_by: 'name', sort_direction: 'asc', page: 1 })
+  const [filters, setFilters] = useState<Filters>({ sort_by: 'last_name', sort_direction: 'asc', page: 1 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -134,7 +134,7 @@ export default function UsersPage({ embedded = false }: UsersPageProps) {
       {successMsg && <Alert variant="success">{successMsg}</Alert>}
       {error && <Alert variant="error">{error}</Alert>}
 
-      <UserFiltersBar filters={filters} onChange={updateFilters} workshops={workshops} />
+      <UserFiltersBar filters={filters} onChange={updateFilters} />
 
       {loading ? (
         <div className="users-loading">
@@ -149,7 +149,7 @@ export default function UsersPage({ embedded = false }: UsersPageProps) {
         <>
           <UserTable
             users={users}
-            sortBy={filters.sort_by ?? 'name'}
+            sortBy={filters.sort_by ?? 'last_name'}
             sortDirection={filters.sort_direction ?? 'asc'}
             onSort={updateFilters}
             currentUserId={currentUser?.id ?? 0}

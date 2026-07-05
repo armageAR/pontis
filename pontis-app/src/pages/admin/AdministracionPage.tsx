@@ -18,12 +18,14 @@ export default function AdministracionPage() {
   return (
     <AppLayout>
       <div className="adm-tabs">
-        <button
-          className={`adm-tab ${tab === 'hermanos' ? 'adm-tab-active' : ''}`}
-          onClick={() => setTab('hermanos')}
-        >
-          Hermanos
-        </button>
+        {isSuperAdmin && (
+          <button
+            className={`adm-tab ${tab === 'hermanos' ? 'adm-tab-active' : ''}`}
+            onClick={() => setTab('hermanos')}
+          >
+            Hermanos
+          </button>
+        )}
         <button
           className={`adm-tab ${tab === 'validaciones' ? 'adm-tab-active' : ''}`}
           onClick={() => setTab('validaciones')}
@@ -41,7 +43,7 @@ export default function AdministracionPage() {
       </div>
 
       <div className="adm-tab-content">
-        {tab === 'hermanos' && <UsersPage embedded />}
+        {tab === 'hermanos' && isSuperAdmin && <UsersPage embedded />}
         {tab === 'validaciones' && <DegreeValidationPage />}
         {tab === 'auditoria' && isSuperAdmin && <AuditLogPage />}
       </div>

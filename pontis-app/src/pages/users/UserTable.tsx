@@ -2,7 +2,6 @@ import { ChevronUp, ChevronDown, Pencil, KeyRound, Crown, ShieldX } from 'lucide
 import type { UserListItem, UserFilters } from '@/api/users'
 import ActionMenu from '@/components/ActionMenu'
 import UserStatusSelect from './UserStatusSelect'
-import { formatDate } from '@/utils/date'
 import './UserTable.css'
 
 interface UserTableProps {
@@ -27,12 +26,12 @@ interface Column {
 }
 
 const COLUMNS: Column[] = [
-  { key: 'name', label: 'Nombre', sortable: true },
+  { key: 'last_name', label: 'Apellido/s', sortable: true },
+  { key: 'name', label: 'Nombre/s', sortable: true },
   { key: 'email', label: 'Email', sortable: true },
-  { key: 'workshops', label: 'Talleres', sortable: false },
+  { key: 'workshops', label: 'Talleres', sortable: true },
   { key: 'status', label: 'Estado', sortable: true },
-  { key: 'created_at', label: 'Registro', sortable: true },
-  { key: 'actions', label: '', sortable: false },
+  { key: 'actions', label: 'Acciones', sortable: true },
 ]
 
 function SortIcon({ col, sortBy, sortDirection }: { col: string; sortBy: string; sortDirection: 'asc' | 'desc' }) {
@@ -92,13 +91,16 @@ export default function UserTable({
 
             return (
               <tr key={u.id}>
+                <td className="user-cell-lastname">{u.last_name ?? '—'}</td>
                 <td className="user-cell-name">
-                  <span className="user-name-text">{u.name}</span>
-                  {userIsSuperAdmin && (
-                    <span className="user-superadmin-badge" title="Superadmin">
-                      <Crown size={11} />
-                    </span>
-                  )}
+                  <span className="user-cell-name-inner">
+                    <span className="user-name-text">{u.name}</span>
+                    {userIsSuperAdmin && (
+                      <span className="user-superadmin-badge" title="Superadmin">
+                        <Crown size={11} />
+                      </span>
+                    )}
+                  </span>
                 </td>
                 <td className="user-cell-email">{u.email}</td>
                 <td>
@@ -123,7 +125,6 @@ export default function UserTable({
                     onStatusChange={onStatusChange}
                   />
                 </td>
-                <td className="user-cell-date">{formatDate(u.created_at)}</td>
                 <td className="user-cell-actions">
                   <ActionMenu
                     actions={[

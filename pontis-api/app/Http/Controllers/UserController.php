@@ -23,29 +23,26 @@ class UserController extends Controller
             'status'         => ['nullable', 'string', 'in:pending,active,rejected,suspended,inactive,o_eterno'],
             'workshop_id'    => ['nullable', 'integer', 'exists:workshops,id'],
             'workshop_role'  => ['nullable', 'string', 'in:admin,member'],
+            'province'       => ['nullable', 'string', 'max:100'],
             'per_page'       => ['nullable', 'integer', 'min:1', 'max:100'],
-            'sort_by'        => ['nullable', 'string', 'in:name,email,role,status,created_at'],
+            'sort_by'        => ['nullable', 'string', 'in:last_name,name,email,workshops,status,actions,created_at,role'],
             'sort_direction' => ['nullable', 'string', 'in:asc,desc'],
         ]);
 
         $currentUser = $request->user();
 
-        // Payload administrativo (incluye email): solo Superadmin o Admin de
-        // Taller. La comunidad consulta Hermanos por /people, con mínimo dato.
-        $isWorkshopAdmin = $currentUser->workshops()->wherePivot('role', 'admin')->exists();
-        abort_unless($currentUser->isSuperAdmin() || $isWorkshopAdmin, 403);
+        // Pantalla de Hermanos: payload administrativo sensible (email, estado,
+        // membresías). Exclusiva del Superadmin. Las tareas del Admin de Taller
+        // viven en Administración → Validaciones; la comunidad usa /people.
+        abort_unless($currentUser->isSuperAdmin(), 403);
 
         $query = User::with('workshops');
-
-        if (! $currentUser->isSuperAdmin()) {
-            $myWorkshopIds = $currentUser->workshops()->pluck('workshops.id');
-            $query->whereHas('workshops', fn ($q) => $q->whereIn('workshops.id', $myWorkshopIds));
-        }
 
         if ($request->filled('search')) {
             $search = mb_strtolower($request->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->whereRaw('unaccent(LOWER(name)) like unaccent(?)', ["%{$search}%"])
+                  ->orWhereRaw('unaccent(LOWER(last_name)) like unaccent(?)', ["%{$search}%"])
                   ->orWhereRaw('unaccent(LOWER(email)) like unaccent(?)', ["%{$search}%"])
                   ->orWhereRaw("CAST(masonic_id AS TEXT) like ?", ["%{$search}%"]);
             });
@@ -67,13 +64,50 @@ class UserController extends Controller
             $query->whereHas('workshops', fn ($q) => $q->where('user_workshop.role', $request->input('workshop_role')));
         }
 
-        $sortBy = $request->input('sort_by', 'name');
-        $sortDir = $request->input('sort_direction', 'asc');
-        $query->orderBy($sortBy, $sortDir);
+        if ($request->filled('province')) {
+            $query->where('province', $request->input('province'));
+        }
+
+        $this->applySort($query, $request->input('sort_by', 'last_name'), $request->input('sort_direction', 'asc'));
 
         $perPage = $request->input('per_page', 15);
 
         return AdminUserResource::collection($query->paginate($perPage));
+    }
+
+    /**
+     * Ordena el listado por una columna visible de la tabla de Hermanos. Para
+     * las columnas que no son un campo directo del usuario se aplica un orden
+     * determinístico y siempre se desempata por id para paginación estable.
+     */
+    private function applySort($query, string $sortBy, string $sortDir): void
+    {
+        $dir = strtolower($sortDir) === 'desc' ? 'desc' : 'asc';
+
+        switch ($sortBy) {
+            case 'workshops':
+                // Orden por el número de Taller más bajo del Hermano.
+                $query->orderByRaw(
+                    '(select min(w.number) from user_workshop uw'
+                    . ' inner join workshops w on w.id = uw.workshop_id'
+                    . " where uw.user_id = users.id) {$dir}"
+                );
+                break;
+
+            case 'actions':
+                // La columna Acciones no es un dato del usuario: se ordena por
+                // disponibilidad de acciones administrativas (los superadmin
+                // exponen más acciones) y se documenta como determinístico.
+                $query->orderByRaw("(case when role = 'superadmin' then 1 else 0 end) {$dir}");
+                break;
+
+            default:
+                // last_name, name, email, status, created_at, role.
+                $query->orderBy($sortBy, $dir);
+                break;
+        }
+
+        $query->orderBy('users.id', 'asc');
     }
 
     public function myWorkshops(Request $request): JsonResponse

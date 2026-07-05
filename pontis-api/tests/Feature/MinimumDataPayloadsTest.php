@@ -175,13 +175,15 @@ class MinimumDataPayloadsTest extends TestCase
 
     // ── 3.2 Contexto administrativo conserva sus campos ──────────────────────
 
-    public function test_admin_user_list_includes_email_for_admins(): void
+    public function test_admin_user_list_includes_email_for_superadmin(): void
     {
+        // La pantalla de Hermanos es exclusiva del Superadmin, pero conserva los
+        // campos administrativos (email, verificación) en su payload.
         $workshop = Workshop::factory()->create();
-        $admin = $this->member($workshop, role: 'admin');
+        $superadmin = User::factory()->create(['role' => 'superadmin', 'status' => 'active']);
         $member = $this->member($workshop);
 
-        $rows = $this->actingAs($admin, 'sanctum')
+        $rows = $this->actingAs($superadmin, 'sanctum')
             ->getJson('/api/users')->assertOk()->json('data');
         $row = collect($rows)->firstWhere('id', $member->id);
 

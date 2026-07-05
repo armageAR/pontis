@@ -65,23 +65,17 @@ class UserListTest extends TestCase
              ->assertJsonPath('meta.total', 4);
     }
 
-    public function test_workshop_admin_sees_only_own_workshop_users(): void
+    public function test_workshop_admin_cannot_list_users(): void
     {
+        // La pantalla de Hermanos es exclusiva del Superadmin: el Admin de Taller
+        // resuelve sus tareas en Administración → Validaciones, no acá.
         $workshop = Workshop::factory()->create();
         $admin = $this->workshopAdmin($workshop);
-        $member = $this->workshopMember($workshop);
+        $this->workshopMember($workshop);
 
-        $otherWorkshop = Workshop::factory()->create();
-        $outsider = $this->workshopMember($otherWorkshop);
-
-        $response = $this->actingAs($admin, 'sanctum')
+        $this->actingAs($admin, 'sanctum')
              ->getJson('/api/users')
-             ->assertOk();
-
-        $ids = collect($response->json('data'))->pluck('id')->toArray();
-        $this->assertContains($admin->id, $ids);
-        $this->assertContains($member->id, $ids);
-        $this->assertNotContains($outsider->id, $ids);
+             ->assertForbidden();
     }
 
     public function test_regular_workshop_member_cannot_list_users(): void
@@ -184,6 +178,34 @@ class UserListTest extends TestCase
         unset($u2);
     }
 
+    public function test_filter_by_province(): void
+    {
+        $sa = $this->superAdmin();
+        $target = User::factory()->create(['province' => 'Buenos Aires']);
+        User::factory()->create(['province' => 'Córdoba']);
+
+        $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users?province=' . urlencode('Buenos Aires'))
+             ->assertOk()
+             ->assertJsonCount(1, 'data')
+             ->assertJsonPath('data.0.id', $target->id);
+    }
+
+    public function test_search_matches_last_name(): void
+    {
+        $sa = $this->superAdmin();
+        $target = User::factory()->create(['name' => 'Juan', 'last_name' => 'Gerling']);
+        User::factory()->create(['name' => 'Otro', 'last_name' => 'Perez']);
+
+        $response = $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users?search=gerling')
+             ->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($target->id));
+        $this->assertCount(1, $ids);
+    }
+
     // ── pagination & sort ────────────────────────────────────────────────────
 
     public function test_pagination(): void
@@ -212,6 +234,45 @@ class UserListTest extends TestCase
         $this->assertEquals($names, collect($names)->sort()->values()->toArray());
     }
 
+    public function test_sort_by_last_name(): void
+    {
+        $sa = $this->superAdmin();
+        User::factory()->create(['last_name' => 'Zabala']);
+        User::factory()->create(['last_name' => 'Alvarez']);
+
+        $response = $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users?sort_by=last_name&sort_direction=asc')
+             ->assertOk();
+
+        $lastNames = collect($response->json('data'))->pluck('last_name')->filter()->values()->toArray();
+        $this->assertEquals($lastNames, collect($lastNames)->sort()->values()->toArray());
+    }
+
+    public function test_sort_by_workshops_and_actions_is_accepted(): void
+    {
+        $sa = $this->superAdmin();
+        $w = Workshop::factory()->create(['number' => 7]);
+        $this->workshopMember($w);
+
+        $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users?sort_by=workshops&sort_direction=desc')
+             ->assertOk();
+
+        $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users?sort_by=actions&sort_direction=asc')
+             ->assertOk();
+    }
+
+    public function test_invalid_sort_by_is_rejected(): void
+    {
+        $sa = $this->superAdmin();
+
+        $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users?sort_by=password')
+             ->assertUnprocessable()
+             ->assertJsonValidationErrors(['sort_by']);
+    }
+
     // ── response structure ───────────────────────────────────────────────────
 
     public function test_response_includes_workshop_with_pivot_role(): void
@@ -228,6 +289,22 @@ class UserListTest extends TestCase
         $this->assertNotEmpty($userData['workshops']);
         $this->assertEquals('UNION DEL PLATA', $userData['workshops'][0]['name']);
         $this->assertEquals('admin', $userData['workshops'][0]['workshop_role']);
+    }
+
+    public function test_response_includes_last_name_and_province(): void
+    {
+        $sa = $this->superAdmin();
+        $user = User::factory()->create(['last_name' => 'Gerling', 'province' => 'Santa Fe']);
+
+        $response = $this->actingAs($sa, 'sanctum')
+             ->getJson('/api/users')
+             ->assertOk();
+
+        $userData = collect($response->json('data'))->firstWhere('id', $user->id);
+        $this->assertArrayHasKey('last_name', $userData);
+        $this->assertArrayHasKey('province', $userData);
+        $this->assertEquals('Gerling', $userData['last_name']);
+        $this->assertEquals('Santa Fe', $userData['province']);
     }
 
     // ── update status ────────────────────────────────────────────────────────
