@@ -1,10 +1,4 @@
-# visibility-policy
-
-## Purpose
-
-Servicio central de politicas de visibilidad para resolver que datos puede ver un Hermano segun viewer, subject, relacion de Talleres, aparicion anonima, contacto y previews de acciones sensibles. Las reglas de publicaciones quedan dormidas en V1 y se revaluaran en V2.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Central visibility decisions
 The system SHALL resolve profile visibility through a central policy service in V1, while publication visibility rules remain dormant until V2.
@@ -18,14 +12,6 @@ The system SHALL resolve profile visibility through a central policy service in 
 - **WHEN** an endpoint would expose publication visibility behavior
 - **THEN** the system MUST block the publication endpoint as unavailable in V1
 - **AND** it MUST NOT return publication visibility results to users
-
-### Requirement: Anonymous appearance resolution
-The central policy SHALL determine when a result can appear anonymously.
-
-#### Scenario: Viewer cannot see identity but anonymous appearance is enabled
-- **WHEN** the viewer does not qualify for identity visibility
-- **AND** anonymous appearance is enabled
-- **THEN** the policy MUST allow an anonymous result without revealing identity fields
 
 ### Requirement: Visibility preview
 The central policy SHALL support previews of visible profile or sensitive-action data in V1, but publication preview access SHALL remain unavailable until V2.

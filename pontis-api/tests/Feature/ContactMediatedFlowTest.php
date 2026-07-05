@@ -81,6 +81,7 @@ class ContactMediatedFlowTest extends TestCase
 
     public function test_explore_anonymous_publication_does_not_serialize_owner_user_id(): void
     {
+        $this->markTestSkipped('Publicaciones diferidas a V2 (defer-publications-to-v2).');
         $owner = $this->member(Workshop::factory()->create());
         $service = $this->service($owner);
         $requester = $this->member(Workshop::factory()->create());

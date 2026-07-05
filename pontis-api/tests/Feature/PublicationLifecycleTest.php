@@ -13,6 +13,15 @@ class PublicationLifecycleTest extends TestCase
 {
     use RefreshDatabase;
 
+    // Publicaciones diferidas a V2: el módulo queda dormido y sus endpoints
+    // responden 403 en V1. Estos tests de ciclo de vida se preservan para
+    // reactivarlos con el módulo en V2 (defer-publications-to-v2).
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->markTestSkipped('Publicaciones diferidas a V2 (defer-publications-to-v2).');
+    }
+
     private function user(): User
     {
         return User::factory()->create(['role' => 'user', 'status' => 'active']);

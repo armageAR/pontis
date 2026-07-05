@@ -113,6 +113,7 @@ class MinimumDataPayloadsTest extends TestCase
 
     public function test_explore_service_author_has_no_sensitive_keys(): void
     {
+        $this->markTestSkipped('Publicaciones diferidas a V2 (defer-publications-to-v2).');
         $owner = $this->member(Workshop::factory()->create());
         Service::create([
             'user_id' => $owner->id, 'title' => 'Oferta', 'description' => 'Desc',

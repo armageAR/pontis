@@ -14,7 +14,6 @@ import WorkshopsPage from '@/pages/workshops/WorkshopsPage'
 import ProfilePage from '@/pages/profile/ProfilePage'
 import PersonPage from '@/pages/person/PersonPage'
 import SearchPage from '@/pages/search/SearchPage'
-import MisPublicacionesPage from '@/pages/publications/MisPublicacionesPage'
 import BandejaPage from '@/pages/inbox/BandejaPage'
 import AdministracionPage from '@/pages/admin/AdministracionPage'
 import MisHermanosPage from '@/pages/hermanos/MisHermanosPage'
@@ -38,15 +37,16 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/people/:id" element={<PersonPage />} />
             <Route path="/buscar" element={<SearchPage />} />
-            <Route path="/mis-publicaciones" element={<MisPublicacionesPage />} />
             <Route path="/bandeja" element={<BandejaPage />} />
             <Route path="/administracion" element={<AdministracionPage />} />
             <Route path="/mis-hermanos" element={<MisHermanosPage />} />
             {/* Redirects para no romper links viejos */}
             <Route path="/people" element={<Navigate to="/buscar" replace />} />
-            <Route path="/explore" element={<Navigate to="/buscar" replace />} />
-            <Route path="/services" element={<Navigate to="/mis-publicaciones" replace />} />
-            <Route path="/needs" element={<Navigate to="/mis-publicaciones" replace />} />
+            {/* Publicaciones diferidas a V2: rutas dormidas → panel (defer-publications-to-v2) */}
+            <Route path="/explore" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/mis-publicaciones" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/services" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/needs" element={<Navigate to="/dashboard" replace />} />
             <Route path="/contact-requests" element={<Navigate to="/bandeja" replace />} />
             <Route path="/change-requests" element={<Navigate to="/bandeja" replace />} />
             <Route path="/users" element={<Navigate to="/administracion" replace />} />

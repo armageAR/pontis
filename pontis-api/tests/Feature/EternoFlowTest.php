@@ -100,6 +100,9 @@ class EternoFlowTest extends TestCase
 
     public function test_o_eterno_is_excluded_from_search_and_explore_but_history_remains(): void
     {
+        // Cubre exclusión en búsqueda y en explore; explore quedó diferido a V2.
+        // Se preserva para reactivar junto con publicaciones (defer-publications-to-v2).
+        $this->markTestSkipped('Publicaciones diferidas a V2 (defer-publications-to-v2).');
         $superadmin = $this->user(['role' => 'superadmin']);
         $viewer = $this->user();
         $target = $this->user(['name' => 'Historico']);

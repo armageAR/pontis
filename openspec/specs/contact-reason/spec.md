@@ -13,14 +13,6 @@ The system SHALL require a reason when creating a contact request.
 - **THEN** the system MUST reject the request
 - **AND** no contact request MUST be created
 
-### Requirement: Contact request source context
-The system SHALL preserve the source context for a contact request.
-
-#### Scenario: User contacts from publication
-- **WHEN** a Hermano starts contact from an offer or need publication
-- **THEN** the request MUST include the publication context
-- **AND** the recipient MUST see that context
-
 ### Requirement: Contact request message
 The system SHALL require a meaningful bounded message for contact requests.
 

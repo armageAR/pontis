@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->redirectGuestsTo(fn (Request $request) => null);
+        // Publicaciones diferidas a V2: bloquea los endpoints del módulo dormido.
+        $middleware->alias([
+            'publications.deferred' => \App\Http\Middleware\PublicationsDeferred::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

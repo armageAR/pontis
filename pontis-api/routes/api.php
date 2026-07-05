@@ -97,27 +97,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/positions/{position}', [PositionCatalogController::class, 'update']);
     Route::delete('/positions/{position}', [PositionCatalogController::class, 'destroy']);
 
-    // Catálogo de categorías de servicios
-    Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
-    Route::post('/service-categories', [ServiceCategoryController::class, 'store']);
-    Route::patch('/service-categories/{serviceCategory}', [ServiceCategoryController::class, 'update']);
-    Route::delete('/service-categories/{serviceCategory}', [ServiceCategoryController::class, 'destroy']);
+    // Publicaciones (services / needs / categorías) diferidas a V2: el código y
+    // los datos se conservan, pero el módulo queda dormido y no accesible en V1.
+    // Ver openspec: defer-publications-to-v2.
+    Route::middleware('publications.deferred')->group(function () {
+        // Catálogo de categorías de servicios
+        Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
+        Route::post('/service-categories', [ServiceCategoryController::class, 'store']);
+        Route::patch('/service-categories/{serviceCategory}', [ServiceCategoryController::class, 'update']);
+        Route::delete('/service-categories/{serviceCategory}', [ServiceCategoryController::class, 'destroy']);
 
-    // Servicios ofrecidos
-    Route::get('/services', [ServiceController::class, 'index']);
-    Route::post('/services', [ServiceController::class, 'store']);
-    Route::get('/services/{service}', [ServiceController::class, 'show']);
-    Route::patch('/services/{service}', [ServiceController::class, 'update']);
-    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
-    Route::post('/services/{service}/suspend', [ServiceController::class, 'suspend']);
+        // Servicios ofrecidos
+        Route::get('/services', [ServiceController::class, 'index']);
+        Route::post('/services', [ServiceController::class, 'store']);
+        Route::get('/services/{service}', [ServiceController::class, 'show']);
+        Route::patch('/services/{service}', [ServiceController::class, 'update']);
+        Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+        Route::post('/services/{service}/suspend', [ServiceController::class, 'suspend']);
 
-    // Necesidades
-    Route::get('/needs', [NeedController::class, 'index']);
-    Route::post('/needs', [NeedController::class, 'store']);
-    Route::get('/needs/{need}', [NeedController::class, 'show']);
-    Route::patch('/needs/{need}', [NeedController::class, 'update']);
-    Route::delete('/needs/{need}', [NeedController::class, 'destroy']);
-    Route::post('/needs/{need}/suspend', [NeedController::class, 'suspend']);
+        // Necesidades
+        Route::get('/needs', [NeedController::class, 'index']);
+        Route::post('/needs', [NeedController::class, 'store']);
+        Route::get('/needs/{need}', [NeedController::class, 'show']);
+        Route::patch('/needs/{need}', [NeedController::class, 'update']);
+        Route::delete('/needs/{need}', [NeedController::class, 'destroy']);
+        Route::post('/needs/{need}/suspend', [NeedController::class, 'suspend']);
+    });
 
     // Provincias (catálogo)
     Route::get('/provinces', [ProvinceController::class, 'index']);
@@ -134,14 +139,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Configuración de visibilidad por bloque
     Route::get('/profile/visibility', [VisibilitySettingsController::class, 'index']);
     Route::post('/profile/visibility', [VisibilitySettingsController::class, 'update']);
-    Route::get('/profile/publication-preview', [VisibilitySettingsController::class, 'publicationPreview']);
+    // Preview de publicación diferido a V2 (defer-publications-to-v2).
+    Route::get('/profile/publication-preview', [VisibilitySettingsController::class, 'publicationPreview'])
+        ->middleware('publications.deferred');
 
     // Búsqueda de personas
     Route::get('/people', [PeopleController::class, 'index']);
 
-    // Explorar servicios y necesidades de otros hermanos (con filtro de visibilidad)
-    Route::get('/explore/services', [ExploreController::class, 'services']);
-    Route::get('/explore/needs', [ExploreController::class, 'needs']);
+    // Explorar servicios y necesidades: diferido a V2 (defer-publications-to-v2).
+    Route::middleware('publications.deferred')->group(function () {
+        Route::get('/explore/services', [ExploreController::class, 'services']);
+        Route::get('/explore/needs', [ExploreController::class, 'needs']);
+    });
 
     // Ficha pública de persona
     Route::get('/people/{user}', [PublicProfileController::class, 'show']);

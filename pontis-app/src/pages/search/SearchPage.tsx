@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import PeoplePage from '@/pages/people/PeoplePage'
-import ExplorePage from '@/pages/explore/ExplorePage'
 import WorkshopDirectoryTab from './WorkshopDirectoryTab'
 import './SearchPage.css'
 
-type Tab = 'people' | 'explore' | 'workshops'
+// El tab "Servicios y necesidades" (exploración de publicaciones) queda diferido
+// a V2: en V1 la búsqueda expone sólo Hermanos y Talleres (defer-publications-to-v2).
+type Tab = 'people' | 'workshops'
 
 export default function SearchPage() {
   const [tab, setTab] = useState<Tab>('people')
@@ -27,12 +28,6 @@ export default function SearchPage() {
           Hermanos
         </button>
         <button
-          className={`search-tab${tab === 'explore' ? ' search-tab-active' : ''}`}
-          onClick={() => setTab('explore')}
-        >
-          Servicios y necesidades
-        </button>
-        <button
           className={`search-tab${tab === 'workshops' ? ' search-tab-active' : ''}`}
           onClick={() => setTab('workshops')}
         >
@@ -42,7 +37,6 @@ export default function SearchPage() {
 
       <div className="search-tab-content">
         {tab === 'people'     && <PeoplePage embedded />}
-        {tab === 'explore'    && <ExplorePage embedded />}
         {tab === 'workshops'  && <WorkshopDirectoryTab />}
       </div>
     </AppLayout>

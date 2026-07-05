@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Search,
   BookOpen,
-  FileText,
   Inbox,
   Shield,
   Menu,
@@ -21,11 +20,12 @@ interface AppLayoutProps {
   children: ReactNode
 }
 
+// Publicaciones diferidas a V2: "Mis publicaciones" se retira de la navegación
+// de V1 (defer-publications-to-v2).
 const NAV_ITEMS = [
   { to: '/dashboard',         label: 'Panel',            Icon: LayoutDashboard },
   { to: '/buscar',            label: 'Buscar',           Icon: Search },
   { to: '/workshops',         label: 'Talleres',         Icon: BookOpen },
-  { to: '/mis-publicaciones', label: 'Mis publicaciones', Icon: FileText },
   { to: '/bandeja',           label: 'Bandeja',          Icon: Inbox },
 ]
 

@@ -88,6 +88,7 @@ class VisibilityPolicyEndpointsTest extends TestCase
 
     public function test_explore_respects_workshop_visibility_scope(): void
     {
+        $this->markTestSkipped('Publicaciones diferidas a V2 (defer-publications-to-v2).');
         $workshop = Workshop::factory()->create();
         $owner = $this->member($workshop);
         $this->activeService($owner, 'workshop', 'Solo mi taller');
@@ -107,6 +108,7 @@ class VisibilityPolicyEndpointsTest extends TestCase
 
     public function test_explore_masks_anonymous_author(): void
     {
+        $this->markTestSkipped('Publicaciones diferidas a V2 (defer-publications-to-v2).');
         $owner = $this->member(Workshop::factory()->create());
         $owner->update(['name' => 'Juan', 'last_name' => 'Perez', 'profession' => 'Abogado']);
         $this->activeService($owner, 'anonymous', 'Oferta reservada');
@@ -203,6 +205,7 @@ class VisibilityPolicyEndpointsTest extends TestCase
 
     public function test_publication_preview_endpoint(): void
     {
+        $this->markTestSkipped('Publicaciones diferidas a V2 (defer-publications-to-v2).');
         $user = $this->member(Workshop::factory()->create());
         $user->update(['name' => 'Juan', 'last_name' => 'Perez']);
 

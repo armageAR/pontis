@@ -16,12 +16,9 @@ Pontis no es una red social pública, un marketplace ni una plataforma transacci
 - Relación entre Hermanos y uno o más Talleres
 - Grado actual obligatorio e historial de grados
 - Cargos opcionales asociados a un Taller, con historial
-- Servicios ofrecidos por Hermanos
-- Necesidades o búsquedas declaradas por Hermanos
-- Publicaciones internas para necesidades, búsquedas, avisos, ofrecimientos, recomendaciones o pedidos de ayuda
-- Búsqueda interna sobre Hermanos, Talleres, servicios, necesidades, profesiones, oficios, categorías, ubicaciones y datos habilitados
+- Búsqueda interna sobre Hermanos, Talleres, profesiones, oficios, categorías, ubicaciones y datos habilitados
 - Solicitudes de contacto con consentimiento cuando el contacto directo no esté explícitamente habilitado
-- Notificaciones para eventos relevantes de validación, contacto, publicación, crawler y cambios sensibles
+- Notificaciones para eventos relevantes de validación, contacto, crawler y cambios sensibles
 - Auditoría funcional para acciones administrativas y sensibles relevantes
 - Roles básicos: Superadmin, Admin de Taller y Usuario / Hermano
 - Soporte de crawler supervisado para importar o actualizar Talleres / Logias
@@ -30,11 +27,11 @@ Pontis no es una red social pública, un marketplace ni una plataforma transacci
 - Un visitante público solo puede ver la homepage e iniciar el registro.
 - Un usuario registrado debe verificar su email y ser aprobado antes de acceder a información interna.
 - Un Hermano pendiente puede completar datos requeridos, seleccionar un Taller inicial, declarar un grado y corregir datos enviados cuando se le solicite.
-- Un Hermano activo puede administrar su ficha, servicios, necesidades, publicaciones, visibilidad y preferencias de contacto.
+- Un Hermano activo puede administrar su ficha, visibilidad y preferencias de contacto.
 - Un Hermano activo puede buscar ayuda o contactos, pero los resultados deben respetar la visibilidad y pueden ser identificados, parcialmente identificados, anónimos o institucionales.
-- Un Hermano puede iniciar una solicitud de contacto cuando un resultado, servicio, necesidad o publicación no expone datos de contacto directo.
+- Un Hermano puede iniciar una solicitud de contacto cuando un resultado habilitado no expone datos de contacto directo.
 - El destinatario de una solicitud de contacto puede aceptarla o rechazarla, controlando qué datos se comparten.
-- Un Admin de Taller puede validar y administrar usuarios, relaciones, cargos y publicaciones solo dentro de sus Talleres autorizados.
+- Un Admin de Taller puede validar y administrar usuarios, relaciones y cargos solo dentro de sus Talleres autorizados.
 - Un Superadmin puede administrar el sistema completo, incluyendo usuarios, Talleres, catálogos, cambios sensibles, revisión del crawler, roles y auditoría funcional.
 
 ## Stack tecnico
@@ -57,8 +54,8 @@ Pontis no es una red social pública, un marketplace ni una plataforma transacci
 - Mantener el alcance funcional de V1 simple, claro y mantenible.
 - Usar el término Hermano en la interfaz general y reservar Usuario para autenticación, acceso, roles, permisos y estado del sistema.
 - Evitar un módulo separado de Personas; toda persona registrada es funcionalmente el mismo registro que el usuario del sistema con ficha asociada.
-- Hacer que toda información personal, de contacto, profesional, masónica, de servicios, necesidades, publicaciones, grados, cargos y Talleres sea privada por defecto.
-- Hacer que la visibilidad sea explícita y comprensible antes de que un usuario publique, active o exponga información.
+- Hacer que toda información personal, de contacto, profesional, masónica, grados, cargos y Talleres sea privada por defecto.
+- Hacer que la visibilidad sea explícita y comprensible antes de que un usuario active o exponga información.
 - Permitir una búsqueda útil sin revelar datos que no hayan sido habilitados explícitamente.
 - Preservar registros históricos de grados y cargos.
 - Mantener separados conceptualmente los roles administrativos, los grados masónicos y los cargos masónicos.
@@ -68,6 +65,7 @@ Pontis no es una red social pública, un marketplace ni una plataforma transacci
 ## Limitaciones de alcance
 - Sin perfiles públicos sin login
 - Sin listado público de Hermanos, Talleres, servicios, necesidades o publicaciones
+- Sin publicaciones, ofertas ni necesidades publicadas en V1; el modulo queda diferido a V2 y no debe ser visible ni accesible aunque exista codigo dormido.
 - Sin acceso a datos internos para usuarios pendientes de validación
 - Sin comportamiento de marketplace
 - Sin pagos
@@ -87,6 +85,6 @@ Pontis no es una red social pública, un marketplace ni una plataforma transacci
 ## Objetivo del proyecto
 Pontis V1 tiene como objetivo establecer una base funcional sólida para una comunidad privada y validada de Hermanos.
 
-La primera versión debe soportar registro, validación, fichas personales, relaciones con Talleres, grados, cargos, servicios, necesidades, búsqueda interna, contacto controlado, roles, visibilidad, notificaciones y auditabilidad, manteniendo limitada la complejidad de implementación.
+La primera versión debe soportar registro, validación, fichas personales, relaciones con Talleres, grados, cargos, búsqueda interna, contacto controlado, roles, visibilidad, notificaciones y auditabilidad, manteniendo limitada la complejidad de implementación. Las publicaciones, ofertas y necesidades publicadas quedan diferidas a V2.
 
 Cuando exista duda entre exponer información o protegerla, Pontis debe protegerla. Cuando exista duda entre automatizar una acción sensible o requerir confirmación, Pontis debe requerir revisión humana. Cuando exista duda entre agregar complejidad flexible o mantener reglas claras, V1 debe mantener reglas claras.
