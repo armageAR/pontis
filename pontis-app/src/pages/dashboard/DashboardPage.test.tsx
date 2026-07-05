@@ -9,10 +9,12 @@ const h = vi.hoisted(() => ({
     membership_notifications: [],
     is_workshop_admin: false,
     pending_validation_count: 0,
+    profile_completion: { percent: 60, completed: 10, total: 16 },
   } as {
     membership_notifications: unknown[]
     is_workshop_admin: boolean
     pending_validation_count: number
+    profile_completion: { percent: number; completed: number; total: number }
   },
   getDashboard: vi.fn(),
 }))
@@ -34,7 +36,7 @@ function renderPage() {
 describe('DashboardPage administration box', () => {
   beforeEach(() => {
     h.user = { role: 'user', name: 'Test' }
-    h.dashboard = { membership_notifications: [], is_workshop_admin: false, pending_validation_count: 0 }
+    h.dashboard = { membership_notifications: [], is_workshop_admin: false, pending_validation_count: 0, profile_completion: { percent: 60, completed: 10, total: 16 } }
     h.getDashboard.mockReset()
     h.getDashboard.mockResolvedValue(h.dashboard)
   })
@@ -100,5 +102,35 @@ describe('DashboardPage administration box', () => {
     renderPage()
 
     expect(await screen.findByText('Administracion')).toBeInTheDocument()
+  })
+})
+
+describe('DashboardPage "Mi Perfil" card', () => {
+  beforeEach(() => {
+    h.user = { role: 'user', name: 'Test' }
+    h.dashboard = { membership_notifications: [], is_workshop_admin: false, pending_validation_count: 0, profile_completion: { percent: 60, completed: 10, total: 16 } }
+    h.getDashboard.mockReset()
+    h.getDashboard.mockResolvedValue(h.dashboard)
+  })
+
+  it('renders the Mi Perfil card linking to /profile after data loads', async () => {
+    renderPage()
+    const heading = await screen.findByText('Mi Perfil')
+    const link = heading.closest('a')
+    expect(link).toHaveAttribute('href', '/profile')
+  })
+
+  it('shows the completion percentage and progress bar', async () => {
+    renderPage()
+    await screen.findByText('Mi Perfil')
+    expect(screen.getByText('60%')).toBeInTheDocument()
+    const bar = screen.getByRole('progressbar', { name: 'Completitud del perfil' })
+    expect(bar).toHaveAttribute('aria-valuenow', '60')
+  })
+
+  it('shows the Mi Perfil card for every role (e.g. superadmin)', async () => {
+    h.user = { role: 'superadmin', name: 'Super' }
+    renderPage()
+    expect(await screen.findByText('Mi Perfil')).toBeInTheDocument()
   })
 })

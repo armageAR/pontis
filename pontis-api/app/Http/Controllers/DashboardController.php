@@ -22,7 +22,45 @@ class DashboardController extends Controller
             'membership_notifications' => $notifications,
             'is_workshop_admin'        => $user->isAdminOfAnyWorkshop(),
             'pending_validation_count' => $this->getPendingValidationCount($user),
+            'profile_completion'       => $this->getProfileCompletion($user),
         ]);
+    }
+
+    /**
+     * Completitud del perfil del usuario autenticado, calculada en backend con
+     * una lista explícita de campos para evitar cálculos divergentes en UI.
+     * Devuelve {percent (0-100), completed, total}. Ver add-profile-card-to-dashboard.
+     */
+    private function getProfileCompletion($user): array
+    {
+        // Campos simples: cuentan como completos si no están vacíos.
+        $simpleFields = [
+            'name', 'last_name', 'email', 'dni', 'masonic_id',
+            'birth_date', 'initiation_date', 'masonic_status',
+            'province', 'locality',
+            'profession', 'occupation', 'bio',
+        ];
+
+        $checks = [];
+        foreach ($simpleFields as $field) {
+            $checks[] = filled($user->{$field});
+        }
+
+        // Contacto: alcanza con tener al menos un canal cargado.
+        $checks[] = filled($user->phone) || filled($user->whatsapp) || filled($user->alternative_email);
+        // Al menos un Taller activo.
+        $checks[] = $user->workshops()->exists();
+        // Al menos un grado registrado.
+        $checks[] = $user->userDegrees()->exists();
+
+        $total = count($checks);
+        $completed = count(array_filter($checks));
+
+        return [
+            'percent'   => (int) round($completed / $total * 100),
+            'completed' => $completed,
+            'total'     => $total,
+        ];
     }
 
     /**

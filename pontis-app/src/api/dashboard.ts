@@ -23,10 +23,17 @@ export interface MembershipNotification {
   resolved_at: string
 }
 
+export interface ProfileCompletion {
+  percent: number
+  completed: number
+  total: number
+}
+
 export interface DashboardData {
   membership_notifications: MembershipNotification[]
   is_workshop_admin: boolean
   pending_validation_count: number
+  profile_completion: ProfileCompletion
 }
 
 export async function getDashboard(): Promise<DashboardData> {

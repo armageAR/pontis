@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, Users, Check, X, Info, Crown, ShieldCheck } from 'lucide-react'
+import { Building2, Users, Check, X, Info, Crown, ShieldCheck, UserCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import * as dashApi from '@/api/dashboard'
-import type { MembershipNotification } from '@/api/dashboard'
+import type { MembershipNotification, ProfileCompletion } from '@/api/dashboard'
 import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import './DashboardPage.css'
@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<MembershipNotification[]>([])
   const [isWorkshopAdmin, setIsWorkshopAdmin] = useState(false)
   const [pendingValidationCount, setPendingValidationCount] = useState(0)
+  const [profileCompletion, setProfileCompletion] = useState<ProfileCompletion | null>(null)
   const [dashboardLoaded, setDashboardLoaded] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
@@ -22,6 +23,7 @@ export default function DashboardPage() {
       setNotifications(data.membership_notifications)
       setIsWorkshopAdmin(data.is_workshop_admin)
       setPendingValidationCount(data.pending_validation_count)
+      setProfileCompletion(data.profile_completion)
     }).catch(() => {})
       .finally(() => setDashboardLoaded(true))
   }, [])
@@ -88,6 +90,29 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="dashboard-cards">
+          <Link to="/profile" className="dashboard-card dashboard-card-profile">
+            <span className="dashboard-card-icon"><UserCircle size={28} /></span>
+            <h3>Mi Perfil</h3>
+            <p>Completá y revisá tu ficha personal.</p>
+            {profileCompletion && (
+              <div className="dashboard-profile-progress">
+                <div className="dashboard-progress-head">
+                  <span>Completitud</span>
+                  <span className="dashboard-progress-percent">{profileCompletion.percent}%</span>
+                </div>
+                <div
+                  className="dashboard-progress-track"
+                  role="progressbar"
+                  aria-label="Completitud del perfil"
+                  aria-valuenow={profileCompletion.percent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div className="dashboard-progress-fill" style={{ width: `${profileCompletion.percent}%` }} />
+                </div>
+              </div>
+            )}
+          </Link>
           {(isWorkshopAdmin || user?.role === 'superadmin') && (
             <Link to="/administracion" className="dashboard-card dashboard-card-admin">
               {pendingValidationCount > 0 && (
