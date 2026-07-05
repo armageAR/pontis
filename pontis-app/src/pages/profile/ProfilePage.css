@@ -5,9 +5,9 @@
 .profile-page-desc { font-size: var(--text-sm); color: var(--text-muted); margin: 0 0 var(--space-4); line-height: 1.5; }
 
 /* Panel de contenido de cada tab: angosto por defecto, ancho en Vida masónica. */
-.profile-panel { max-width: 760px; }
+.profile-panel { max-width: 760px; overflow: hidden; }
 .profile-panel:focus-visible { outline: none; }
-.profile-panel-wide { max-width: 1040px; }
+.profile-panel-wide { max-width: 1040px; overflow: hidden; }
 
 /* Grupo de campos apilados dentro de un tab (sin card, respiración generosa). */
 .profile-fields { display: flex; flex-direction: column; gap: var(--space-4); }
