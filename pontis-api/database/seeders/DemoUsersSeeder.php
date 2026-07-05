@@ -2,280 +2,161 @@
 
 namespace Database\Seeders;
 
-use App\Enums\UserStatus;
-use App\Models\Need;
 use App\Models\Position;
-use App\Models\Service;
-use App\Models\ServiceCategory;
 use App\Models\User;
 use App\Models\UserDegree;
 use App\Models\UserPosition;
 use App\Models\UserVisibilitySetting;
 use App\Models\Workshop;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
 
+/**
+ * Dataset determinístico de V1 (improve-test-seeders): 5 talleres reales, 8
+ * usuarios activos por taller (6 Maestros, 1 Compañero, 1 Aprendiz), grados con
+ * historial, cargos sólo para Maestros, dos Admin de Taller por taller y presets
+ * de visibilidad que cubren incógnito, nada visible, todo visible y mixtos.
+ *
+ * No crea publicaciones (services/needs): diferidas a V2 (publication-v2-deferral).
+ * Todos los usuarios usan password `password` y emails deterministas para QA.
+ */
 class DemoUsersSeeder extends Seeder
 {
-    private const PREFERRED_WORKSHOP_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100, 200, 300, 387, 469, 730];
-    private const MAX_WORKSHOPS = 12;
-    private const USERS_PER_WORKSHOP = 18;
-
-    private const FIRST_NAMES = [
-        'Juan', 'Carlos', 'Roberto', 'Miguel', 'Jorge', 'Luis', 'Eduardo', 'Fernando',
-        'Ricardo', 'Alberto', 'Daniel', 'Sergio', 'Gustavo', 'Pablo', 'Andrés',
-        'Martín', 'Diego', 'Hernán', 'Marcelo', 'Raúl', 'Guillermo', 'Tomás',
-        'Nicolás', 'Esteban', 'Federico', 'Claudio', 'Ignacio', 'Patricio',
-        'Alejandro', 'Damián', 'Leandro', 'Mauricio', 'Sebastián', 'Víctor',
+    /** Talleres demo (por número) y sus slug/provincia/localidad coherentes. */
+    private const WORKSHOPS = [
+        1    => ['slug' => 'uniondelplata',  'province' => 'Ciudad Autónoma de Buenos Aires', 'locality' => 'Ciudad Autónoma de Buenos Aires', 'neighborhood' => 'San Nicolás'],
+        2    => ['slug' => 'confraternidad', 'province' => 'Ciudad Autónoma de Buenos Aires', 'locality' => 'Ciudad Autónoma de Buenos Aires', 'neighborhood' => 'Monserrat'],
+        80   => ['slug' => 'laplata',        'province' => 'Buenos Aires',                    'locality' => 'La Plata',                        'neighborhood' => 'Centro'],
+        702  => ['slug' => 'oconnor',        'province' => 'Salta',                           'locality' => 'Salta',                           'neighborhood' => 'Tres Cerritos'],
+        1222 => ['slug' => 'luzdelara',      'province' => 'Chubut',                          'locality' => 'Rawson',                          'neighborhood' => 'Centro'],
     ];
 
-    private const LAST_NAMES = [
-        'González', 'Rodríguez', 'Fernández', 'López', 'Martínez', 'Pérez', 'García',
-        'Sánchez', 'Romero', 'Sosa', 'Torres', 'Álvarez', 'Ruiz', 'Ramírez', 'Flores',
-        'Acosta', 'Benítez', 'Medina', 'Herrera', 'Aguirre', 'Castro', 'Silva',
-        'Molina', 'Vega', 'Rojas', 'Méndez', 'Cabrera', 'Peralta', 'Navarro',
-        'Ibarra', 'Suárez', 'Domínguez', 'Campos', 'Figueroa',
+    private const FIRST_NAMES = ['Juan', 'Carlos', 'Roberto', 'Miguel', 'Jorge', 'Luis', 'Eduardo', 'Fernando'];
+    private const LAST_NAMES = ['González', 'Rodríguez', 'Fernández', 'López', 'Martínez', 'Pérez', 'García', 'Sánchez'];
+    private const PROFESSIONS = ['Contador', 'Abogado', 'Médico clínico', 'Ingeniero civil', 'Arquitecto', 'Electricista matriculado', 'Docente universitario', 'Programador'];
+
+    /**
+     * Los 8 puestos del taller. `cargo` sólo para los 6 Maestros; `admin` marca
+     * a los dos Admin de Taller (Venerable Maestro y Primer Vigilante).
+     */
+    private const SLOTS = [
+        ['key' => 'maestro1', 'degree' => 'maestro',   'cargo' => 'Venerable Maestro',     'admin' => true,  'preset' => 'open'],
+        ['key' => 'maestro2', 'degree' => 'maestro',   'cargo' => 'Primer Vigilante',      'admin' => true,  'preset' => 'professional_visible'],
+        ['key' => 'maestro3', 'degree' => 'maestro',   'cargo' => 'Segundo Vigilante',     'admin' => false, 'preset' => 'incognito'],
+        ['key' => 'maestro4', 'degree' => 'maestro',   'cargo' => 'Maestro de Ceremonias', 'admin' => false, 'preset' => 'private'],
+        ['key' => 'maestro5', 'degree' => 'maestro',   'cargo' => 'Experto',               'admin' => false, 'preset' => 'workshop_only'],
+        ['key' => 'maestro6', 'degree' => 'maestro',   'cargo' => 'Tesorero',              'admin' => false, 'preset' => 'private_contact'],
+        ['key' => 'companero', 'degree' => 'companero', 'cargo' => null,                    'admin' => false, 'preset' => 'all_my_workshops'],
+        ['key' => 'aprendiz',  'degree' => 'aprendiz',  'cargo' => null,                    'admin' => false, 'preset' => 'balanced_mixed'],
     ];
 
-    private const PROFESSIONS = [
-        'Contador', 'Abogado', 'Médico clínico', 'Ingeniero civil', 'Arquitecto',
-        'Electricista matriculado', 'Carpintero', 'Docente universitario',
-        'Comerciante', 'Programador', 'Plomero', 'Mecánico automotor',
-        'Psicólogo', 'Diseñador gráfico', 'Martillero público',
-        'Kinesiólogo', 'Odontólogo', 'Analista de datos', 'Técnico en seguridad',
-        'Consultor de recursos humanos', 'Corredor inmobiliario', 'Chef',
-        'Traductor', 'Periodista', 'Veterinario', 'Agrimensor', 'Farmacéutico',
-    ];
-
-    private const LOCATIONS = [
-        ['province' => 'Ciudad Autónoma de Buenos Aires', 'locality' => 'Buenos Aires', 'neighborhood' => 'San Nicolás'],
-        ['province' => 'Buenos Aires', 'locality' => 'La Plata', 'neighborhood' => 'Centro'],
-        ['province' => 'Buenos Aires', 'locality' => 'Mar del Plata', 'neighborhood' => 'Güemes'],
-        ['province' => 'Córdoba', 'locality' => 'Córdoba', 'neighborhood' => 'Nueva Córdoba'],
-        ['province' => 'Córdoba', 'locality' => 'Río Cuarto', 'neighborhood' => 'Centro'],
-        ['province' => 'Santa Fe', 'locality' => 'Rosario', 'neighborhood' => 'Pichincha'],
-        ['province' => 'Santa Fe', 'locality' => 'Santa Fe', 'neighborhood' => 'Candioti'],
-        ['province' => 'Mendoza', 'locality' => 'Mendoza', 'neighborhood' => 'Quinta Sección'],
-        ['province' => 'Tucumán', 'locality' => 'San Miguel de Tucumán', 'neighborhood' => 'Barrio Norte'],
-        ['province' => 'Salta', 'locality' => 'Salta', 'neighborhood' => 'Tres Cerritos'],
-        ['province' => 'Neuquén', 'locality' => 'Neuquén', 'neighborhood' => 'Área Centro Este'],
-        ['province' => 'Río Negro', 'locality' => 'Bariloche', 'neighborhood' => 'Centro'],
-        ['province' => 'Entre Ríos', 'locality' => 'Paraná', 'neighborhood' => 'Centro'],
-        ['province' => 'Chubut', 'locality' => 'Puerto Madryn', 'neighborhood' => 'Sur'],
-        ['province' => 'Misiones', 'locality' => 'Posadas', 'neighborhood' => 'Villa Sarita'],
-        ['province' => 'San Juan', 'locality' => 'San Juan', 'neighborhood' => 'Concepción'],
-        ['province' => 'Corrientes', 'locality' => 'Corrientes', 'neighborhood' => 'Centro'],
-        ['province' => 'Jujuy', 'locality' => 'San Salvador de Jujuy', 'neighborhood' => 'Ciudad de Nieva'],
-        ['province' => 'La Pampa', 'locality' => 'Santa Rosa', 'neighborhood' => 'Villa Alonso'],
-        ['province' => 'San Luis', 'locality' => 'San Luis', 'neighborhood' => 'Centro'],
-        ['province' => 'Tierra del Fuego', 'locality' => 'Ushuaia', 'neighborhood' => 'Centro'],
-        ['province' => 'Santa Cruz', 'locality' => 'Río Gallegos', 'neighborhood' => 'Centro'],
-        ['province' => 'Chaco', 'locality' => 'Resistencia', 'neighborhood' => 'Villa San Martín'],
-        ['province' => 'Catamarca', 'locality' => 'San Fernando del Valle de Catamarca', 'neighborhood' => 'Centro'],
-    ];
-
-    private const ACCOUNT_STATUSES = [
-        UserStatus::ACTIVE->value,
-        UserStatus::PENDING->value,
-        UserStatus::VERIFYING->value,
-        UserStatus::REJECTED->value,
-        UserStatus::SUSPENDED->value,
-        UserStatus::INACTIVE->value,
-    ];
-
-    private const MEMBERSHIP_STATUSES = [
-        'active',
-        'pending',
-        'correction_requested',
-        'rejected',
-        'inactive',
-        'suspended',
-        'ended',
-        'historical',
-    ];
-
-    private const VISIBILITY_PRESETS = [
-        'open_profile' => [
-            'identity' => 'registered', 'masonic' => 'registered', 'contact' => 'registered',
-            'location' => 'registered', 'profession' => 'registered', 'bio' => 'registered',
-            'degrees' => 'registered', 'positions' => 'registered',
+    /**
+     * Presets de visibilidad. Niveles válidos por bloque: private, workshop,
+     * my_workshops, registered. La identidad incógnita usa anonymous_search.
+     */
+    private const PRESETS = [
+        // Muestra todo a registrados.
+        'open' => [
+            'identity' => ['registered', false], 'masonic' => ['registered', false], 'contact' => ['registered', false],
+            'location' => ['registered', false], 'profession' => ['registered', false], 'bio' => ['registered', false],
+            'degrees' => ['registered', false], 'positions' => ['registered', false],
+        ],
+        // No muestra nada.
+        'private' => [
+            'identity' => ['private', false], 'masonic' => ['private', false], 'contact' => ['private', false],
+            'location' => ['private', false], 'profession' => ['private', false], 'bio' => ['private', false],
+            'degrees' => ['private', false], 'positions' => ['private', false],
+        ],
+        // Incógnito: aparece en búsquedas con identidad reservada.
+        'incognito' => [
+            'identity' => ['workshop', true], 'masonic' => ['private', false], 'contact' => ['private', false],
+            'location' => ['registered', false], 'profession' => ['registered', false], 'bio' => ['private', false],
+            'degrees' => ['private', false], 'positions' => ['private', false],
+        ],
+        // Mixtos.
+        'professional_visible' => [
+            'identity' => ['my_workshops', false], 'masonic' => ['workshop', false], 'contact' => ['my_workshops', false],
+            'location' => ['registered', false], 'profession' => ['registered', false], 'bio' => ['registered', false],
+            'degrees' => ['workshop', false], 'positions' => ['registered', false],
         ],
         'workshop_only' => [
-            'identity' => 'workshop', 'masonic' => 'workshop', 'contact' => 'workshop',
-            'location' => 'my_workshops', 'profession' => 'registered', 'bio' => 'my_workshops',
-            'degrees' => 'workshop', 'positions' => 'workshop',
+            'identity' => ['workshop', false], 'masonic' => ['workshop', false], 'contact' => ['workshop', false],
+            'location' => ['my_workshops', false], 'profession' => ['registered', false], 'bio' => ['my_workshops', false],
+            'degrees' => ['workshop', false], 'positions' => ['workshop', false],
         ],
         'private_contact' => [
-            'identity' => 'registered', 'masonic' => 'my_workshops', 'contact' => 'private',
-            'location' => 'workshop', 'profession' => 'registered', 'bio' => 'registered',
-            'degrees' => 'my_workshops', 'positions' => 'workshop',
-        ],
-        'anonymous_publications' => [
-            'identity' => 'private', 'masonic' => 'private', 'contact' => 'private',
-            'location' => 'registered', 'profession' => 'anonymous', 'bio' => 'anonymous',
-            'degrees' => 'private', 'positions' => 'private',
+            'identity' => ['registered', false], 'masonic' => ['my_workshops', false], 'contact' => ['private', false],
+            'location' => ['workshop', false], 'profession' => ['registered', false], 'bio' => ['registered', false],
+            'degrees' => ['my_workshops', false], 'positions' => ['workshop', false],
         ],
         'all_my_workshops' => [
-            'identity' => 'my_workshops', 'masonic' => 'my_workshops',
-            'contact' => 'my_workshops', 'location' => 'registered', 'profession' => 'registered',
-            'bio' => 'my_workshops', 'degrees' => 'my_workshops', 'positions' => 'my_workshops',
+            'identity' => ['my_workshops', false], 'masonic' => ['my_workshops', false], 'contact' => ['my_workshops', false],
+            'location' => ['registered', false], 'profession' => ['registered', false], 'bio' => ['my_workshops', false],
+            'degrees' => ['my_workshops', false], 'positions' => ['my_workshops', false],
         ],
-        'strict_private' => [
-            'identity' => 'private', 'masonic' => 'private', 'contact' => 'private',
-            'location' => 'private', 'profession' => 'workshop', 'bio' => 'private',
-            'degrees' => 'private', 'positions' => 'private',
-        ],
-        'professional_visible' => [
-            'identity' => 'my_workshops', 'masonic' => 'workshop', 'contact' => 'my_workshops',
-            'location' => 'registered', 'profession' => 'registered', 'bio' => 'registered',
-            'degrees' => 'workshop', 'positions' => 'registered',
+        'balanced_mixed' => [
+            'identity' => ['registered', false], 'masonic' => ['workshop', false], 'contact' => ['my_workshops', false],
+            'location' => ['registered', false], 'profession' => ['registered', false], 'bio' => ['workshop', false],
+            'degrees' => ['workshop', false], 'positions' => ['my_workshops', false],
         ],
     ];
 
     public function run(): void
     {
-        $workshops = $this->resolveDemoWorkshops();
+        $positions = Position::whereIn('name', array_filter(array_column(self::SLOTS, 'cargo')))
+            ->get()->keyBy('name');
 
-        if ($workshops->isEmpty()) {
-            $this->command->warn('No hay logias para asociar usuarios demo.');
-            return;
-        }
+        $created = 0;
 
-        $this->command->info('Logias demo seleccionadas: '.$workshops->pluck('number')->join(', '));
+        foreach (self::WORKSHOPS as $number => $meta) {
+            $workshop = Workshop::where('number', $number)->first();
+            if (! $workshop) {
+                $this->command?->warn("Taller #{$number} no encontrado; corré WorkshopSeeder primero.");
+                continue;
+            }
 
-        $categories = ServiceCategory::orderBy('name')->get()->values();
-        $positions = Position::orderBy('name')->get()->values();
-        $admin = User::where('role', 'superadmin')->first();
-
-        $seq = 0;
-        $seeded = 0;
-
-        foreach ($workshops as $workshop) {
-            $this->command->info("Generando usuarios demo para logia #{$workshop->number} - {$workshop->name}");
-
-            for ($index = 0; $index < self::USERS_PER_WORKSHOP; $index++) {
-                $scenario = $this->scenarioFor($seq, $index);
-                $location = self::LOCATIONS[$seq % count(self::LOCATIONS)];
-                $name = self::FIRST_NAMES[$seq % count(self::FIRST_NAMES)];
-                $lastName = self::LAST_NAMES[($seq * 7) % count(self::LAST_NAMES)];
-                $profession = self::PROFESSIONS[$seq % count(self::PROFESSIONS)];
-                $email = "demo{$workshop->number}_{$index}@pontis.test";
-
-                $user = User::updateOrCreate(
-                    ['email' => $email],
-                    $this->userPayload($seq, $name, $lastName, $profession, $location, $scenario)
-                );
-
-                $user->email_verified_at = $scenario['verified'] ? Carbon::now()->subDays($seq % 45) : null;
-                $user->save();
-
+            foreach (self::SLOTS as $i => $slot) {
+                $user = $this->seedUser($number, $meta, $slot, $i);
                 $this->resetDemoRelations($user);
-                $this->seedMemberships($user, $workshop, $workshops->values(), $scenario, $index, $seq);
-                $this->seedVisibility($user, $scenario['visibility_preset']);
-                $this->seedDegrees($user, $workshop, $scenario);
-                $this->seedPositions($user, $workshop, $positions, $scenario, $seq);
-                $this->seedPublications($user, $categories, $admin, $scenario, $location, $seq);
-
-                $seq++;
-                $seeded++;
+                $this->seedMembership($user, $workshop, $slot['admin']);
+                $this->seedDegrees($user, $workshop, $slot['degree']);
+                $this->seedPosition($user, $workshop, $slot, $positions);
+                $this->seedVisibility($user, self::PRESETS[$slot['preset']]);
+                $created++;
             }
         }
 
-        $this->command->info("Demo users seeded: {$seeded} usuarios con estados, perfiles, seguridad y publicaciones variadas.");
+        $this->command?->info("Demo users seeded: {$created} usuarios activos en ".count(self::WORKSHOPS).' talleres.');
     }
 
-    private function resolveDemoWorkshops()
+    private function seedUser(int $number, array $meta, array $slot, int $i): User
     {
-        $preferred = Workshop::whereIn('number', self::PREFERRED_WORKSHOP_NUMBERS)
-            ->orderByRaw('CASE number '.collect(self::PREFERRED_WORKSHOP_NUMBERS)->map(fn ($number, $index) => "WHEN {$number} THEN {$index}")->join(' ').' END')
-            ->get();
+        $email = "{$meta['slug']}.{$slot['key']}@pontis.test";
+        $name = self::FIRST_NAMES[$i];
+        $lastName = self::LAST_NAMES[$i];
+        $profession = self::PROFESSIONS[$i];
 
-        $selected = $preferred;
-
-        if ($selected->count() < self::MAX_WORKSHOPS) {
-            $extra = Workshop::whereNotIn('id', $selected->pluck('id'))
-                ->where('status', 'active')
-                ->orderBy('number')
-                ->take(self::MAX_WORKSHOPS - $selected->count())
-                ->get();
-
-            $selected = $selected->concat($extra);
-        }
-
-        if ($selected->isEmpty()) {
-            $selected = Workshop::orderBy('number')->take(self::MAX_WORKSHOPS)->get();
-        }
-
-        return $selected->take(self::MAX_WORKSHOPS)->values();
-    }
-
-    private function scenarioFor(int $seq, int $index): array
-    {
-        $isWorkshopAdmin = $index === 0;
-
-        return [
-            'account_status' => self::ACCOUNT_STATUSES[$seq % count(self::ACCOUNT_STATUSES)],
-            'membership_status' => $isWorkshopAdmin ? 'active' : self::MEMBERSHIP_STATUSES[$seq % count(self::MEMBERSHIP_STATUSES)],
-            'verified' => $seq % 6 !== 2,
-            'masonic_status' => ['active', 'inactive', 'suspended', 'discharged'][$seq % 4],
-            'degree' => ['maestro', 'companero', 'aprendiz'][$seq % 3],
-            'role' => $isWorkshopAdmin ? 'admin' : 'member',
-            'second_workshop' => $seq % 5 === 0,
-            'visibility_preset' => array_keys(self::VISIBILITY_PRESETS)[$seq % count(self::VISIBILITY_PRESETS)],
-            'services' => $this->serviceScenarios($seq),
-            'needs' => $this->needScenarios($seq),
-        ];
-    }
-
-    private function userPayload(
-        int $seq,
-        string $name,
-        string $lastName,
-        string $profession,
-        array $location,
-        array $scenario
-    ): array {
-        $birthYear = 1968 + ($seq % 28);
-        $initiationYear = 2005 + ($seq % 18);
-        $slug = strtolower(str_replace(' ', '.', "{$name}.{$lastName}"));
-
-        return [
+        return User::updateOrCreate(['email' => $email], [
             'name' => $name,
             'last_name' => $lastName,
             'password' => 'password',
             'role' => 'user',
-            'status' => $scenario['account_status'],
-            'dni' => str_pad((string) (23000000 + ($seq * 137)), 8, '0', STR_PAD_LEFT),
-            'masonic_id' => 'PON-'.str_pad((string) ($seq + 1001), 5, '0', STR_PAD_LEFT),
-            'birth_date' => "{$birthYear}-".str_pad((string) (($seq % 12) + 1), 2, '0', STR_PAD_LEFT).'-15',
-            'initiation_date' => "{$initiationYear}-".str_pad((string) (($seq % 12) + 1), 2, '0', STR_PAD_LEFT).'-03',
-            'masonic_status' => $scenario['masonic_status'],
-            'phone' => '+54 9 11 '.str_pad((string) (40000000 + $seq), 8, '0', STR_PAD_LEFT),
-            'phone_fixed' => '+54 11 '.str_pad((string) (43000000 + $seq), 8, '0', STR_PAD_LEFT),
-            'whatsapp' => '+54 9 11 '.str_pad((string) (50000000 + $seq), 8, '0', STR_PAD_LEFT),
-            'alternative_email' => "contacto.{$seq}@pontis.test",
-            'contact_preference' => ['email', 'whatsapp', 'phone'][$seq % 3],
+            'status' => 'active',
+            'email_verified_at' => now(),
+            'dni' => str_pad((string) ($number * 100 + $i + 1), 8, '0', STR_PAD_LEFT),
+            'masonic_id' => 'PON-'.$number.'-'.str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT),
+            'birth_date' => (1965 + $i).'-0'.(($i % 9) + 1).'-15',
+            'initiation_date' => (2005 + $i).'-0'.(($i % 9) + 1).'-03',
+            'masonic_status' => 'active',
+            'phone' => '+54 9 11 '.str_pad((string) ($number * 1000 + $i), 8, '0', STR_PAD_LEFT),
             'country' => 'Argentina',
-            'province' => $location['province'],
-            'locality' => $location['locality'],
-            'neighborhood' => $location['neighborhood'],
-            'address' => 'Calle Demo '.(100 + $seq),
+            'province' => $meta['province'],
+            'locality' => $meta['locality'],
+            'neighborhood' => $meta['neighborhood'],
+            'address' => 'Calle Demo '.(100 + $i),
             'profession' => $profession,
             'occupation' => $profession,
-            'company' => ['Independiente', 'Estudio propio', 'Hospital regional', 'PyME familiar'][$seq % 4],
-            'profession_description' => "Experiencia comprobable en {$profession} y acompañamiento a hermanos.",
-            'secondary_activities' => ['Mentoría', 'Capacitaciones', 'Gestión de proyectos', 'Voluntariado'][$seq % 4],
-            'knowledge_areas' => ['Administración, procesos', 'Salud, bienestar', 'Tecnología, datos', 'Construcción, oficios'][$seq % 4],
-            'certifications' => ['Matrícula vigente', 'Diplomatura profesional', 'Certificación técnica', 'Formación continua'][$seq % 4],
-            'bio' => "Perfil demo para probar visibilidad, búsquedas y publicaciones desde {$location['locality']}.",
-            'photo_url' => "https://example.com/demo-users/{$seq}.jpg",
-            'linkedin' => "https://www.linkedin.com/in/{$slug}-demo-{$seq}",
-            'website' => "https://example.com/profesionales/{$seq}",
-            'facebook' => "{$slug}.demo",
-            'instagram' => "@{$slug}.demo",
-            'availability_notes' => ['Mañanas', 'Tardes', 'Fines de semana', 'A coordinar'][$seq % 4],
-            'admin_notes' => "Usuario demo escenario {$seq}.",
-        ];
+            'bio' => "Perfil demo de {$meta['locality']} para probar visibilidad y búsquedas.",
+        ]);
     }
 
     private function resetDemoRelations(User $user): void
@@ -284,191 +165,82 @@ class DemoUsersSeeder extends Seeder
         UserVisibilitySetting::where('user_id', $user->id)->delete();
         UserDegree::where('user_id', $user->id)->delete();
         UserPosition::where('user_id', $user->id)->delete();
-        Service::where('user_id', $user->id)->forceDelete();
-        Need::where('user_id', $user->id)->forceDelete();
     }
 
-    private function seedMemberships(User $user, Workshop $primary, $workshops, array $scenario, int $index, int $seq): void
-    {
-        $this->attachMembership($user, $primary, $scenario['role'], $scenario['membership_status'], $index);
-
-        if ($scenario['second_workshop'] && $workshops->count() > 1) {
-            $secondary = $workshops
-                ->reject(fn (Workshop $workshop) => $workshop->id === $primary->id)
-                ->values()
-                ->get($seq % ($workshops->count() - 1));
-
-            if ($secondary) {
-                $this->attachMembership($user, $secondary, 'member', 'historical', $index);
-            }
-        }
-    }
-
-    private function attachMembership(User $user, Workshop $workshop, string $role, string $status, int $index): void
+    private function seedMembership(User $user, Workshop $workshop, bool $admin): void
     {
         $user->workshopMemberships()->attach($workshop->id, [
-            'role' => $role,
-            'status' => $status,
-            'requested_by_user' => in_array($status, ['pending', 'correction_requested'], true),
-            'user_seen_at' => $status === 'correction_requested' ? null : Carbon::now()->subDays($index + 1),
-            'correction_notes' => $status === 'correction_requested' ? 'Falta validar documentación de pertenencia.' : null,
+            'role' => $admin ? 'admin' : 'member',
+            'status' => 'active',
+            'is_principal' => true,
+            'requested_by_user' => false,
         ]);
     }
 
-    private function seedVisibility(User $user, string $preset): void
+    /** Historial de grados según progresión: aprendiz → compañero → maestro. */
+    private function seedDegrees(User $user, Workshop $workshop, string $degree): void
     {
-        foreach (self::VISIBILITY_PRESETS[$preset] as $block => $visibility) {
-            UserVisibilitySetting::create([
-                'user_id' => $user->id,
-                'block' => $block,
-                'visibility' => $visibility,
-            ]);
-        }
-    }
+        $rows = match ($degree) {
+            'maestro' => [
+                ['aprendiz',  '2012-03-10', '2015-06-14'],
+                ['companero', '2015-06-15', '2018-09-19'],
+                ['maestro',   '2018-09-20', null],
+            ],
+            'companero' => [
+                ['aprendiz',  '2018-03-10', '2021-06-14'],
+                ['companero', '2021-06-15', null],
+            ],
+            default => [
+                ['aprendiz', '2022-03-10', null],
+            ],
+        };
 
-    private function seedDegrees(User $user, Workshop $workshop, array $scenario): void
-    {
-        UserDegree::create([
-            'user_id' => $user->id,
-            'workshop_id' => $workshop->id,
-            'degree' => $scenario['degree'],
-            'start_date' => Carbon::now()->subYears(4)->subDays($user->id % 365),
-            'end_date' => null,
-            'notes' => 'Grado demo vigente.',
-        ]);
-
-        if ($scenario['degree'] === 'maestro') {
+        foreach ($rows as [$deg, $start, $end]) {
             UserDegree::create([
                 'user_id' => $user->id,
                 'workshop_id' => $workshop->id,
-                'degree' => 'companero',
-                'start_date' => Carbon::now()->subYears(7),
-                'end_date' => Carbon::now()->subYears(4)->subDay(),
-                'notes' => 'Histórico demo.',
+                'degree' => $deg,
+                'start_date' => $start,
+                'end_date' => $end,
+                'validation_status' => 'validated',
+                'validated_at' => now(),
+                'notes' => 'Grado demo.',
             ]);
         }
     }
 
-    private function seedPositions(User $user, Workshop $workshop, $positions, array $scenario, int $seq): void
+    private function seedPosition(User $user, Workshop $workshop, array $slot, $positions): void
     {
-        if ($positions->isEmpty() || $seq % 4 === 3) {
+        if ($slot['cargo'] === null) {
+            return; // Compañero y Aprendiz no tienen cargo.
+        }
+        $position = $positions->get($slot['cargo']);
+        if (! $position) {
+            $this->command?->warn("Cargo '{$slot['cargo']}' no existe; corré PositionSeeder primero.");
             return;
         }
 
         UserPosition::create([
             'user_id' => $user->id,
-            'position_id' => $positions[$seq % $positions->count()]->id,
+            'position_id' => $position->id,
             'workshop_id' => $workshop->id,
-            'start_date' => Carbon::now()->subYears(2)->subDays($seq % 120),
-            'end_date' => $scenario['role'] === 'admin' ? null : ($seq % 2 === 0 ? null : Carbon::now()->subMonths(3)),
-            'notes' => $scenario['role'] === 'admin' ? 'Cargo administrativo demo.' : 'Cargo demo.',
+            'start_date' => '2022-01-10',
+            'end_date' => null,
+            'validation_status' => 'validated',
+            'validated_at' => now(),
+            'notes' => 'Cargo demo vigente.',
         ]);
     }
 
-    private function seedPublications(User $user, $categories, ?User $admin, array $scenario, array $location, int $seq): void
+    private function seedVisibility(User $user, array $preset): void
     {
-        foreach ($scenario['services'] as $offset => $s) {
-            Service::create([
+        foreach ($preset as $block => [$visibility, $anonymousSearch]) {
+            UserVisibilitySetting::create([
                 'user_id' => $user->id,
-                'service_category_id' => $categories->isNotEmpty() ? $categories[($seq + $offset) % $categories->count()]->id : null,
-                'title' => $s['title'],
-                'description' => $s['description'],
-                'modality' => $s['modality'],
-                'location' => "{$location['locality']}, {$location['province']}",
-                'availability' => ['Lunes a viernes', 'Turnos por la tarde', 'Remoto con agenda previa'][$offset % 3],
-                'conditions' => ['Sin cargo para consultas iniciales', 'Arancel preferencial', 'Derivación según disponibilidad'][$offset % 3],
-                'visibility' => $s['visibility'],
-                'status' => $s['status'],
-                'published_at' => $s['published_at'],
-                'expires_at' => $s['expires_at'],
+                'block' => $block,
+                'visibility' => $visibility,
+                'anonymous_search' => $anonymousSearch,
             ]);
         }
-
-        foreach ($scenario['needs'] as $offset => $n) {
-            Need::create([
-                'user_id' => $user->id,
-                'service_category_id' => $categories->isNotEmpty() ? $categories[($seq + $offset + 3) % $categories->count()]->id : null,
-                'title' => $n['title'],
-                'description' => $n['description'],
-                'location' => "{$location['locality']}, {$location['province']}",
-                'urgency' => $n['urgency'],
-                'visibility' => $n['visibility'],
-                'status' => $n['status'],
-                'published_at' => $n['published_at'],
-                'expires_at' => $n['expires_at'],
-            ]);
-        }
-    }
-
-    private function serviceScenarios(int $seq): array
-    {
-        $catalog = [
-            ['lifecycle' => 'active', 'visibility' => 'registered', 'modality' => 'both', 'title' => 'Asesoramiento profesional disponible'],
-            ['lifecycle' => 'active', 'visibility' => 'anonymous', 'modality' => 'remoto', 'title' => 'Consulta reservada para hermanos'],
-            ['lifecycle' => 'active', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio presencial disponible'],
-            ['lifecycle' => 'draft', 'visibility' => 'my_workshops', 'modality' => 'both', 'title' => 'Borrador de servicio en preparación'],
-            ['lifecycle' => 'expired', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio vencido de prueba'],
-            ['lifecycle' => 'draft', 'visibility' => 'private', 'modality' => 'both', 'title' => 'Borrador de servicio privado'],
-            ['lifecycle' => 'suspended', 'visibility' => 'my_workshops', 'modality' => 'remoto', 'title' => 'Servicio suspendido temporalmente'],
-            ['lifecycle' => 'active', 'visibility' => 'registered', 'modality' => 'both', 'title' => 'Servicio activo destacado'],
-            ['lifecycle' => 'suspended', 'visibility' => 'registered', 'modality' => 'presencial', 'title' => 'Servicio suspendido por el autor'],
-            ['lifecycle' => 'expired', 'visibility' => 'my_workshops', 'modality' => 'both', 'title' => 'Servicio vencido para republicar'],
-            ['lifecycle' => 'draft', 'visibility' => 'private', 'modality' => 'remoto', 'title' => 'Borrador de servicio remoto'],
-        ];
-
-        return [
-            $this->publicationPayload($catalog[$seq % count($catalog)], 'service', $seq),
-            $this->publicationPayload($catalog[($seq + 3) % count($catalog)], 'service', $seq + 1),
-            $this->publicationPayload($catalog[($seq + 6) % count($catalog)], 'service', $seq + 2),
-        ];
-    }
-
-    private function needScenarios(int $seq): array
-    {
-        $catalog = [
-            ['lifecycle' => 'active', 'visibility' => 'registered', 'urgency' => 'medium', 'title' => 'Necesito recomendación profesional'],
-            ['lifecycle' => 'active', 'visibility' => 'anonymous', 'urgency' => 'high', 'title' => 'Búsqueda urgente y reservada'],
-            ['lifecycle' => 'active', 'visibility' => 'my_workshops', 'urgency' => 'low', 'title' => 'Necesidad con contactos sugeridos'],
-            ['lifecycle' => 'suspended', 'visibility' => 'workshop', 'urgency' => 'medium', 'title' => 'Necesidad suspendida'],
-            ['lifecycle' => 'expired', 'visibility' => 'registered', 'urgency' => 'low', 'title' => 'Necesidad vencida'],
-            ['lifecycle' => 'suspended', 'visibility' => 'registered', 'urgency' => 'low', 'title' => 'Necesidad resuelta y suspendida'],
-            ['lifecycle' => 'draft', 'visibility' => 'private', 'urgency' => 'low', 'title' => 'Borrador de necesidad privada'],
-            ['lifecycle' => 'active', 'visibility' => 'registered', 'urgency' => 'high', 'title' => 'Necesidad urgente abierta'],
-            ['lifecycle' => 'draft', 'visibility' => 'my_workshops', 'urgency' => 'medium', 'title' => 'Borrador de necesidad en preparación'],
-            ['lifecycle' => 'expired', 'visibility' => 'workshop', 'urgency' => 'medium', 'title' => 'Necesidad vencida para republicar'],
-            ['lifecycle' => 'draft', 'visibility' => 'private', 'urgency' => 'low', 'title' => 'Borrador de necesidad'],
-        ];
-
-        return [
-            $this->publicationPayload($catalog[$seq % count($catalog)], 'need', $seq),
-            $this->publicationPayload($catalog[($seq + 4) % count($catalog)], 'need', $seq + 1),
-            $this->publicationPayload($catalog[($seq + 8) % count($catalog)], 'need', $seq + 2),
-        ];
-    }
-
-    private function publicationPayload(array $base, string $type, int $seq): array
-    {
-        $now = Carbon::now();
-        [$status, $publishedAt, $expiresAt] = match ($base['lifecycle']) {
-            'active'    => ['active', $now->copy()->subDays(5), $now->copy()->addDays(30)],
-            'expired'   => ['active', $now->copy()->subDays(100), $now->copy()->subDays(10)],
-            'suspended' => ['suspended', $now->copy()->subDays(20), $now->copy()->addDays(20)],
-            default     => ['draft', null, null],
-        };
-
-        $description = $type === 'service'
-            ? 'Oferta demo para probar exploración, visibilidad y vencimiento.'
-            : 'Necesidad demo para probar estados, urgencia y vencimiento.';
-
-        return [
-            'title' => $base['title'],
-            'visibility' => $base['visibility'],
-            'modality' => $base['modality'] ?? null,
-            'urgency' => $base['urgency'] ?? null,
-            'status' => $status,
-            'published_at' => $publishedAt,
-            'expires_at' => $expiresAt,
-            'description' => "{$description} Caso {$seq}.",
-        ];
     }
 }

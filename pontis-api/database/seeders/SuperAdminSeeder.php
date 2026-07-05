@@ -9,7 +9,9 @@ class SuperAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        User::firstOrCreate(
+        // Idempotente: garantiza el login conocido admin@pontis.com / password
+        // incluso si el registro ya existe con otros valores.
+        User::updateOrCreate(
             ['email' => 'admin@pontis.com'],
             [
                 'name' => 'Super Admin',

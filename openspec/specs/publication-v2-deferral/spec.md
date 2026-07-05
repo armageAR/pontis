@@ -45,3 +45,11 @@ The system SHALL treat `offers / needs` as the target domain naming for future p
 - **WHEN** a developer reads the V1 publication documentation
 - **THEN** the documentation MUST state that `offers` maps to "Lo que ofrezco" and `needs` maps to "Lo que necesito"
 - **AND** the documentation MUST state that current `services` code remains dormant until a future V2 migration
+
+### Requirement: V1 seeders do not create publication demo data
+The V1 demo/test seeders SHALL NOT create active or draft publication data for offers or needs.
+
+#### Scenario: Demo seeders run in V1
+- **WHEN** V1 seeders are executed
+- **THEN** they MUST NOT create demo rows in publication resources such as `services` or `needs`
+- **AND** they MUST NOT depend on publication categories for seeded user scenarios
