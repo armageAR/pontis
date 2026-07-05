@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import Modal from './Modal'
 import Spinner from './Spinner'
 import Badge from './Badge'
+import Button from './Button'
+import Alert from './Alert'
+import ContactRequestForm from './ContactRequestForm'
+import { useAuth } from '@/context/AuthContext'
 import client from '@/api/client'
 import { formatDate } from '@/utils/date'
 import './PersonProfileModal.css'
@@ -19,6 +23,7 @@ interface PublicProfile {
   name: string
   last_name?: string | null
   anonymous?: boolean
+  can_request_contact?: boolean
   masonic_id?: string | null
   masonic_status?: string | null
   initiation_date?: string | null
@@ -43,13 +48,16 @@ interface PersonProfileModalProps {
 }
 
 export default function PersonProfileModal({ personId, open, onClose }: PersonProfileModalProps) {
+  const { user: me } = useAuth()
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
+  // Vista del modal: perfil (por defecto), formulario de contacto o confirmación.
+  const [view, setView] = useState<'profile' | 'contact' | 'sent'>('profile')
 
   useEffect(() => {
-    if (!open || personId === null) { setProfile(null); setError(false); return }
-    setLoading(true); setError(false); setProfile(null)
+    if (!open || personId === null) { setProfile(null); setError(false); setView('profile'); return }
+    setLoading(true); setError(false); setProfile(null); setView('profile')
     client.get<PublicProfile>(`/people/${personId}`)
       .then(r => setProfile(r.data))
       .catch(() => setError(true))
@@ -65,12 +73,30 @@ export default function PersonProfileModal({ personId, open, onClose }: PersonPr
   const hasContact = profile && (profile.phone || profile.whatsapp || profile.alternative_email)
   const hasProfession = profile && (profile.profession || profile.occupation || profile.company)
 
+  const isSelf = profile != null && me?.id === profile.id
+  const canRequestContact = profile != null && !isSelf && profile.can_request_contact !== false
+
   return (
     <Modal open={open} onClose={onClose} title={loading ? 'Cargando…' : fullName}>
       {loading ? (
         <div className="ppm-loading"><Spinner /></div>
       ) : error || !profile ? (
         <p className="ppm-empty">No se pudo cargar el perfil.</p>
+      ) : view === 'contact' ? (
+        <ContactRequestForm
+          requesteeId={profile.id}
+          requesteeName={profile.name}
+          source="search"
+          onSent={() => setView('sent')}
+          onCancel={() => setView('profile')}
+        />
+      ) : view === 'sent' ? (
+        <div className="ppm-sent">
+          <Alert variant="success">Solicitud enviada. El Hermano decidirá si la acepta.</Alert>
+          <div className="ppm-actions">
+            <Button variant="outline" onClick={() => setView('profile')}>Volver al perfil</Button>
+          </div>
+        </div>
       ) : (
         <div className="ppm-profile">
           {profile.anonymous && (
@@ -156,6 +182,21 @@ export default function PersonProfileModal({ personId, open, onClose }: PersonPr
 
           {!hasMasonic && !hasProfession && !hasContact && !location && (!profile.degrees || profile.degrees.length === 0) && (!profile.positions || profile.positions.length === 0) && !profile.bio && (
             <p className="ppm-empty">Este Hermano no comparte más datos con vos.</p>
+          )}
+
+          {!isSelf && (
+            <div className="ppm-actions">
+              {canRequestContact ? (
+                <Button onClick={() => setView('contact')}>Solicitar contacto</Button>
+              ) : (
+                <Button
+                  disabled
+                  title="Este Hermano no acepta solicitudes de contacto desde búsquedas."
+                >
+                  Solicitar contacto
+                </Button>
+              )}
+            </div>
           )}
         </div>
       )}
