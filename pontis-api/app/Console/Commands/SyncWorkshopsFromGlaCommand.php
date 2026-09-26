@@ -26,7 +26,7 @@ class SyncWorkshopsFromGlaCommand extends Command
             if ($this->option('dry-run')) {
                 $diff = $this->sync->preview();
 
-                $this->info('New workshops: ' . count($diff['new']));
+                $this->info('New workshops: '.count($diff['new']));
                 $this->table(
                     ['Zona', 'Nro', 'Nombre', 'Día', 'Ciudad'],
                     collect($diff['new'])->map(fn (array $w) => [
@@ -38,7 +38,7 @@ class SyncWorkshopsFromGlaCommand extends Command
                     ])->toArray()
                 );
 
-                $this->info('Modified workshops: ' . count($diff['modified']));
+                $this->info('Modified workshops: '.count($diff['modified']));
                 foreach ($diff['modified'] as $m) {
                     $this->line("  Nro {$m['number']} — {$m['name']}");
                     foreach ($m['changes'] as $field => $change) {
@@ -46,7 +46,7 @@ class SyncWorkshopsFromGlaCommand extends Command
                     }
                 }
 
-                $this->info('To disable: ' . count($diff['disabled']));
+                $this->info('To disable: '.count($diff['disabled']));
                 foreach ($diff['disabled'] as $d) {
                     $this->line("  Nro {$d['number']} — {$d['name']}");
                 }
@@ -58,6 +58,7 @@ class SyncWorkshopsFromGlaCommand extends Command
 
             if (empty($parsed)) {
                 $this->warn('No workshops parsed.');
+
                 return self::FAILURE;
             }
 
@@ -73,11 +74,12 @@ class SyncWorkshopsFromGlaCommand extends Command
                 ->where('status', 'active')
                 ->update(['status' => 'disabled']);
 
-            $this->info('Synced ' . count($parsed) . " workshops. Disabled {$disabled} stale entries.");
+            $this->info('Synced '.count($parsed)." workshops. Disabled {$disabled} stale entries.");
 
             return self::SUCCESS;
         } catch (\RuntimeException $e) {
             $this->error($e->getMessage());
+
             return self::FAILURE;
         }
     }

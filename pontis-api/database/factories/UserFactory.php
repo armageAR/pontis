@@ -17,13 +17,13 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'              => fake()->name(),
-            'email'             => fake()->unique()->safeEmail(),
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password'          => static::$password ??= Hash::make('password'),
-            'remember_token'    => Str::random(10),
-            'role'              => 'user',
-            'status'            => 'active',
+            'password' => static::$password ??= Hash::make('password'),
+            'remember_token' => Str::random(10),
+            'role' => 'user',
+            'status' => 'active',
         ];
     }
 
@@ -37,9 +37,9 @@ class UserFactory extends Factory
     public function superAdmin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role'              => 'superadmin',
+            'role' => 'superadmin',
             'email_verified_at' => now(),
-            'status'            => 'active',
+            'status' => 'active',
         ]);
     }
 

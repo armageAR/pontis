@@ -13,10 +13,10 @@ class DashboardController extends Controller
         $user = $request->user();
 
         $pendingRequests = $this->getPendingRequests($user);
-        $notifications   = $this->getMembershipNotifications($user);
+        $notifications = $this->getMembershipNotifications($user);
 
         return response()->json([
-            'pending_requests'         => $pendingRequests,
+            'pending_requests' => $pendingRequests,
             'membership_notifications' => $notifications,
         ]);
     }

@@ -26,6 +26,7 @@ class WorkshopTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'user']);
         $user->workshops()->attach($workshop->id, ['role' => 'admin']);
+
         return $user;
     }
 
@@ -33,6 +34,7 @@ class WorkshopTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'user']);
         $user->workshops()->attach($workshop->id, ['role' => 'member']);
+
         return $user;
     }
 

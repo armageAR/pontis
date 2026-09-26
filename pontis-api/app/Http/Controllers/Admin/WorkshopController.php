@@ -44,9 +44,9 @@ class WorkshopController extends Controller
             $search = mb_strtolower($request->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->whereRaw('LOWER(name) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(zone_name) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(address) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(city) like ?', ["%{$search}%"]);
+                    ->orWhereRaw('LOWER(zone_name) like ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(address) like ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(city) like ?', ["%{$search}%"]);
             });
         }
 
@@ -82,9 +82,9 @@ class WorkshopController extends Controller
 
         $paginated->getCollection()->each(function ($workshop) use ($allMemberships) {
             $m = $allMemberships->get($workshop->id);
-            $workshop->is_member  = $m && $m->pivot->status === 'active';
+            $workshop->is_member = $m && $m->pivot->status === 'active';
             $workshop->is_pending = $m && $m->pivot->status === 'pending';
-            $workshop->my_role    = ($m && $m->pivot->status === 'active') ? $m->pivot->role : null;
+            $workshop->my_role = ($m && $m->pivot->status === 'active') ? $m->pivot->role : null;
         });
 
         return WorkshopResource::collection($paginated);
@@ -102,30 +102,30 @@ class WorkshopController extends Controller
             // Superadmins join immediately, no approval needed
             if (! $existing) {
                 $user->workshopMemberships()->attach($workshop->id, [
-                    'role'   => 'member',
+                    'role' => 'member',
                     'status' => 'active',
                 ]);
             }
-            $workshop->is_member  = true;
+            $workshop->is_member = true;
             $workshop->is_pending = false;
-            $workshop->my_role    = $existing?->pivot->role ?? 'member';
+            $workshop->my_role = $existing?->pivot->role ?? 'member';
         } else {
             if (! $existing) {
                 $user->workshopMemberships()->attach($workshop->id, [
-                    'role'              => 'member',
-                    'status'            => 'pending',
+                    'role' => 'member',
+                    'status' => 'pending',
                     'requested_by_user' => true,
                 ]);
             } elseif ($existing->pivot->status === 'rejected') {
                 $user->workshopMemberships()->updateExistingPivot($workshop->id, [
-                    'status'       => 'pending',
+                    'status' => 'pending',
                     'user_seen_at' => null,
                 ]);
             }
 
-            $workshop->is_member  = false;
+            $workshop->is_member = false;
             $workshop->is_pending = true;
-            $workshop->my_role    = null;
+            $workshop->my_role = null;
         }
 
         return new WorkshopResource($workshop);
@@ -138,9 +138,9 @@ class WorkshopController extends Controller
         $user = $request->user();
         $user->workshopMemberships()->detach($workshop->id);
 
-        $workshop->is_member  = false;
+        $workshop->is_member = false;
         $workshop->is_pending = false;
-        $workshop->my_role    = null;
+        $workshop->my_role = null;
 
         return new WorkshopResource($workshop);
     }
@@ -150,7 +150,7 @@ class WorkshopController extends Controller
         Gate::authorize('approveMember', $workshop);
 
         $user->workshopMemberships()->updateExistingPivot($workshop->id, [
-            'status'       => 'active',
+            'status' => 'active',
             'user_seen_at' => null,
         ]);
 
@@ -162,7 +162,7 @@ class WorkshopController extends Controller
         Gate::authorize('approveMember', $workshop);
 
         $user->workshopMemberships()->updateExistingPivot($workshop->id, [
-            'status'       => 'rejected',
+            'status' => 'rejected',
             'user_seen_at' => null,
         ]);
 
@@ -259,7 +259,7 @@ class WorkshopController extends Controller
             $search = mb_strtolower(request()->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->whereRaw('LOWER(users.name) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(users.email) like ?', ["%{$search}%"]);
+                    ->orWhereRaw('LOWER(users.email) like ?', ["%{$search}%"]);
             });
         }
 

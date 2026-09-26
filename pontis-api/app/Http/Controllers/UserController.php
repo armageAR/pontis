@@ -14,13 +14,13 @@ class UserController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $request->validate([
-            'search'         => ['nullable', 'string', 'max:255'],
-            'role'           => ['nullable', 'string', 'in:superadmin,user'],
-            'status'         => ['nullable', 'string', 'in:pending,active,rejected,suspended,inactive'],
-            'workshop_id'    => ['nullable', 'integer', 'exists:workshops,id'],
-            'workshop_role'  => ['nullable', 'string', 'in:admin,member'],
-            'per_page'       => ['nullable', 'integer', 'min:1', 'max:100'],
-            'sort_by'        => ['nullable', 'string', 'in:name,email,role,status,created_at'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'role' => ['nullable', 'string', 'in:superadmin,user'],
+            'status' => ['nullable', 'string', 'in:pending,active,rejected,suspended,inactive'],
+            'workshop_id' => ['nullable', 'integer', 'exists:workshops,id'],
+            'workshop_role' => ['nullable', 'string', 'in:admin,member'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'sort_by' => ['nullable', 'string', 'in:name,email,role,status,created_at'],
             'sort_direction' => ['nullable', 'string', 'in:asc,desc'],
         ]);
 
@@ -37,7 +37,7 @@ class UserController extends Controller
             $search = mb_strtolower($request->input('search'));
             $query->where(function ($q) use ($search) {
                 $q->whereRaw('LOWER(name) like ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(email) like ?', ["%{$search}%"]);
+                    ->orWhereRaw('LOWER(email) like ?', ["%{$search}%"]);
             });
         }
 
@@ -73,20 +73,20 @@ class UserController extends Controller
         if ($currentUser->isSuperAdmin()) {
             $myMemberships = $currentUser->workshops()->get(['workshops.id'])->keyBy('id');
 
-            $workshops = \App\Models\Workshop::orderBy('number')->get(['id', 'name', 'number'])
+            $workshops = Workshop::orderBy('number')->get(['id', 'name', 'number'])
                 ->map(fn ($w) => [
-                    'id'      => $w->id,
-                    'name'    => $w->name,
-                    'number'  => $w->number,
+                    'id' => $w->id,
+                    'name' => $w->name,
+                    'number' => $w->number,
                     'my_role' => $myMemberships->get($w->id)?->pivot->role ?? null,
                 ]);
         } else {
             $workshops = $currentUser->workshops()->orderBy('number')
                 ->get(['workshops.id', 'workshops.name', 'workshops.number'])
                 ->map(fn ($w) => [
-                    'id'      => $w->id,
-                    'name'    => $w->name,
-                    'number'  => $w->number,
+                    'id' => $w->id,
+                    'name' => $w->name,
+                    'number' => $w->number,
                     'my_role' => $w->pivot->role,
                 ]);
         }
@@ -114,9 +114,9 @@ class UserController extends Controller
     public function update(Request $request, User $user): UserResource|JsonResponse
     {
         $request->validate([
-            'name'  => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'email', 'unique:users,email,' . $user->id],
-            'role'  => ['sometimes', 'required', 'string', 'in:superadmin,user'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => ['sometimes', 'required', 'email', 'unique:users,email,'.$user->id],
+            'role' => ['sometimes', 'required', 'string', 'in:superadmin,user'],
         ]);
 
         $currentUser = $request->user();

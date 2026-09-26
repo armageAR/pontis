@@ -9,6 +9,7 @@ use Illuminate\Database\Seeder;
 class DemoUsersSeeder extends Seeder
 {
     private const WORKSHOP_NUMBERS = [469, 730, 1, 2];
+
     private const USERS_PER_WORKSHOP = 15;
 
     public function run(): void
@@ -17,7 +18,7 @@ class DemoUsersSeeder extends Seeder
 
         $missing = collect(self::WORKSHOP_NUMBERS)->reject(fn ($n) => $workshops->has($n));
         if ($missing->isNotEmpty()) {
-            $this->command->warn('Logias no encontradas con números: ' . $missing->join(', '));
+            $this->command->warn('Logias no encontradas con números: '.$missing->join(', '));
         }
 
         foreach ($workshops as $workshop) {
@@ -32,6 +33,6 @@ class DemoUsersSeeder extends Seeder
             }
         }
 
-        $this->command->info('Demo users seeded: ' . ($workshops->count() * self::USERS_PER_WORKSHOP) . ' usuarios en ' . $workshops->count() . ' logias.');
+        $this->command->info('Demo users seeded: '.($workshops->count() * self::USERS_PER_WORKSHOP).' usuarios en '.$workshops->count().' logias.');
     }
 }

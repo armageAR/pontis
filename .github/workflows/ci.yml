@@ -59,11 +59,8 @@ jobs:
         run: php artisan test --exclude-group known-failure
 
   api-style:
-    name: API code style (advisory)
+    name: API code style
     runs-on: ubuntu-latest
-    # Non-blocking until issue #2 lands. Remove this line afterwards so style
-    # regressions start failing the build.
-    continue-on-error: true
     defaults:
       run:
         working-directory: pontis-api

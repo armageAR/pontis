@@ -21,7 +21,7 @@ class GlaSyncService
         $response = Http::timeout(30)->retry(2, 1500)->get(self::SOURCE_URL);
 
         if (! $response->successful()) {
-            throw new \RuntimeException('No se pudo obtener la página de GLA (HTTP ' . $response->status() . ').');
+            throw new \RuntimeException('No se pudo obtener la página de GLA (HTTP '.$response->status().').');
         }
 
         $body = mb_convert_encoding($response->body(), 'UTF-8', 'UTF-8');
@@ -51,9 +51,9 @@ class GlaSyncService
 
                 if (! empty($changes)) {
                     $modified[] = [
-                        'id'      => $workshop->id,
-                        'number'  => $workshop->number,
-                        'name'    => $workshop->name,
+                        'id' => $workshop->id,
+                        'number' => $workshop->number,
+                        'name' => $workshop->name,
                         'changes' => $changes,
                     ];
                 }
@@ -146,7 +146,7 @@ class GlaSyncService
             if ($tab && preg_match('/^Zona\s+(\d+)\s+-\s+(.+)$/iu', $text, $m)) {
                 $zones[$tab] = [
                     'zone_number' => (int) $m[1],
-                    'zone_name'   => trim($m[2]),
+                    'zone_name' => trim($m[2]),
                 ];
             }
         });
@@ -154,7 +154,7 @@ class GlaSyncService
         $parsed = [];
 
         $crawler->filter('.elementor-tab-content')->each(function (Crawler $panel) use ($zones, &$parsed) {
-            $tab  = $panel->attr('data-tab');
+            $tab = $panel->attr('data-tab');
             $zone = $zones[$tab] ?? ['zone_number' => null, 'zone_name' => null];
 
             $panel->filter('td a')->each(function (Crawler $link) use ($zone, &$parsed) {
@@ -183,7 +183,7 @@ class GlaSyncService
         $sinInfoPattern = '/^(?<name>.+?)\s+Nro\s+(?<number>\d+)\s+[–\-]\s+Trabaja\s+Sin\s+Informaci[oó]n\s+en\s+(?<address>.+)$/iu';
 
         if (preg_match($sinInfoPattern, $clean, $m)) {
-            $m['day']       = null;
+            $m['day'] = null;
             $m['frequency'] = null;
         } else {
             $pattern = '/^(?<name>.+?)\s+Nro\s+(?<number>\d+)\s+[–\-]\s+Trabaja\s+(?<day>Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado|Domingo)\s+(?<frequency>.+?)\s+en\s+(?<address>.+)$/iu';
@@ -193,33 +193,33 @@ class GlaSyncService
             }
         }
 
-        $address  = trim($m['address']);
+        $address = trim($m['address']);
         $language = null;
 
         if (preg_match('/\(en\s+(?<lang>[^)]+)\)/iu', $address, $langMatch)) {
             $language = trim($langMatch['lang']);
-            $address  = trim(preg_replace('/\(en\s+[^)]+\)/iu', '', $address));
+            $address = trim(preg_replace('/\(en\s+[^)]+\)/iu', '', $address));
         }
 
         [$address, $city, $province] = $this->parseAddress($address);
 
-        $day       = isset($m['day']) ? trim($m['day']) : null;
+        $day = isset($m['day']) ? trim($m['day']) : null;
         $frequency = isset($m['frequency']) ? trim($m['frequency']) : null;
 
         $data = [
-            'zone_number'    => $zoneNumber,
-            'zone_name'      => $zoneName,
-            'name'           => trim($m['name']),
-            'number'         => (int) $m['number'],
-            'work_day'       => ($day && $day !== '') ? $this->normalizeDay($day) : null,
+            'zone_number' => $zoneNumber,
+            'zone_name' => $zoneName,
+            'name' => trim($m['name']),
+            'number' => (int) $m['number'],
+            'work_day' => ($day && $day !== '') ? $this->normalizeDay($day) : null,
             'work_frequency' => ($frequency && $frequency !== '') ? $frequency : null,
-            'address'        => $address,
-            'city'           => $city,
-            'province'       => $province,
-            'country'        => 'Argentina',
-            'language'       => $language,
-            'status'         => 'active',
-            'source_url'     => self::SOURCE_URL,
+            'address' => $address,
+            'city' => $city,
+            'province' => $province,
+            'country' => 'Argentina',
+            'language' => $language,
+            'status' => 'active',
+            'source_url' => self::SOURCE_URL,
             'last_synced_at' => now(),
             'raw_source_text' => $clean,
         ];
@@ -331,14 +331,12 @@ class GlaSyncService
         return (bool) preg_match('/^\p{L}/u', $candidate);
     }
 
-
-
     private function normalizeDay(string $day): string
     {
         return match (Str::lower($day)) {
             'miercoles' => 'Miércoles',
-            'sabado'    => 'Sábado',
-            default     => Str::ucfirst(Str::lower($day)),
+            'sabado' => 'Sábado',
+            default => Str::ucfirst(Str::lower($day)),
         };
     }
 

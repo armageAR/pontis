@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\WorkshopStatus;
 use App\Models\User;
 use App\Models\Workshop;
 
@@ -59,7 +60,7 @@ class WorkshopPolicy
 
     public function join(User $user, Workshop $workshop): bool
     {
-        return $workshop->status === \App\Enums\WorkshopStatus::ACTIVE;
+        return $workshop->status === WorkshopStatus::ACTIVE;
     }
 
     public function leave(User $user, Workshop $workshop): bool

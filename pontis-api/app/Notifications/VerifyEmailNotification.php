@@ -28,7 +28,7 @@ class VerifyEmailNotification extends VerifyEmail implements ShouldQueue
 
         $frontendUrl = rtrim(config('app.frontend_url'), '/');
 
-        return $frontendUrl . '/verify-email?verify_url=' . urlencode(url($apiUrl));
+        return $frontendUrl.'/verify-email?verify_url='.urlencode(url($apiUrl));
     }
 
     public function toMail($notifiable): MailMessage
@@ -37,7 +37,7 @@ class VerifyEmailNotification extends VerifyEmail implements ShouldQueue
 
         return (new MailMessage)
             ->subject('Verificá tu email — Pontis')
-            ->greeting('¡Hola ' . $notifiable->name . '!')
+            ->greeting('¡Hola '.$notifiable->name.'!')
             ->line('Gracias por registrarte en Pontis. Para continuar con el proceso de aprobación de tu cuenta, necesitamos verificar tu dirección de email.')
             ->action('Verificar email', $url)
             ->line('Este enlace expira en 60 minutos.')

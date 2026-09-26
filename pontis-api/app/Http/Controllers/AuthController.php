@@ -16,9 +16,9 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users',
-            'password'    => 'required|string|min:8|confirmed',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|string|min:8|confirmed',
             'workshop_id' => 'required|integer|exists:workshops,id',
         ]);
 
@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => $this->userPayload($user),
+            'user' => $this->userPayload($user),
         ], 201);
     }
 
@@ -52,7 +52,7 @@ class AuthController extends Controller
             ->where('status', 'active')
             ->where(function ($query) use ($q) {
                 $query->whereRaw('LOWER(name) like ?', ["%{$q}%"])
-                      ->orWhereRaw("CAST(number AS TEXT) like ?", ["%{$q}%"]);
+                    ->orWhereRaw('CAST(number AS TEXT) like ?', ["%{$q}%"]);
             })
             ->orderBy('number')
             ->limit(10)
@@ -64,7 +64,7 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
@@ -98,7 +98,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => $this->userPayload($user),
+            'user' => $this->userPayload($user),
         ]);
     }
 
@@ -119,9 +119,9 @@ class AuthController extends Controller
         $user = $request->user();
 
         return response()->json([
-            'status'               => $user->status,
-            'email_verified'       => $user->hasVerifiedEmail(),
-            'email_verified_at'    => $user->email_verified_at,
+            'status' => $user->status,
+            'email_verified' => $user->hasVerifiedEmail(),
+            'email_verified_at' => $user->email_verified_at,
             'verification_sent_at' => $user->created_at,
         ]);
     }
@@ -161,11 +161,11 @@ class AuthController extends Controller
     private function userPayload(User $user): array
     {
         return [
-            'id'                => $user->id,
-            'name'              => $user->name,
-            'email'             => $user->email,
-            'role'              => $user->role,
-            'status'            => $user->status,
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'status' => $user->status,
             'email_verified_at' => $user->email_verified_at,
         ];
     }

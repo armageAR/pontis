@@ -8,7 +8,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);
 Route::get('/workshops/search', [AuthController::class, 'searchWorkshops']);
 
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
@@ -16,11 +16,11 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me',      [AuthController::class, 'me']);
+    Route::get('/me', [AuthController::class, 'me']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::post('/workshops/{workshop}/dismiss-notification', [WorkshopController::class, 'dismissNotification']);
 
-    Route::get('/account-status',         [AuthController::class, 'accountStatus']);
+    Route::get('/account-status', [AuthController::class, 'accountStatus']);
     Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
 
     Route::get('/users', [UserController::class, 'index']);
@@ -47,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/workshops/{workshop}/join-requests/{user}/reject', [WorkshopController::class, 'rejectJoinRequest']);
 
         Route::post('/workshops/gla/preview', [WorkshopSyncController::class, 'preview']);
-        Route::post('/workshops/gla/apply',   [WorkshopSyncController::class, 'apply']);
+        Route::post('/workshops/gla/apply', [WorkshopSyncController::class, 'apply']);
 
         Route::get('/workshops/{workshop}/users', [WorkshopController::class, 'users']);
         Route::post('/workshops/{workshop}/users', [WorkshopController::class, 'assignUsers']);

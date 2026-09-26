@@ -27,9 +27,9 @@ class WorkshopResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'users' => UserResource::collection($this->whenLoaded('users')),
-            'is_member'  => $this->is_member ?? false,
+            'is_member' => $this->is_member ?? false,
             'is_pending' => $this->is_pending ?? false,
-            'my_role'    => $this->my_role ?? null,
+            'my_role' => $this->my_role ?? null,
         ];
     }
 }

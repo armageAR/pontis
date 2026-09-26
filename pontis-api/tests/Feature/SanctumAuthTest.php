@@ -25,15 +25,15 @@ class SanctumAuthTest extends TestCase
         $workshop = Workshop::factory()->create();
 
         $response = $this->postJson('/api/register', [
-            'name'                  => 'Juan Test',
-            'email'                 => 'juan@test.com',
-            'password'              => 'password123',
+            'name' => 'Juan Test',
+            'email' => 'juan@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'workshop_id'           => $workshop->id,
+            'workshop_id' => $workshop->id,
         ]);
 
         $response->assertStatus(201)
-                 ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'status']]);
+            ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'status']]);
 
         $this->assertDatabaseHas('users', ['email' => 'juan@test.com', 'status' => 'pending']);
     }
@@ -44,15 +44,15 @@ class SanctumAuthTest extends TestCase
         $workshop = Workshop::factory()->create();
 
         $response = $this->postJson('/api/register', [
-            'name'                  => 'Nuevo User',
-            'email'                 => 'nuevo@test.com',
-            'password'              => 'password123',
+            'name' => 'Nuevo User',
+            'email' => 'nuevo@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'workshop_id'           => $workshop->id,
+            'workshop_id' => $workshop->id,
         ]);
 
         $response->assertStatus(201)
-                 ->assertJsonPath('user.status', 'pending');
+            ->assertJsonPath('user.status', 'pending');
 
         $user = User::where('email', 'nuevo@test.com')->first();
         $this->assertEquals('pending', $user->status->value);
@@ -65,11 +65,11 @@ class SanctumAuthTest extends TestCase
         $workshop = Workshop::factory()->create();
 
         $this->postJson('/api/register', [
-            'name'                  => 'Workshop User',
-            'email'                 => 'workshop@test.com',
-            'password'              => 'password123',
+            'name' => 'Workshop User',
+            'email' => 'workshop@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'workshop_id'           => $workshop->id,
+            'workshop_id' => $workshop->id,
         ])->assertStatus(201);
 
         $user = User::where('email', 'workshop@test.com')->first();
@@ -79,9 +79,9 @@ class SanctumAuthTest extends TestCase
     public function test_register_fails_without_workshop(): void
     {
         $this->postJson('/api/register', [
-            'name'                  => 'No Workshop',
-            'email'                 => 'noworkshop@test.com',
-            'password'              => 'password123',
+            'name' => 'No Workshop',
+            'email' => 'noworkshop@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertStatus(422)->assertJsonValidationErrors(['workshop_id']);
     }
@@ -89,11 +89,11 @@ class SanctumAuthTest extends TestCase
     public function test_register_fails_with_invalid_workshop(): void
     {
         $this->postJson('/api/register', [
-            'name'                  => 'Bad Workshop',
-            'email'                 => 'badworkshop@test.com',
-            'password'              => 'password123',
+            'name' => 'Bad Workshop',
+            'email' => 'badworkshop@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'workshop_id'           => 99999,
+            'workshop_id' => 99999,
         ])->assertStatus(422)->assertJsonValidationErrors(['workshop_id']);
     }
 
@@ -103,11 +103,11 @@ class SanctumAuthTest extends TestCase
         $workshop = Workshop::factory()->create();
 
         $this->postJson('/api/register', [
-            'name'                  => 'Event User',
-            'email'                 => 'event@test.com',
-            'password'              => 'password123',
+            'name' => 'Event User',
+            'email' => 'event@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'workshop_id'           => $workshop->id,
+            'workshop_id' => $workshop->id,
         ]);
 
         Event::assertDispatched(Registered::class);
@@ -119,11 +119,11 @@ class SanctumAuthTest extends TestCase
         $workshop = Workshop::factory()->create();
 
         $this->postJson('/api/register', [
-            'name'                  => 'Otro Juan',
-            'email'                 => 'juan@test.com',
-            'password'              => 'password123',
+            'name' => 'Otro Juan',
+            'email' => 'juan@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'workshop_id'           => $workshop->id,
+            'workshop_id' => $workshop->id,
         ])->assertStatus(422)->assertJsonValidationErrors(['email']);
     }
 
@@ -135,9 +135,9 @@ class SanctumAuthTest extends TestCase
         Workshop::factory()->create(['name' => 'CONFRATERNIDAD', 'number' => 2]);
 
         $this->getJson('/api/workshops/search?q=union')
-             ->assertOk()
-             ->assertJsonCount(1)
-             ->assertJsonPath('0.name', 'UNION DEL PLATA');
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.name', 'UNION DEL PLATA');
     }
 
     public function test_workshop_search_by_number(): void
@@ -146,15 +146,15 @@ class SanctumAuthTest extends TestCase
         Workshop::factory()->create(['name' => 'OTHER', 'number' => 55]);
 
         $this->getJson('/api/workshops/search?q=44')
-             ->assertOk()
-             ->assertJsonCount(1)
-             ->assertJsonPath('0.number', 44);
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.number', 44);
     }
 
     public function test_workshop_search_requires_min_2_chars(): void
     {
         $this->getJson('/api/workshops/search?q=a')
-             ->assertStatus(422);
+            ->assertStatus(422);
     }
 
     public function test_workshop_search_excludes_disabled(): void
@@ -163,8 +163,8 @@ class SanctumAuthTest extends TestCase
         Workshop::factory()->create(['name' => 'ACTIVE TWO', 'status' => 'disabled']);
 
         $this->getJson('/api/workshops/search?q=ACTIVE')
-             ->assertOk()
-             ->assertJsonCount(1);
+            ->assertOk()
+            ->assertJsonCount(1);
     }
 
     // ── login ─────────────────────────────────────────────────────────────────
@@ -177,12 +177,12 @@ class SanctumAuthTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password123',
         ]);
 
         $response->assertOk()
-                 ->assertJsonStructure(['token', 'user' => ['id', 'email', 'status']]);
+            ->assertJsonStructure(['token', 'user' => ['id', 'email', 'status']]);
     }
 
     public function test_pending_user_can_login_and_gets_pending_status(): void
@@ -192,12 +192,12 @@ class SanctumAuthTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password123',
         ]);
 
         $response->assertOk()
-                 ->assertJsonPath('user.status', 'pending');
+            ->assertJsonPath('user.status', 'pending');
     }
 
     public function test_rejected_user_cannot_login(): void
@@ -207,10 +207,10 @@ class SanctumAuthTest extends TestCase
         ]);
 
         $this->postJson('/api/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password123',
         ])->assertStatus(422)
-          ->assertJsonValidationErrors(['email']);
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_suspended_user_cannot_login(): void
@@ -220,10 +220,10 @@ class SanctumAuthTest extends TestCase
         ]);
 
         $this->postJson('/api/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password123',
         ])->assertStatus(422)
-          ->assertJsonValidationErrors(['email']);
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_inactive_user_cannot_login(): void
@@ -233,10 +233,10 @@ class SanctumAuthTest extends TestCase
         ]);
 
         $this->postJson('/api/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'password123',
         ])->assertStatus(422)
-          ->assertJsonValidationErrors(['email']);
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_login_fails_with_wrong_password(): void
@@ -244,7 +244,7 @@ class SanctumAuthTest extends TestCase
         $user = User::factory()->create(['password' => bcrypt('password123')]);
 
         $this->postJson('/api/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'wrongpassword',
         ])->assertStatus(422)->assertJsonValidationErrors(['email']);
     }
@@ -256,13 +256,13 @@ class SanctumAuthTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user, 'sanctum')
-             ->getJson('/api/me')
-             ->assertOk()
-             ->assertJson([
-                 'id' => $user->id,
-                 'email' => $user->email,
-                 'status' => 'active',
-             ]);
+            ->getJson('/api/me')
+            ->assertOk()
+            ->assertJson([
+                'id' => $user->id,
+                'email' => $user->email,
+                'status' => 'active',
+            ]);
     }
 
     public function test_me_requires_authentication(): void
@@ -277,13 +277,13 @@ class SanctumAuthTest extends TestCase
         $user = User::factory()->pending()->unverified()->create();
 
         $this->actingAs($user, 'sanctum')
-             ->getJson('/api/account-status')
-             ->assertOk()
-             ->assertJson([
-                 'status' => 'pending',
-                 'email_verified' => false,
-             ])
-             ->assertJsonStructure(['verification_sent_at']);
+            ->getJson('/api/account-status')
+            ->assertOk()
+            ->assertJson([
+                'status' => 'pending',
+                'email_verified' => false,
+            ])
+            ->assertJsonStructure(['verification_sent_at']);
     }
 
     public function test_account_status_returns_active_verified(): void
@@ -291,12 +291,12 @@ class SanctumAuthTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user, 'sanctum')
-             ->getJson('/api/account-status')
-             ->assertOk()
-             ->assertJson([
-                 'status' => 'active',
-                 'email_verified' => true,
-             ]);
+            ->getJson('/api/account-status')
+            ->assertOk()
+            ->assertJson([
+                'status' => 'active',
+                'email_verified' => true,
+            ]);
     }
 
     // ── resend verification ──────────────────────────────────────────────────
@@ -308,9 +308,9 @@ class SanctumAuthTest extends TestCase
         $user = User::factory()->pending()->unverified()->create();
 
         $this->actingAs($user, 'sanctum')
-             ->postJson('/api/email/resend-verification')
-             ->assertOk()
-             ->assertJson(['message' => 'Email de verificación reenviado.']);
+            ->postJson('/api/email/resend-verification')
+            ->assertOk()
+            ->assertJson(['message' => 'Email de verificación reenviado.']);
 
         Notification::assertSentTo($user, VerifyEmailNotification::class);
     }
@@ -322,9 +322,9 @@ class SanctumAuthTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user, 'sanctum')
-             ->postJson('/api/email/resend-verification')
-             ->assertOk()
-             ->assertJson(['message' => 'El email ya fue verificado.']);
+            ->postJson('/api/email/resend-verification')
+            ->assertOk()
+            ->assertJson(['message' => 'El email ya fue verificado.']);
 
         Notification::assertNotSentTo($user, VerifyEmailNotification::class);
     }
@@ -342,8 +342,8 @@ class SanctumAuthTest extends TestCase
         );
 
         $this->getJson($url)
-             ->assertOk()
-             ->assertJson(['message' => 'Email verificado correctamente.']);
+            ->assertOk()
+            ->assertJson(['message' => 'Email verificado correctamente.']);
 
         $this->assertNotNull($user->fresh()->email_verified_at);
     }
@@ -380,11 +380,11 @@ class SanctumAuthTest extends TestCase
         $workshop = Workshop::factory()->create();
 
         $this->postJson('/api/register', [
-            'name'                  => 'Mail User',
-            'email'                 => 'mail@test.com',
-            'password'              => 'password123',
+            'name' => 'Mail User',
+            'email' => 'mail@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'workshop_id'           => $workshop->id,
+            'workshop_id' => $workshop->id,
         ])->assertStatus(201);
 
         $user = User::where('email', 'mail@test.com')->first();
@@ -397,11 +397,11 @@ class SanctumAuthTest extends TestCase
         $workshop = Workshop::factory()->create();
 
         $this->postJson('/api/register', [
-            'name'                  => 'Link User',
-            'email'                 => 'link@test.com',
-            'password'              => 'password123',
+            'name' => 'Link User',
+            'email' => 'link@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-            'workshop_id'           => $workshop->id,
+            'workshop_id' => $workshop->id,
         ])->assertStatus(201);
 
         $user = User::where('email', 'link@test.com')->first();
@@ -410,7 +410,7 @@ class SanctumAuthTest extends TestCase
             $mail = $notification->toMail($user);
             $url = $mail->actionUrl;
 
-            return str_contains($url, config('app.frontend_url') . '/verify-email');
+            return str_contains($url, config('app.frontend_url').'/verify-email');
         });
     }
 
@@ -418,13 +418,13 @@ class SanctumAuthTest extends TestCase
 
     public function test_logout_invalidates_token(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $token = $user->createToken('api')->plainTextToken;
 
         $this->withToken($token)
-             ->postJson('/api/logout')
-             ->assertOk()
-             ->assertJson(['message' => 'Sesión cerrada.']);
+            ->postJson('/api/logout')
+            ->assertOk()
+            ->assertJson(['message' => 'Sesión cerrada.']);
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
