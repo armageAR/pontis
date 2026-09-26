@@ -1,8 +1,11 @@
 # Laravel
+# Note: do NOT ignore storage/logs or bootstrap/cache wholesale. Laravel keeps a
+# .gitignore inside each of them so the directory itself stays in the repository
+# while its contents do not. Excluding the directories made them vanish from a
+# clone, which breaks `composer install` (package:discover needs bootstrap/cache
+# to exist and be writable).
 pontis-api/.env
 pontis-api/vendor/
-pontis-api/storage/logs/
-pontis-api/bootstrap/cache/
 
 # Node
 pontis-app/node_modules/
