@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "pontis/api",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Pontis API — membership management for organizations made up of local groups.",
+    "keywords": ["laravel", "api", "membership", "groups", "pontis"],
     "license": "MIT",
     "require": {
         "php": "^8.3",

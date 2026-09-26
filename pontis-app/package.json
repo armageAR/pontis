@@ -1,7 +1,9 @@
 {
   "name": "pontis-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Pontis web client — membership management for organizations made up of local groups.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",

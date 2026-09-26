@@ -8,3 +8,13 @@ pontis-api/bootstrap/cache/
 pontis-app/node_modules/
 pontis-app/dist/
 pontis-app/.env
+
+# Local dev artifacts
+*.log
+*.pid
+.servers.pid
+
+# Local tooling / agent state
+.omc/
+.claude/
+.agents/

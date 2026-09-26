@@ -20,6 +20,14 @@ use Illuminate\Support\Facades\Gate;
 
 class WorkshopController extends Controller
 {
+    // FIXME: this listing is not scoped by membership. A non-superadmin sees only
+    // their own groups when the client passes `my_workshops_only`; without that flag
+    // the full directory is returned. Three tests in tests/Feature/WorkshopTest.php
+    // (test_user_sees_only_own_workshops, test_user_with_no_workshops_sees_empty_list,
+    // test_workshop_admin_sees_only_own_workshops) expect the scoping to be implicit
+    // and currently fail. Decide which behaviour is correct — an open directory
+    // everyone can browse, or a list limited to the caller's groups — then fix the
+    // side that is wrong. See "Known issues" in the root README.
     public function index(WorkshopIndexRequest $request): AnonymousResourceCollection
     {
         Gate::authorize('viewAny', Workshop::class);
