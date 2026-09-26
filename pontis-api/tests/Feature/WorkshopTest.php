@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\Workshop;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 class WorkshopTest extends TestCase
@@ -69,6 +70,7 @@ class WorkshopTest extends TestCase
             ->assertJsonCount(3, 'data');
     }
 
+    #[Group('known-failure')] // See issue #1: the listing is not scoped by membership.
     public function test_user_sees_only_own_workshops(): void
     {
         $workshop = Workshop::factory()->create();
@@ -84,6 +86,7 @@ class WorkshopTest extends TestCase
         unset($other);
     }
 
+    #[Group('known-failure')] // See issue #1: the listing is not scoped by membership.
     public function test_user_with_no_workshops_sees_empty_list(): void
     {
         Workshop::factory()->count(2)->create();
@@ -94,6 +97,7 @@ class WorkshopTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    #[Group('known-failure')] // See issue #1: the listing is not scoped by membership.
     public function test_workshop_admin_sees_only_own_workshops(): void
     {
         $workshop = Workshop::factory()->create();

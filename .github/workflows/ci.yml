@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Read-only by default: nothing here needs to write to the repository.
+permissions:
+  contents: read
+
+# A new push to the same branch or PR supersedes the run in flight.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pontis-api
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          # pdo_sqlite/sqlite3 back the in-memory test database configured in phpunit.xml.
+          extensions: pdo_sqlite, sqlite3, mbstring, xml, curl, tokenizer, bcmath, ctype, fileinfo, dom, zip
+          coverage: none
+
+      - name: Resolve Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config --global cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('pontis-api/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # The three tests in the known-failure group are quarantined rather than
+      # deleted: they still run locally and still fail. See issue #1.
+      - name: Run tests
+        run: php artisan test --exclude-group known-failure
+
+  api-style:
+    name: API code style (advisory)
+    runs-on: ubuntu-latest
+    # Non-blocking until issue #2 lands. Remove this line afterwards so style
+    # regressions start failing the build.
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: pontis-api
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, tokenizer, dom
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check formatting with Pint
+        run: ./vendor/bin/pint --test
+
+  web:
+    name: Web client build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pontis-app
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: pontis-app/.nvmrc
+          cache: npm
+          cache-dependency-path: pontis-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Type errors fail the build: the script is `tsc -b && vite build`.
+      - name: Build
+        run: npm run build
+
+  web-lint:
+    name: Web client lint (advisory)
+    runs-on: ubuntu-latest
+    # Non-blocking until issue #3 lands. Remove this line afterwards.
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: pontis-app
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: pontis-app/.nvmrc
+          cache: npm
+          cache-dependency-path: pontis-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint

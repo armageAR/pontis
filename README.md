@@ -1,5 +1,7 @@
 # Pontis
 
+[![CI](https://github.com/armageAR/pontis/actions/workflows/ci.yml/badge.svg)](https://github.com/armageAR/pontis/actions/workflows/ci.yml)
+
 Membership management platform for organizations that are structured as a network of local
 groups (chapters, branches, clubs — referred to in the code as **workshops**).
 
@@ -240,15 +242,31 @@ dev server in one step.
 
 ---
 
-## Testing
+## Testing and CI
 
 The feature suite covers authentication and token handling, the member listing with its
 role-based scoping, and group/membership management including the policy rules:
 
 ```bash
 cd pontis-api
-php artisan test
+php artisan test                            # 123 tests, 3 of which fail — see issue #1
+php artisan test --exclude-group known-failure   # what CI runs: 120 passing
 ```
+
+`.github/workflows/ci.yml` runs on every push to `main` and on every pull request:
+
+| Job | Blocking | What it runs |
+| --- | --- | --- |
+| API tests | yes | `php artisan test --exclude-group known-failure` on PHP 8.3 |
+| Web client build | yes | `npm run build` (`tsc -b && vite build`) on Node 22 |
+| API code style | advisory | `pint --test` — non-blocking until [#2](https://github.com/armageAR/pontis/issues/2) |
+| Web client lint | advisory | `npm run lint` — non-blocking until [#3](https://github.com/armageAR/pontis/issues/3) |
+
+The three tests tracked in [#1](https://github.com/armageAR/pontis/issues/1) are marked
+`#[Group('known-failure')]` and excluded in CI so that the build is a real signal instead of
+permanently red. They are not skipped locally: a plain `php artisan test` still runs them and
+still fails, which is the point. The two advisory jobs report their findings without failing
+the build; drop `continue-on-error` from each once its issue is closed.
 
 ---
 
@@ -262,6 +280,9 @@ php artisan test
 - [**#2 — Pint code style has drifted**](https://github.com/armageAR/pontis/issues/2) in the
   pre-existing PHP files, mainly operator alignment. Purely cosmetic, and a good first
   contribution.
+- [**#3 — ESLint reports 11 errors**](https://github.com/armageAR/pontis/issues/3) in the web
+  client, 7 of them `react-hooks/set-state-in-effect`. The build and type-check pass; only
+  `npm run lint` is affected.
 
 ## Security
 
