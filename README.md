@@ -14,6 +14,9 @@ It is a two-part application:
 | REST API | Laravel 13 · PHP 8.3 · Sanctum · PostgreSQL | `pontis-api/` |
 | Web client | React 19 · TypeScript · Vite 8 · React Router 7 | `pontis-app/` |
 
+Built with the help of AI coding agents — [Claude Code](https://claude.com/claude-code) and
+[Codex](https://openai.com/codex) — under human review.
+
 ---
 
 ## Features
