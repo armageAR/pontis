@@ -254,17 +254,14 @@ php artisan test
 
 ## Known issues
 
-- **The group listing is not scoped by membership.** `GET /api/admin/workshops` returns the
-  whole directory to any authenticated user; a non-superadmin only gets a narrowed list when
-  the client passes `my_workshops_only`. Three tests in
-  `pontis-api/tests/Feature/WorkshopTest.php` expect that scoping to be implicit and
-  currently fail, so a fresh clone runs 120 of 123 tests green. The open question is which
-  behaviour is intended — a directory everyone can browse, or a list limited to the caller's
-  own groups — and the fix depends on the answer. Marked with a `FIXME` in
-  `app/Http/Controllers/Admin/WorkshopController.php`.
-- `./vendor/bin/pint` reports style drift in most of the pre-existing PHP files, mainly
-  operator alignment. Running it would produce a large, purely cosmetic diff, so it has been
-  left alone.
+- [**#1 — The group listing is not scoped by membership.**](https://github.com/armageAR/pontis/issues/1)
+  `GET /api/admin/workshops` returns the whole directory to any authenticated user. Three
+  tests in `pontis-api/tests/Feature/WorkshopTest.php` expect that scoping to be implicit and
+  currently fail, so **a fresh clone runs 120 of 123 tests green**. Whether the tests or the
+  controller are wrong is still an open decision; see the issue.
+- [**#2 — Pint code style has drifted**](https://github.com/armageAR/pontis/issues/2) in the
+  pre-existing PHP files, mainly operator alignment. Purely cosmetic, and a good first
+  contribution.
 
 ## Security
 
