@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useState } from 'react'
 import type { UserListItem } from '@/api/users'
 import Modal from '@/components/Modal'
 import FormField from '@/components/FormField'
@@ -23,15 +23,6 @@ export default function UserPasswordModal({ user, open, onClose, onSave }: UserP
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
-
-  useEffect(() => {
-    if (open) {
-      setPassword('')
-      setConfirmation('')
-      setError('')
-      setFieldErrors({})
-    }
-  }, [open])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()

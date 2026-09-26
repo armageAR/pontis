@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
 import FormField from '@/components/FormField'

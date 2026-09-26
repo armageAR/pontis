@@ -109,10 +109,8 @@ jobs:
         run: npm run build
 
   web-lint:
-    name: Web client lint (advisory)
+    name: Web client lint
     runs-on: ubuntu-latest
-    # Non-blocking until issue #3 lands. Remove this line afterwards.
-    continue-on-error: true
     defaults:
       run:
         working-directory: pontis-app

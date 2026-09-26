@@ -36,7 +36,8 @@ export default function GlaSyncModal({ open, diff, onClose, onApplied }: Props) 
   function toggleNew(number: number) {
     setSelectedNew((prev) => {
       const next = new Set(prev)
-      next.has(number) ? next.delete(number) : next.add(number)
+      if (next.has(number)) next.delete(number)
+      else next.add(number)
       return next
     })
   }
@@ -44,7 +45,8 @@ export default function GlaSyncModal({ open, diff, onClose, onApplied }: Props) 
   function toggleModified(id: number) {
     setSelectedModified((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
@@ -52,7 +54,8 @@ export default function GlaSyncModal({ open, diff, onClose, onApplied }: Props) 
   function toggleDisabled(id: number) {
     setSelectedDisabled((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }

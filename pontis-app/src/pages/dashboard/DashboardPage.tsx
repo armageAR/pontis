@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Building2, Users, Check, X, Info, Crown } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import * as dashApi from '@/api/dashboard'
 import type { PendingRequest, MembershipNotification } from '@/api/dashboard'
 import AppLayout from '@/components/AppLayout'

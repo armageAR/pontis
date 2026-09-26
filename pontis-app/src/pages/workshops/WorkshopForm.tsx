@@ -1,4 +1,4 @@
-import { type FormEvent, useState, useEffect } from 'react'
+import { type FormEvent, useState } from 'react'
 import type { Workshop, WorkshopFormData } from '@/api/workshops'
 import Input from '@/components/Input'
 import Select from '@/components/Select'
@@ -20,44 +20,45 @@ interface WorkshopFormProps {
 type FieldErrors = Record<string, string[]>
 
 export default function WorkshopForm({ workshop, onSubmit, onCancel, submitLabel }: WorkshopFormProps) {
-  const [form, setForm] = useState<WorkshopFormData>({
-    name: '',
-    number: 0,
-    zone_number: null,
-    zone_name: null,
-    work_day: null,
-    work_frequency: null,
-    address: null,
-    city: null,
-    province: null,
-    country: 'Argentina',
-    language: null,
-    status: 'active',
-    notes: null,
-  })
+  // Read from the prop once, at mount. Modal unmounts its children when it
+  // closes, so every time the form is opened this runs again with the current
+  // workshop — no effect needed to keep it in sync.
+  const [form, setForm] = useState<WorkshopFormData>(() =>
+    workshop
+      ? {
+          name: workshop.name,
+          number: workshop.number,
+          zone_number: workshop.zone_number,
+          zone_name: workshop.zone_name,
+          work_day: workshop.work_day,
+          work_frequency: workshop.work_frequency,
+          address: workshop.address,
+          city: workshop.city,
+          province: workshop.province,
+          country: workshop.country,
+          language: workshop.language,
+          status: workshop.status,
+          notes: workshop.notes,
+        }
+      : {
+          name: '',
+          number: 0,
+          zone_number: null,
+          zone_name: null,
+          work_day: null,
+          work_frequency: null,
+          address: null,
+          city: null,
+          province: null,
+          country: 'Argentina',
+          language: null,
+          status: 'active',
+          notes: null,
+        },
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
-
-  useEffect(() => {
-    if (workshop) {
-      setForm({
-        name: workshop.name,
-        number: workshop.number,
-        zone_number: workshop.zone_number,
-        zone_name: workshop.zone_name,
-        work_day: workshop.work_day,
-        work_frequency: workshop.work_frequency,
-        address: workshop.address,
-        city: workshop.city,
-        province: workshop.province,
-        country: workshop.country,
-        language: workshop.language,
-        status: workshop.status,
-        notes: workshop.notes,
-      })
-    }
-  }, [workshop])
 
   function set<K extends keyof WorkshopFormData>(key: K, value: WorkshopFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))

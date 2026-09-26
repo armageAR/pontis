@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { CheckCircle } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import * as authApi from '@/api/auth'
 import AuthLayout from '@/components/AuthLayout'
 import Spinner from '@/components/Spinner'
@@ -14,14 +14,14 @@ export default function VerifyEmailPage() {
   const [params] = useSearchParams()
   const verifyUrl = params.get('verify_url')
 
-  const [loading, setLoading] = useState(true)
+  // Whether the link is usable is known on the first render, so both the loading
+  // flag and the error start out correct instead of being corrected by an effect.
+  const [loading, setLoading] = useState(verifyUrl !== null)
   const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(verifyUrl !== null ? '' : 'Link de verificación inválido.')
 
   useEffect(() => {
     if (!verifyUrl) {
-      setError('Link de verificación inválido.')
-      setLoading(false)
       return
     }
 

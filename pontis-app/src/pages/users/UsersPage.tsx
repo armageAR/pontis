@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '@/api/users'
 import type { UserListItem, UserFilters as Filters, UserUpdatePayload, WorkshopOption } from '@/api/users'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import AppLayout from '@/components/AppLayout'
 import Spinner from '@/components/Spinner'
 import Pagination from '@/components/Pagination'
@@ -46,7 +46,11 @@ export default function UsersPage() {
 
   const isCurrentUserWorkshopAdmin = workshops.some((w) => w.my_role === 'admin')
 
+  // `filters` only ever changes from user input, so this cannot cascade: the
+  // fetch raises the loading flag before awaiting and lowers it when it settles.
+  // Clearing this rule would mean adopting a data-fetching library; see issue #3.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers(filters)
   }, [filters, fetchUsers])
 
@@ -161,7 +165,10 @@ export default function UsersPage() {
         </>
       )}
 
+      {/* Keyed by user so each modal remounts — and so resets its form — when it
+          opens or switches user, instead of an effect syncing state from props. */}
       <UserEditModal
+        key={`edit-${editingUser?.id ?? 'none'}`}
         user={editingUser}
         open={editingUser !== null}
         onClose={() => setEditingUser(null)}
@@ -173,6 +180,7 @@ export default function UsersPage() {
       />
 
       <UserPasswordModal
+        key={`password-${passwordUser?.id ?? 'none'}`}
         user={passwordUser}
         open={passwordUser !== null}
         onClose={() => setPasswordUser(null)}

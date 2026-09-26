@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import AuthLayout from '@/components/AuthLayout'
 import Spinner from '@/components/Spinner'
 import Button from '@/components/Button'

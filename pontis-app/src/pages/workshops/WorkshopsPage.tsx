@@ -4,7 +4,7 @@ import * as api from '@/api/workshops'
 import * as syncApi from '@/api/sync'
 import type { Workshop, WorkshopFilters as Filters, WorkshopFormData } from '@/api/workshops'
 import type { GlaDiff } from '@/api/sync'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import Spinner from '@/components/Spinner'
@@ -59,7 +59,11 @@ export default function WorkshopsPage() {
     }
   }, [])
 
+  // `filters` only ever changes from user input, so this cannot cascade: the
+  // fetch raises the loading flag before awaiting and lowers it when it settles.
+  // Clearing this rule would mean adopting a data-fetching library; see issue #3.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchWorkshops(filters)
   }, [filters, fetchWorkshops])
 

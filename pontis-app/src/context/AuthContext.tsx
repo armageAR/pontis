@@ -1,29 +1,13 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react'
-import type { User } from '@/api/auth'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { AuthContext } from './authContext'
 import * as authApi from '@/api/auth'
-
-interface AuthState {
-  user: User | null
-  loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string, passwordConfirmation: string, workshopId: number) => Promise<void>
-  logout: () => Promise<void>
-  refreshUser: () => Promise<void>
-}
-
-const AuthContext = createContext<AuthState | null>(null)
+import type { User } from '@/api/auth'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Derived at mount instead of inside the effect: with no token there is
+  // nothing to wait for, so the app must not start in a loading state.
+  const [loading, setLoading] = useState(() => localStorage.getItem('token') !== null)
 
   const fetchUser = useCallback(async () => {
     try {
@@ -36,11 +20,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setLoading(false)
+    if (localStorage.getItem('token') === null) {
       return
     }
+    // Restoring the session on mount is a genuine external-system read, and the
+    // flag has to be lowered once the request settles. Clearing this rule would
+    // mean Suspense or a data-fetching library; see issue #3.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUser().finally(() => setLoading(false))
   }, [fetchUser])
 
@@ -78,10 +64,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth(): AuthState {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
 }

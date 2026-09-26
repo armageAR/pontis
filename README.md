@@ -262,13 +262,17 @@ php artisan test --exclude-group known-failure   # what CI runs: 120 passing
 | API tests | yes | `php artisan test --exclude-group known-failure` on PHP 8.3 |
 | Web client build | yes | `npm run build` (`tsc -b && vite build`) on Node 22 |
 | API code style | advisory | `pint --test` — non-blocking until [#2](https://github.com/armageAR/pontis/issues/2) |
-| Web client lint | advisory | `npm run lint` — non-blocking until [#3](https://github.com/armageAR/pontis/issues/3) |
+| Web client lint | yes | `npm run lint` |
 
 The three tests tracked in [#1](https://github.com/armageAR/pontis/issues/1) are marked
 `#[Group('known-failure')]` and excluded in CI so that the build is a real signal instead of
 permanently red. They are not skipped locally: a plain `php artisan test` still runs them and
-still fails, which is the point. The two advisory jobs report their findings without failing
-the build; drop `continue-on-error` from each once its issue is closed.
+still fails, which is the point. The remaining advisory job reports its findings without
+failing the build; drop `continue-on-error` once [#2](https://github.com/armageAR/pontis/issues/2)
+is closed.
+
+The web client has no automated tests yet, so changes to it are verified by `npm run lint`,
+the type-checking build, and manual checks against a running instance.
 
 ---
 
@@ -282,9 +286,6 @@ the build; drop `continue-on-error` from each once its issue is closed.
 - [**#2 — Pint code style has drifted**](https://github.com/armageAR/pontis/issues/2) in the
   pre-existing PHP files, mainly operator alignment. Purely cosmetic, and a good first
   contribution.
-- [**#3 — ESLint reports 11 errors**](https://github.com/armageAR/pontis/issues/3) in the web
-  client, 7 of them `react-hooks/set-state-in-effect`. The build and type-check pass; only
-  `npm run lint` is affected.
 - The directory importer cannot always tell where a street ends and a city begins, because the
   source page appends the city to the address as free text with no delimiter. When the
   boundary is ambiguous the importer reports no city rather than guessing, and leaves the

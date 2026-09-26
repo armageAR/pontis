@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { LayoutGrid, RefreshCw, ShieldCheck } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/context/useAuth'
 import Button from '@/components/Button'
 import './HomePage.css'
 

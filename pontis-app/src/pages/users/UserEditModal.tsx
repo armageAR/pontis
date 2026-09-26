@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useState } from 'react'
 import { X, ShieldCheck, User as UserIcon } from 'lucide-react'
 import type { UserListItem, UserUpdatePayload, UserWorkshop, WorkshopOption } from '@/api/users'
 import Modal from '@/components/Modal'
@@ -33,28 +33,19 @@ export default function UserEditModal({
   onWorkshopRemove,
   onWorkshopRoleToggle,
 }: UserEditModalProps) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  // Seeded from the user being edited instead of synced by an effect. UsersPage
+  // keys this modal by user id, so opening it — or switching users — remounts the
+  // component and these initial values run again.
+  const [name, setName] = useState(user?.name ?? '')
+  const [email, setEmail] = useState(user?.email ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
-  const [localWorkshops, setLocalWorkshops] = useState<UserWorkshop[]>([])
+  const [localWorkshops, setLocalWorkshops] = useState<UserWorkshop[]>(user?.workshops ?? [])
   const [workshopToAdd, setWorkshopToAdd] = useState('')
   const [workshopLoading, setWorkshopLoading] = useState<string | null>(null)
   const [workshopError, setWorkshopError] = useState('')
-
-  useEffect(() => {
-    if (user) {
-      setName(user.name)
-      setEmail(user.email)
-      setError('')
-      setFieldErrors({})
-      setLocalWorkshops(user.workshops ?? [])
-      setWorkshopToAdd('')
-      setWorkshopError('')
-    }
-  }, [user])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
