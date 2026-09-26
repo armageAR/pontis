@@ -60,6 +60,8 @@ Built with the help of AI coding agents — [Claude Code](https://claude.com/cla
   are compared field by field, and the raw source text plus a `last_synced_at` timestamp are
   kept for auditing.
 - Also available headless: `php artisan workshops:sync-from-gla [--dry-run]`.
+- Fields the page does not report are left untouched rather than overwritten with empty
+  values, so hand-curated data survives a sync.
 
 ---
 
@@ -283,6 +285,11 @@ the build; drop `continue-on-error` from each once its issue is closed.
 - [**#3 — ESLint reports 11 errors**](https://github.com/armageAR/pontis/issues/3) in the web
   client, 7 of them `react-hooks/set-state-in-effect`. The build and type-check pass; only
   `npm run lint` is affected.
+- The directory importer cannot always tell where a street ends and a city begins, because the
+  source page appends the city to the address as free text with no delimiter. When the
+  boundary is ambiguous the importer reports no city rather than guessing, and leaves the
+  stored value untouched — so a handful of entries keep whatever was curated by hand. See
+  [#4](https://github.com/armageAR/pontis/issues/4) for the reasoning.
 
 ## Security
 
